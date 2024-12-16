@@ -1,0 +1,6 @@
+* text=auto
+*.css linguist-vendored
+*.scss linguist-vendored
+*.less linguist-vendored
+*.xls   binary
+*.xlsx  binary
