@@ -19,14 +19,15 @@ class ProductController extends Controller
     {
         // Initialize the user and company properties
         $this->user = Auth::user();
-        $this->company = get_company($this->user); 
-        
+        $this->company = get_company($this->user);
+
         $this->pump = $request->pump;
     }
 
     function index(Request $request)
     {
         $pump_id = $this->pump->id;
+
         return view('client_admin.pump.product', compact(['pump_id']));
     }
 
@@ -36,17 +37,17 @@ class ProductController extends Controller
             ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id), 0) as quantity')
             ->get();
 
-        return response()->json([ 
+        return response()->json([
             'recordsTotal' => $products->count(),
             'recordsFiltered' => $products->count(),
             'success' => true,
             'data' => $products,
         ]);
     }
-    
+
     public function create(Request $request)
     {
-        
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|string',
@@ -58,7 +59,7 @@ class ProductController extends Controller
         return response()->json(['success' => true, 'message' => 'Product created successfully.']);
     }
 
-    
+
     public function update(Request $request)
     {
         $product = Product::findOrFail($request->id);
@@ -90,7 +91,7 @@ class ProductController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Product updated successfully.']);
     }
-    
+
     public function addStock(Request $request)
     {
 
