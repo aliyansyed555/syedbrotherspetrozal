@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ClientAdmin\Pump;
 
 use App\Http\Controllers\Controller;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Customer;
@@ -120,5 +121,47 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while deleting the Customer.'], 500);
         }
+    }
+
+    public function generate_pdf(Request $request, $pump_id, $customer_id){
+        // Generate and download the PDF
+
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+
+        $customer = Customer::where('petrol_pump_id', $pump_id)->findOrFail($customer_id);
+
+        $credits = $customer->credits()->whereBetween('date', [$start_date, $end_date])->get();
+
+        $pdf = Pdf::loadView('pdfs.customer-credits-history-pdf', [
+            'credits' => $credits,
+            'customer' => $customer,
+        ]);
+        
+        $filename = "{$customer->name}-" . now()->format('d-m-Y') . ".pdf";
+
+        $directory = public_path('storage/random_pdfs');
+        if (!file_exists($directory)) {
+            mkdir($directory, 0777, true);  // Create the directory if it doesn't exist
+        }
+
+        // Save the PDF to the specified directory
+        $pdfPath = $directory . '/' . $filename;
+        $pdf->save($pdfPath);
+
+        // Check if you want to send the file as a response (AJAX)
+        if ($request->ajax()) {
+            // Return the file URL in the response
+            $fileUrl = asset('storage/random_pdfs/' . $filename);
+            return response()->json([
+                'status' => 'success',
+                'file_url' => $fileUrl, // Provide the URL to the saved PDF
+            ]);
+        }
+
+        // If not an AJAX request, download the PDF directly
+        return response()->download($pdfPath, $filename, [
+            'Content-Type' => 'application/pdf',
+        ])->deleteFileAfterSend(false);
     }
 }

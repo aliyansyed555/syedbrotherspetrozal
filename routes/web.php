@@ -84,13 +84,18 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
     Route::post('/{pump_id}/saveReport', 'saveReport')->middleware('verify.pump')->name('pump.saveReport');
     Route::get('/{pump_id}/report', 'getPumpReport')->middleware('verify.pump')->name('pump.getPumpReport');
 
+    Route::post('/{pump_id}/reports/pdf', 'generatePdf')->middleware('verify.pump')->name('pump.getPumpReportPdf');
+
     Route::get('/{pump_id}/expenses', 'get_expenses')->middleware('verify.pump')->name('pump.get_expenses');
+
+    Route::post('/{pump_id}/get_expenses_pdf', 'get_expenses_pdf')->middleware('verify.pump')->name('pump.get_expenses_pdf');
 
     Route::post('/{pump_id}/daily-reports/create', 'save_bank_deposit')->middleware('verify.pump')->name('pump.save_bank_deposit');
     
     
 
     Route::get('/{pump_id}/sales-history', 'get_sales_history')->middleware('verify.pump')->name('pump.get_sales_history');
+    Route::post('/{pump_id}/sales-history-pdf', 'get_sales_history_pdf')->middleware('verify.pump')->name('pump.get_sales_history_pdf');
 
     Route::get('/', 'index')->name('pump.index');
     Route::get('/get_all', 'get_all')->name('pump.get_all');
@@ -175,6 +180,7 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
         Route::post('/create', 'create')->name('create');
         Route::put('/update/{customer_id}', 'update')->name('update');
         Route::delete('/delete/{customer_id}', 'delete')->name('delete');
+        Route::post('/credits/generate_pdf/{customer_id}', 'generate_pdf')->name('generate_pdf');
     });
 
     // Customers As Subpage of Pump
@@ -204,6 +210,7 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
         Route::post('/create', 'create')->name('create');
         Route::put('/update/{employee_id}', 'update')->name('update');
         Route::delete('/delete/{employee_id}', 'delete')->name('delete');
+        Route::post('/wages/generate_pdf/{employee_id}', 'generate_pdf')->name('generate_pdf');
     });
    
     // products As Subpage of Pump
