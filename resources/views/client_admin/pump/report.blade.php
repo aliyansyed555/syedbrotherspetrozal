@@ -66,6 +66,15 @@
                             @endforeach
 
                             {{-- <th class="fw-bold">Salaries</th> --}}
+                            <th class="fw-bold">Tuck Shop Rent</th>
+                            <th class="fw-bold">Tuck Shop Earning</th>
+                            <th class="fw-bold">Service Station Earning</th>
+                            <th class="fw-bold">Service Station Rent</th>
+                            <th class="fw-bold">Tyre Shop Earning</th>
+                            <th class="fw-bold">Tyre Shop Rent</th>
+                            <th class="fw-bold">Lube Shop Earning</th>
+                            <th class="fw-bold">Lube Shop Rent</th>
+
                             <th class="fw-bold">Expense</th>
                             {{-- <th class="fw-bold">Pump Rent</th> --}}
                             <th class="fw-bold">Bank Deposit</th>
@@ -102,10 +111,10 @@
                                     $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
                                     $profit = $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_price"] - $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_buying_price"];
                                     $fuelsProfit += $profit;
-                                    
+
                                     $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
                                     $profitWithGain = $dipComparison * $reportData[$i]["{$columnBase}_price"];
-                                    
+
                                     $totalProfitWithGain += $profitWithGain;
                                     ?>
                                     <td>
@@ -121,6 +130,18 @@
                                     </td>
                                 @endforeach
 
+                                <td>{{ $reportData[$i]['tuck_shop_rent'] }}</td>
+                                <td>{{ $reportData[$i]['tuck_shop_earning'] }}</td>
+
+                                <td>{{ $reportData[$i]['service_station_earning'] }}</td>
+                                <td>{{ $reportData[$i]['service_station_rent'] }}</td>
+
+                                <td>{{ $reportData[$i]['tyre_shop_earning'] }}</td>
+                                <td>{{ $reportData[$i]['tyre_shop_rent'] }}</td>
+
+                                <td>{{ $reportData[$i]['lube_shop_earning'] }}</td>
+                                <td>{{ $reportData[$i]['lube_shop_rent'] }}</td>
+
                                 {{-- <td>{{ $reportData[$i]['total_wage'] }}</td> --}}
                                 <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}
                                 </td>
@@ -130,16 +151,16 @@
                                 <td>{{ $reportData[$i]['products_profit'] ?? '0.00' }}</td>
                                 <td>{{ $reportData[$i]['total_credit'] ?? '0.00' }}</td>
                                 <td class="py-2 px-3 {{ $fuelsProfit + $reportData[$i]['products_profit'] > 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $fuelsProfit + $reportData[$i]['products_profit'] ?? '0.00' }}
+                                    {{ round(($fuelsProfit + $reportData[$i]['products_profit'] ?? '0.00') ,2) }}
                                 </td>
                                 <?php
                                     $totalProfit = $fuelsProfit + $reportData[$i]['products_profit'] - $reportData[$i]['pump_rent'] - $reportData[$i]['daily_expense'] - $reportData[$i]['total_wage'];
                                 ?>
                                 <td class="py-2 px-3 {{ $totalProfit > 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $totalProfit }}
+                                    {{ round($totalProfit , 2) }}
                                 </td>
                                 <td class="py-2 px-3 {{ $totalProfitWithGain + $totalProfit > 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $totalProfitWithGain + $totalProfit }}
+                                    {{round(($totalProfitWithGain + $totalProfit) , 2)}}
                                 </td>
                             </tr>
                         @endfor
@@ -155,11 +176,14 @@
                                 <th class="fw-bold"></th>
                                 <th class="fw-bold"></th>
                                 <th class="fw-bold"></th>
+                                <th class="fw-bold"></th>
+                                <th class="fw-bold"></th>
                             @endforeach
 
-                            {{-- <th class="fw-bold">Salaries</th> --}}
                             <th class="fw-bold"></th>
-                            {{-- <th class="fw-bold">Pump Rent</th> --}}
+
+                            <th class="fw-bold"></th>
+                            <th class="fw-bold"></th>
                             <th class="fw-bold"></th>
                             <th class="fw-bold"></th>
                             <th class="fw-bold"></th>
@@ -338,7 +362,7 @@
                     };
 
                     // Calculate totals for the last 5 columns
-                    var totalExpense = sumColumn(-7);
+                    var totalExpense = sumColumn(-8);
                     var totalBankDeposit = sumColumn(-7);
                     var totalMobilOilSale = sumColumn(-6);
                     var totalMobilOilProfit = sumColumn(-5);
