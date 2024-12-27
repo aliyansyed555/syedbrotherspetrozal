@@ -639,7 +639,7 @@ class PetrolPumpController extends Controller
         LEFT JOIN
             customers c ON c.petrol_pump_id = ?
         LEFT JOIN
-            customer_credits cc ON cc.customer_id = c.id AND cc.date = cr.date
+            customer_credits cc ON cc.customer_id = c.id AND cc.date = cr.date AND cc.is_special = 0
         LEFT JOIN
             employees e ON e.petrol_pump_id = ?
         LEFT JOIN

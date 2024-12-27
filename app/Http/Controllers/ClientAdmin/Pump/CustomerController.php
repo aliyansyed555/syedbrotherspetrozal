@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\ClientAdmin\Pump;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerCredit;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Customer;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -18,8 +20,8 @@ class CustomerController extends Controller
     {
         // Initialize the user and company properties
         $this->user = Auth::user();
-        $this->company = get_company($this->user); 
-        
+        $this->company = get_company($this->user);
+
         $this->pump = $request->pump;
     }
 
@@ -38,10 +40,10 @@ class CustomerController extends Controller
             $customer->total_credit = $customer->credits()->sum('balance');
             return $customer;
         });
-        
+
         // dd($customers);
 
-        return response()->json([ 
+        return response()->json([
             'recordsTotal' => $customers->count(),
             'recordsFiltered' => $customers->count(),
             'success' => true,
@@ -49,16 +51,17 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function get_credits($pump_id, $customer_id){
+    public function get_credits($pump_id, $customer_id)
+    {
         $customer = Customer::where('petrol_pump_id', $pump_id)->findOrFail($customer_id);
         $credits = $customer->credits()->get();
         // $credits = $this->pump->customer()->credits()->get();
         return view('client_admin.pump.customers.credits', compact('pump_id', 'customer', 'credits'));
     }
-    
+
     public function create(Request $request)
     {
-        
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => [
@@ -72,7 +75,41 @@ class CustomerController extends Controller
         return response()->json(['success' => true, 'message' => 'Customer created successfully.']);
     }
 
-    
+    public function addCustomerCredit(Request $request)
+    {
+
+        $validatedData = $request->validate([
+            'date' => 'required',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $customerCredit = CustomerCredit::create([
+            'customer_id' => $request->customer_id,
+            'bill_amount' => $request->bill_amount ?? 0, #plus
+            'amount_paid' => $request->amount_paid, #subtract
+            'remarks' => $request->remarks,
+            'date' => $request->date,
+            'is_special' => 1,
+            'balance' => 0, #will update in next step
+        ]);
+
+
+        $totalBalance = CustomerCredit::where('customer_id', $request->customer_id)
+            ->selectRaw('SUM(balance) as total_balance')
+            ->groupBy('customer_id')
+            ->value('total_balance');
+
+        if ($request->bill_amount) $totalBalance = $totalBalance + $request->bill_amount;
+        if ($request->amount_paid) $totalBalance = $totalBalance - $request->amount_paid;
+
+        $customerCredit->update([
+            'balance' => $totalBalance
+        ]);
+
+        return back()->with('success', 'Customer credit added successfully.');
+    }
+
+
     public function update(Request $request)
     {
         $customer = Customer::findOrFail($request->id);
@@ -123,7 +160,8 @@ class CustomerController extends Controller
         }
     }
 
-    public function generate_pdf(Request $request, $pump_id, $customer_id){
+    public function generate_pdf(Request $request, $pump_id, $customer_id)
+    {
         // Generate and download the PDF
 
         $start_date = $request->start_date;
@@ -137,7 +175,7 @@ class CustomerController extends Controller
             'credits' => $credits,
             'customer' => $customer,
         ]);
-        
+
         $filename = "{$customer->name}-" . now()->format('d-m-Y') . ".pdf";
 
         $directory = public_path('storage/random_pdfs');

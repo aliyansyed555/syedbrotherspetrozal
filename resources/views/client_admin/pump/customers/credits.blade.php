@@ -5,7 +5,7 @@
         <div class="card mb-5 mb-xl-8">
 
             <div class="card-header align-items-center border-0 pt-5">
-                
+
                 <!--begin::Card title-->
                 <div class="card-title">
                     <!--begin::Search-->
@@ -80,10 +80,13 @@
                         </button>
                         <!--end::Export-->
                         <!--begin::Add subscription-->
-                        
+                        <!-- Trigger Button -->
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#creditModal">
+                            Add Credit
+                        </button>
                     </div>
                     <!--end::Toolbar-->
-                    
+
                 </div>
                 <!--end::Card toolbar-->
             </div>
@@ -125,7 +128,7 @@
                                     @endphp
                                     <td>{{ $balance }}</td>
                                     <td>{{ $credit->remarks }}</td>
-                                   
+
                                 </tr>
                             @endforeach
                         </tbody>
@@ -198,7 +201,7 @@
                             <!--end::Input-->
                         </div>
                         <!--end::Input group-->
-                        
+
                         <!--begin::Actions-->
                         {{-- <div class="text-center">
                             <button type="reset" id="report_generation_form_cancel" class="btn btn-light me-3" data-bs-dismiss="modal">Discard</button>
@@ -216,7 +219,7 @@
                                 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                             </button>
                         </div>
-                        
+
                         <!--end::Actions-->
                         <!--end::Actions-->
                     </form>
@@ -229,6 +232,58 @@
         <!--end::Modal dialog-->
     </div>
     <!--end::Modal - New Card-->
+
+    <!-- Modal -->
+    <div class="modal fade" id="creditModal" tabindex="-1" aria-labelledby="creditModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="creditModalLabel">Add Credit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('add_customer_credit') }}" method="POST">
+                    @csrf
+                <div class="modal-body">
+                    <div class="row position-relative">
+                        <input type="hidden" name="customer_id" value=" {{$customer->id}}">
+                        <div class="col-md-6 mb-5">
+                            <div class="fv-row">
+                                <label class="required form-label" for="bill_amount">Bill Amount</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="00" id="bill_amount" name="bill_amount" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-5">
+                            <div class="fv-row">
+                                <label class="required form-label" for="amount_paid">Amount Received</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="00" id="amount_paid" name="amount_paid" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-5">
+                            <div class="fv-row">
+                                <label class="required form-label" for="remarks">Date</label>
+                                <input type="date" required class="form-control form-control-solid" placeholder="Date" id="date" name="date" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-5">
+                            <div class="fv-row">
+                                <label class="required form-label" for="remarks">Comment</label>
+                                <input type="text" class="form-control form-control-solid" placeholder="Detail About Credit" id="remarks" name="remarks" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-5">
+                            <button type="submit" class="btn btn-primary" id="add_credit">Add Credit</button>
+                        </div>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
 @endsection
 
@@ -247,7 +302,7 @@
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range"
-            }); 
+            });
 
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
@@ -308,7 +363,7 @@
                 formData.append('start_date', start_date);
                 formData.append('end_date', end_date);
 
-                
+
                 $.ajax({
                     url: `/pump/${pumpId}/customer/credits/generate_pdf/${customerId}` ,
                     method: 'POST',
@@ -317,7 +372,7 @@
                     processData: false,
                     success: function(response) {
                         console.log(response);
-                        
+
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
@@ -330,8 +385,6 @@
                     }
                 });
             });
-
-
         });
     </script>
 @endsection

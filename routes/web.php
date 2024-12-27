@@ -44,6 +44,7 @@ Route::post('/login', [AuthController::class, 'loginAction'])->name('signin');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::view('/404', 'errors.404')->name('error.404');
 
+Route::post('/add-customer-credit', [CustomerController::class, 'addCustomerCredit'])->name('add_customer_credit');
 
 Route::controller(ClientController::class)->prefix('clients')->middleware('super_admin')->group(function(){
     Route::get('/', 'index')->name('clients.index');
@@ -51,7 +52,7 @@ Route::controller(ClientController::class)->prefix('clients')->middleware('super
     Route::post('/create', 'create')->name('clients.create');
     Route::put('/update/{id}', 'update')->name('clients.update');
     Route::delete('/delete/{id}',  'delete')->name('clients.delete');
-    
+
 });
 
 Route::controller(CompanyController::class)->prefix('company')->middleware('super_admin')->group(function(){
@@ -91,8 +92,8 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
     Route::post('/{pump_id}/get_expenses_pdf', 'get_expenses_pdf')->middleware('verify.pump')->name('pump.get_expenses_pdf');
 
     Route::post('/{pump_id}/daily-reports/create', 'save_bank_deposit')->middleware('verify.pump')->name('pump.save_bank_deposit');
-    
-    
+
+
 
     Route::get('/{pump_id}/sales-history', 'get_sales_history')->middleware('verify.pump')->name('pump.get_sales_history');
     Route::post('/{pump_id}/sales-history-pdf', 'get_sales_history_pdf')->middleware('verify.pump')->name('pump.get_sales_history_pdf');
@@ -103,12 +104,12 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
     Route::put('/update/{id}', 'update')->name('pump.update');
     Route::delete('/delete/{id}',  'delete')->name('pump.delete');
     Route::get('/{pump_id}', 'show')->name('pump.show');
-    
+
     Route::get('/getProducts/{pump_id}', 'getProducts')->name('pump.getProducts');
     Route::get('/getEmployees/{pump_id}', 'getEmployees')->name('pump.getEmployees');
     Route::get('/getCustomers/{pump_id}', 'getCustomers')->name('pump.getCustomers');
     Route::post('/getTanksByFuelType', 'getTanksByFuelType')->name('pump.purchase.getTanksByFuelType');
-    
+
 
     Route::post('/{pump_id}/saveReport', 'saveReport')->name('pump.saveReport');
 
@@ -212,7 +213,7 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
         Route::delete('/delete/{employee_id}', 'delete')->name('delete');
         Route::post('/wages/generate_pdf/{employee_id}', 'generate_pdf')->name('generate_pdf');
     });
-   
+
     // products As Subpage of Pump
     Route::prefix('{pump_id}/product')->middleware('verify.pump')->controller(ProductController::class)->group(function () {
         Route::get('/', 'index')->name('pump.product.index');

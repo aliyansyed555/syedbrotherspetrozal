@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class CustomerCredit extends Model
 {
     protected $fillable = [
-        'bill_amount',  
-        'amout_paid',
+        'bill_amount',
+        'amount_paid',
         'balance',
         'remarks',
         'date',
