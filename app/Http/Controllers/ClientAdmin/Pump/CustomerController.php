@@ -130,7 +130,7 @@ class CustomerController extends Controller
         $end_date = $request->end_date;
 
         $customer = Customer::where('petrol_pump_id', $pump_id)->findOrFail($customer_id);
-
+        $customer->total_credit = $customer->credits()->sum('balance');
         $credits = $customer->credits()->whereBetween('date', [$start_date, $end_date])->get();
 
         $pdf = Pdf::loadView('pdfs.customer-credits-history-pdf', [

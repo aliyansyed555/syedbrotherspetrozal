@@ -10,6 +10,10 @@
             font-size: 10px;
         }
 
+        h2, h3, h5{
+            margin: 0;
+            padding: 0;
+        }
         table {
             width: 100%;
             font-size: 10px;
@@ -45,7 +49,10 @@
 </head>
 
 <body>
-    <h2>{{ $pump->name }} - {{ $pump->location }}</h2>
+    <h2>{{ $customer->name }}</h2>
+    <h3>{{ $customer->phone }}</h3>
+
+    <h5 style="margin-bottom: 10px">Closing Balance: {{  $customer->total_credit }}</h5>
     <table>
         <thead>
             <tr>

@@ -310,7 +310,7 @@
 
                 
                 $.ajax({
-                    url: `/pump/${pumpId}/customer/credits/generate_pdf/${customerId}/` ,
+                    url: `/pump/${pumpId}/customer/credits/generate_pdf/${customerId}` ,
                     method: 'POST',
                     data: formData,
                     contentType: false,
