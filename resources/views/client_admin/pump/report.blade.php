@@ -362,6 +362,9 @@
                     };
 
                     // Calculate totals for the last 5 columns
+                    var dieselDipCamp = sumColumn(-31);
+                    var petrolDipCamp = sumColumn(-24);
+                    var dipCamp = sumColumn(-17);
                     var totalExpense = sumColumn(-8);
                     var totalBankDeposit = sumColumn(-7);
                     var totalMobilOilSale = sumColumn(-6);
@@ -371,7 +374,11 @@
                     var totalProfit = sumColumn(-2);
                     var totalProfitWithGain = sumColumn(-1);
 
+
                     // Update the footer
+                    $(api.column(-31).footer()).html(dieselDipCamp.toLocaleString('en-US'));
+                    $(api.column(-24).footer()).html(petrolDipCamp.toLocaleString('en-US'));
+                    $(api.column(-17).footer()).html(dipCamp.toLocaleString('en-US'));
                     $(api.column(-8).footer()).html(totalExpense.toLocaleString('en-US'));
                     $(api.column(-7).footer()).html(totalBankDeposit.toLocaleString('en-US'));
                     $(api.column(-6).footer()).html(totalMobilOilSale.toLocaleString('en-US'));
