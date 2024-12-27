@@ -11,7 +11,7 @@
             <div class="row mb-5">
                 <div class="fv-row col-md-6 ">
                     <label class="required fs-6 fw-bold mb-2" for="readings[{{ $nozzle->id }}][analog_reading]">
-                        {{ $nozzle->name }} - Hidden: 
+                        {{ $nozzle->name }} - Hidden:
                         <span>
                             {{ $nozzle->nozzleReadings->first() ? $nozzle->nozzleReadings->first()->analog_reading : '0' }}
                         </span>
@@ -21,19 +21,18 @@
 
                 <div class="fv-row col-md-6">
                     <label class="required fs-6 fw-bold mb-2" for="readings[{{ $nozzle->id }}][digital_reading]">
-                        {{ $nozzle->name }} - Digital : 
+                        {{ $nozzle->name }} - Digital :
                         <span>
                             {{ $nozzle->nozzleReadings->first() ? $nozzle->nozzleReadings->first()->digital_reading : '0' }}
-                        </span>    
+                        </span>
                     </label>
-                    <input type="text" 
-                        class="form-control form-control-solid track_change fuel-input" 
-                        data-fuel-type-id="{{ $fuelTypeId }}" 
-                        data-last-reading="{{ $nozzle->nozzleReadings->first() ? $nozzle->nozzleReadings->first()->digital_reading : '0' }}" 
-                        id="readings[{{ $nozzle->id }}][digital_reading]" 
-                        name="readings[{{ $nozzle->id }}][digital_reading]" 
-                        value="{{ $nozzle->nozzleReadings->first() ? $nozzle->nozzleReadings->first()->digital_reading : '0' }}" 
+                    <input type="text"
+                        class="form-control form-control-solid track_change fuel-input"
+                        data-fuel-type-id="{{ $fuelTypeId }}"
+                        data-last-reading="{{ $nozzle->nozzleReadings->first() ? $nozzle->nozzleReadings->first()->digital_reading : '0' }}"
                         id="readings[{{ $nozzle->id }}][digital_reading]"
+                        name="readings[{{ $nozzle->id }}][digital_reading]"
+                        value="{{ $nozzle->nozzleReadings->first() ? $nozzle->nozzleReadings->first()->digital_reading : '0' }}"
                     />
                 </div>
             </div>
