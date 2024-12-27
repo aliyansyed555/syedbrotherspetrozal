@@ -47,9 +47,9 @@ $(document).ready(function () {
     });
 
     // Validator
-    // 
-    // 
-    
+    //
+    //
+
 
     // Initialize form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
     // var form = ;
@@ -57,14 +57,14 @@ $(document).ready(function () {
         document.getElementById('report-stepper'),
         {
             fields: {
-                'date': { 
+                'date': {
                     validators: {
                         notEmpty: {
                             message: 'Date is required'
                         }
                     }
                 },
-              
+
             },
             plugins: {
                 trigger: new FormValidation.plugins.Trigger(),
@@ -89,7 +89,7 @@ $(document).ready(function () {
         // 4 = credits
         // 5 = cards
         // 6 = expenses
-        
+
         if (step == 2) {
             if (products.length == 0) {
                 $.ajax({
@@ -171,7 +171,7 @@ $(document).ready(function () {
             total: rowTotal
         };
         soldProducts.push(productData);
-      
+
         // Add row to the table
         const rowHtml = `
             <tr data-product-id="${productId}">
@@ -338,9 +338,9 @@ $(document).ready(function () {
         const row = $(this).closest('tr');
         const rowBalance = parseFloat(row.find('.balance').text());
 
-        // const customerId = row.data('product-id'); 
+        // const customerId = row.data('product-id');
         allCredits = allCredits.filter(credit => credit.customer_id != row.data('product-id'));
-    
+
         totalCredit -= rowBalance;
         row.remove();
         updateTotalCredit();
@@ -403,7 +403,7 @@ $(document).ready(function () {
     $('#card_payments_table').on('click', '.remove-transaction', function () {
         const row = $(this).closest('tr');
         const rowBalance = parseFloat(row.find('.card_amount').text());
-        
+
         allCardPayments = allCardPayments.filter(cardPayment => cardPayment.card_number != row.data('product-id'));
 
         totalCardPayments -= rowBalance;
@@ -429,13 +429,13 @@ $(document).ready(function () {
         calculateSidebarReport();
     });
 
-    
+
     // function calculateSidebarReport() {
-        
+
     //     daily_expense = parseFloat($('#daily_expense').val() || '0');
     //     pump_rent = parseFloat($('#pump_rent').val() || '0');
     //     bank_deposit = parseFloat($('#bank_deposit').val() || '0');
-        
+
     //     amount_received = allCredits.reduce((total, credit) => total + parseFloat(credit.amount_paid || '0'), 0);
 
     //     $('#sidebar_receive_from_customers').text(amount_received.toFixed(2));
@@ -451,7 +451,7 @@ $(document).ready(function () {
     //         const lastReading = parseFloat($(this).data('last-reading'));
     //         const currentReading = parseFloat($(this).val() || '0');
     //         const fuelSold = currentReading - lastReading;
-        
+
     //         // Initialize or update the total for the current fuel type
     //         if (!fuelTotals[fuelTypeId]) {
     //             fuelTotals[fuelTypeId] = 0;
@@ -460,22 +460,22 @@ $(document).ready(function () {
     //             fuelTotals[fuelTypeId] += fuelSold;
     //         }
     //     });
-        
+
     //     // Process the totals and populate the fuelSoldAmounts array
     //     Object.keys(fuelTotals).forEach(fuelTypeId => {
     //         const pricePerLitre = parseFloat($(`#fuel_price_${fuelTypeId}`).data('kt-countup-value'));
     //         const fuelTypeName = $(`#fuel_price_${fuelTypeId}`).data('fuel-name');
     //         const totalFuelSold = fuelTotals[fuelTypeId].toFixed(2);
     //         const soldAmountPrice = (totalFuelSold * pricePerLitre).toFixed(2); // Calculate total price
-        
+
     //         // Add the data to the fuelSoldAmounts array
     //         fuelSoldAmounts.push({
     //             fuelTypeId: fuelTypeId,
     //             fuelTypeName: fuelTypeName,
-    //             totalFuelSold: parseFloat(totalFuelSold), 
-    //             soldAmountPrice: parseFloat(soldAmountPrice) 
+    //             totalFuelSold: parseFloat(totalFuelSold),
+    //             soldAmountPrice: parseFloat(soldAmountPrice)
     //         });
-        
+
     //         // Generate table rows for the UI
     //         const tableRow = `
     //             <tr>
@@ -495,35 +495,48 @@ $(document).ready(function () {
     //         <td class="text-gray-400 p-1">Total Amount:</td>
     //         <td class="text-gray-800 p-1">${fuelMoney}</td>
     //     </tr>`);
-        
+
     //     cashInHand = previousCashInHand + fuelMoney - totalCredit - totalWages + totalPrice - bank_deposit + amount_received - daily_expense - pump_rent;
-        
+
     //     $('#sidebar_cash_in_hand').text(cashInHand.toFixed(2));
     // }
     function calculateSidebarReport() {
-        
+
         daily_expense = parseFloat($('#daily_expense').val() || '0');
+
+        let tuck_shop_rent = parseFloat($('#tuck_shop_rent').val() || '0');
+        let tuck_shop_earning = parseFloat($('#tuck_shop_earning').val() || '0');
+        let service_station_earning = parseFloat($('#service_station_earning').val() || '0');
+        let service_station_rent = parseFloat($('#service_station_rent').val() || '0');
+        let tyre_shop_earning = parseFloat($('#tyre_shop_earning').val() || '0');
+        let tyre_shop_rent = parseFloat($('#tyre_shop_rent').val() || '0');
+        let lube_shop_earning = parseFloat($('#lube_shop_earning').val() || '0');
+        let lube_shop_rent = parseFloat($('#lube_shop_rent').val() || '0');
+
+        // Calculate the sum of all these values
+        let totalRentingSum = tuck_shop_rent + tuck_shop_earning + service_station_earning + service_station_rent + tyre_shop_earning + tyre_shop_rent + lube_shop_earning + lube_shop_rent;
+
         pump_rent = parseFloat($('#pump_rent').val() || '0');
         bank_deposit = parseFloat($('#bank_deposit').val() || '0');
-        
+
         amount_received = allCredits.reduce((total, credit) => total + parseFloat(credit.amount_paid || '0'), 0);
-    
+
         $('#sidebar_receive_from_customers').text(amount_received.toFixed(2));
         $('#sidebar_bank_deposit').text(bank_deposit.toFixed(2));
         $('#sidebar_expense').text(daily_expense + pump_rent);
-    
+
         $('#sidebar_readings_table').empty();
-    
+
         let fuelTotals = {};
         fuelSoldAmounts = [];
-        
+
         // Process each fuel input to calculate fuel sold and account for tank transfers
         $('.fuel-input[data-fuel-type-id]').each(function () {
             const fuelTypeId = $(this).data('fuel-type-id');
             const lastReading = parseFloat($(this).data('last-reading'));
             const currentReading = parseFloat($(this).val() || '0');
             const fuelSold = currentReading - lastReading;
-    
+
             // Initialize or update the total for the current fuel type
             if (!fuelTotals[fuelTypeId]) {
                 fuelTotals[fuelTypeId] = 0;
@@ -532,33 +545,33 @@ $(document).ready(function () {
                 fuelTotals[fuelTypeId] += fuelSold;
             }
         });
-    
+
         // Account for the tank transfers (subtract the fuel transferred back to the tank)
         $('.tank-transfer-input[data-tanks-fuel-type-id]').each(function () {
             const fuelTypeId = $(this).data('tanks-fuel-type-id');
             const tankTransfer = parseFloat($(this).val() || '0');
-            
+
             // Subtract tank transfer from the fuel total (fuel added back to the tank)
             if (fuelTotals[fuelTypeId]) {
                 fuelTotals[fuelTypeId] -= tankTransfer;
             }
         });
-    
+
         // Process the totals and populate the fuelSoldAmounts array
         Object.keys(fuelTotals).forEach(fuelTypeId => {
             const pricePerLitre = parseFloat($(`#fuel_price_${fuelTypeId}`).data('kt-countup-value'));
             const fuelTypeName = $(`#fuel_price_${fuelTypeId}`).data('fuel-name');
             const totalFuelSold = fuelTotals[fuelTypeId].toFixed(2);
-            const soldAmountPrice = (totalFuelSold * pricePerLitre).toFixed(2); 
-    
+            const soldAmountPrice = (totalFuelSold * pricePerLitre).toFixed(2);
+
             // Add the data to the fuelSoldAmounts array
             fuelSoldAmounts.push({
                 fuelTypeId: fuelTypeId,
                 fuelTypeName: fuelTypeName,
-                totalFuelSold: parseFloat(totalFuelSold), 
-                soldAmountPrice: parseFloat(soldAmountPrice) 
+                totalFuelSold: parseFloat(totalFuelSold),
+                soldAmountPrice: parseFloat(soldAmountPrice)
             });
-    
+
             // Generate table rows for the UI
             const tableRow = `
                 <tr>
@@ -572,18 +585,60 @@ $(document).ready(function () {
             `;
             $('#sidebar_readings_table').append(tableRow);
         });
-    
+
         fuelMoney = fuelSoldAmounts.reduce((acc, curr) => acc + curr.soldAmountPrice, 0);
         $('#sidebar_readings_table').append(`<tr>
             <td class="text-gray-400 p-1">Total Amount:</td>
             <td class="text-gray-800 p-1">${fuelMoney.toFixed(2)}</td>
         </tr>`);
         // Ensure totalCredit is always positive
-            
-        cashInHand = previousCashInHand + fuelMoney - totalWages + totalPrice - bank_deposit + amount_received - daily_expense - pump_rent - totalCardPayments;
-        
+
+        cashInHand = previousCashInHand + fuelMoney - totalWages + totalPrice - bank_deposit + amount_received - daily_expense - pump_rent - totalCardPayments+totalRentingSum;
+
         // cashInHand = previousCashInHand + fuelMoney - totalWages + totalPrice - bank_deposit + amount_received - totalCredit - daily_expense - pump_rent - totalCardPayments;
-        
+
+
+        // Dynamically show rows if values are greater than zero
+        if (tuck_shop_rent > 0) {
+            $('#sidebar_tuck_shop_rent').removeClass('d-none');
+            $('#tuck_shop_rent_value').text(tuck_shop_rent.toFixed(2));
+        }
+
+        if (tuck_shop_earning > 0) {
+            $('#sidebar_tuck_shop_earning').removeClass('d-none');
+            $('#tuck_shop_earning_value').text(tuck_shop_earning.toFixed(2));
+        }
+
+        if (service_station_earning > 0) {
+            $('#sidebar_service_station_earning').removeClass('d-none');
+            $('#service_station_earning_value').text(service_station_earning.toFixed(2));
+        }
+
+        if (service_station_rent > 0) {
+            $('#sidebar_service_station_rent').removeClass('d-none');
+            $('#service_station_rent_value').text(service_station_rent.toFixed(2));
+        }
+
+        if (tyre_shop_earning > 0) {
+            $('#sidebar_tyre_shop_earning').removeClass('d-none');
+            $('#tyre_shop_earning_value').text(tyre_shop_earning.toFixed(2));
+        }
+
+        if (tyre_shop_rent > 0) {
+            $('#sidebar_tyre_shop_rent').removeClass('d-none');
+            $('#tyre_shop_rent_value').text(tyre_shop_rent.toFixed(2));
+        }
+
+        if (lube_shop_earning > 0) {
+            $('#sidebar_lube_shop_earning').removeClass('d-none');
+            $('#lube_shop_earning_value').text(lube_shop_earning.toFixed(2));
+        }
+
+        if (lube_shop_rent > 0) {
+            $('#sidebar_lube_shop_rent').removeClass('d-none');
+            $('#lube_shop_rent_value').text(lube_shop_rent.toFixed(2));
+        }
+
         $('#sidebar_cash_in_hand').text(cashInHand.toFixed(2));
     }
 
@@ -605,14 +660,14 @@ $(document).ready(function () {
                             formData[element.name] = element.value;
                         }
                     });
-                    
-                    
-                    
+
+
+
                     const additionalData = {
-                        cashInHand: cashInHand, 
-                        allCredits: allCredits, 
+                        cashInHand: cashInHand,
+                        allCredits: allCredits,
                         allCardPayments: allCardPayments,
-                        givenWages: givenWages, 
+                        givenWages: givenWages,
                         soldProducts: soldProducts
                     };
                     const finalData = {
@@ -634,7 +689,7 @@ $(document).ready(function () {
                             toastr.error('Error submitting data');
                         }
                     });
-                    
+
                     // Log the results
                 } else {
                     console.log('Form not found!');

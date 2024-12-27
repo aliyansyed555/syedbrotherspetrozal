@@ -63,11 +63,12 @@
                                     <h3 class="stepper-title fs-5">Tank Transfer</h3>
                                 </div>
                                 <div class="stepper-item mx-2" data-kt-stepper-element="nav" data-kt-stepper-action="step">
-                                    <h3 class="stepper-title fs-5">Other Expenses</h3>
-                                </div>
-                                <div class="stepper-item mx-2" data-kt-stepper-element="nav" data-kt-stepper-action="step">
                                     <h3 class="stepper-title fs-5">Renting</h3>
                                 </div>
+                                <div class="stepper-item mx-2" data-kt-stepper-element="nav" data-kt-stepper-action="step">
+                                    <h3 class="stepper-title fs-5">Other Expenses</h3>
+                                </div>
+
                             </div>
 
                             <form class="form" novalidate="novalidate" id="report-stepper">
@@ -85,9 +86,9 @@
 
                                     @include('client_admin.pump.report-steps.tank-transfer')
 
+                                    @include('client_admin.pump.report-steps.renting')
                                     @include('client_admin.pump.report-steps.expenses')
 
-                                    @include('client_admin.pump.report-steps.renting')
 
                                 </div>
 
@@ -173,6 +174,49 @@
                                     <td class="text-gray-400 p-1">Bank Deposit:</td>
                                     <td class="text-gray-800 p-1"><span id="sidebar_bank_deposit">00</span></td>
                                 </tr>
+
+
+                                <tr id="sidebar_tuck_shop_rent" class="d-none">
+                                    <td class="text-gray-400 p-1">Tuck Shop Rent:</td>
+                                    <td class="text-gray-800 p-1"><span id="tuck_shop_rent_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_tuck_shop_earning" class="d-none">
+                                    <td class="text-gray-400 p-1">Tuck Shop Earning:</td>
+                                    <td class="text-gray-800 p-1"><span id="tuck_shop_earning_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_service_station_earning" class="d-none">
+                                    <td class="text-gray-400 p-1">Service Station Earning:</td>
+                                    <td class="text-gray-800 p-1"><span id="service_station_earning_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_service_station_rent" class="d-none">
+                                    <td class="text-gray-400 p-1">Service Station Rent:</td>
+                                    <td class="text-gray-800 p-1"><span id="service_station_rent_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_tyre_shop_earning" class="d-none">
+                                    <td class="text-gray-400 p-1">Tyre Shop Earning:</td>
+                                    <td class="text-gray-800 p-1"><span id="tyre_shop_earning_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_tyre_shop_rent" class="d-none">
+                                    <td class="text-gray-400 p-1">Tyre Shop Rent:</td>
+                                    <td class="text-gray-800 p-1"><span id="tyre_shop_rent_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_lube_shop_earning" class="d-none">
+                                    <td class="text-gray-400 p-1">Lube Shop Earning:</td>
+                                    <td class="text-gray-800 p-1"><span id="lube_shop_earning_value">00</span></td>
+                                </tr>
+
+                                <tr id="sidebar_lube_shop_rent" class="d-none">
+                                    <td class="text-gray-400 p-1">Lube Shop Rent:</td>
+                                    <td class="text-gray-800 p-1"><span id="lube_shop_rent_value">00</span></td>
+                                </tr>
+
+
                                 <tr>
                                     <td class="text-gray-400 p-1">Cash in Hand:</td>
                                     <td class="text-gray-800 p-1"><span id="sidebar_cash_in_hand">00</span></td>
