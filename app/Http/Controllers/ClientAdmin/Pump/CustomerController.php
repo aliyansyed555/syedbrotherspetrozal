@@ -37,9 +37,15 @@ class CustomerController extends Controller
         $customers = $this->pump->customers()->get();
 
         $customers->map(function ($customer) {
-            $customer->total_credit = $customer->credits()->sum('balance');
+            // Fetch the last credit entry for the customer
+            $lastCredit = $customer->credits()->orderBy('id', 'desc')->first(); // Assuming 'id' is the primary key
+
+            // Set the total_credit to the balance of the last entry or 0 if no entry exists
+            $customer->total_credit = $lastCredit ? $lastCredit->balance : 0;
+
             return $customer;
         });
+
 
         // dd($customers);
 
@@ -55,6 +61,7 @@ class CustomerController extends Controller
     {
         $customer = Customer::where('petrol_pump_id', $pump_id)->findOrFail($customer_id);
         $credits = $customer->credits()->get();
+
         // $credits = $this->pump->customer()->credits()->get();
         return view('client_admin.pump.customers.credits', compact('pump_id', 'customer', 'credits'));
     }
@@ -82,28 +89,32 @@ class CustomerController extends Controller
             'date' => 'required',
             'remarks' => 'nullable|string',
         ]);
+        
+        $lastEntry = DB::table('customer_credits')
+            ->where('customer_id', $request->customer_id)
+            ->orderBy('id', 'desc') // Assuming 'id' is the primary key
+            ->first();
 
         $customerCredit = CustomerCredit::create([
             'customer_id' => $request->customer_id,
             'bill_amount' => $request->bill_amount ?? 0, #plus
-            'amount_paid' => $request->amount_paid, #subtract
+            'amount_paid' => $request->amount_paid ?? 0, #subtract
             'remarks' => $request->remarks,
             'date' => $request->date,
             'is_special' => 1,
             'balance' => 0, #will update in next step
         ]);
 
-
-        $totalBalance = CustomerCredit::where('customer_id', $request->customer_id)
-            ->selectRaw('SUM(balance) as total_balance')
-            ->groupBy('customer_id')
-            ->value('total_balance');
-
-        if ($request->bill_amount) $totalBalance = $totalBalance + $request->bill_amount;
-        if ($request->amount_paid) $totalBalance = $totalBalance - $request->amount_paid;
+        if ($lastEntry){
+            $newBalance = $lastEntry->balance;
+            if ($request->bill_amount) $newBalance = $newBalance + $request->bill_amount;
+            if ($request->amount_paid) $newBalance = $newBalance - $request->amount_paid;
+        }
+        else
+            $newBalance = $request->bill_amount - $request->amount_paid;
 
         $customerCredit->update([
-            'balance' => $totalBalance
+            'balance' => $newBalance
         ]);
 
         return back()->with('success', 'Customer credit added successfully.');

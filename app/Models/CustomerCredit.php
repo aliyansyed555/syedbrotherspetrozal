@@ -13,7 +13,8 @@ class CustomerCredit extends Model
         'balance',
         'remarks',
         'date',
-        'customer_id'
+        'customer_id',
+        'is_special',
     ];
 
 

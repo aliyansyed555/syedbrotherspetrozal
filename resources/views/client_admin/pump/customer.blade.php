@@ -51,7 +51,6 @@
     </div>
 
 
-
     <form action="" method="POST" id="customer_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="customer_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">
@@ -78,7 +77,7 @@
                     <div class="modal-body">
                         <input type="hidden" id="id" name="id" />
                         @csrf
-                        
+
                         <div class="fv-row mb-5">
                             <label for="name" class="required form-label">Customer Name</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Alex Jones" id="name" name="name" />
@@ -93,7 +92,7 @@
                             <label for="address" class="form-label">Address</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Address, 304. Floor 2 Lhr" id="address" name="address" />
                         </div>
-                        
+
 
                     </div>
 
@@ -112,8 +111,6 @@
     <script>
         $(document).ready(function() {
             // $("#fuel_type_table").DataTable();
-
-            
 
             "use strict";
 
@@ -235,7 +232,7 @@
                 KTDatatablesServerSide.init();
             });
 
-            
+
             $('#customer_table').on('click', '.edit_btn', function() {
                 const dataObj = JSON.parse($(this).attr('data-obj'));
                 $('#id').val(dataObj.id);
@@ -248,7 +245,7 @@
             handlingForms('customer', prefix);
             deleteFn('customer', prefix)
         });
-        
+
 
     </script>
 @endsection

@@ -378,11 +378,24 @@ class PetrolPumpController extends Controller
             // 2. Save customer credits
             if ($request->has('allCredits')) {
                 foreach ($request->input('allCredits') as $credit) {
+                    $lastEntry = DB::table('customer_credits')
+                        ->where('customer_id', $credit['customer_id'])
+                        ->orderBy('id', 'desc') // Assuming 'id' is the primary key
+                        ->first();
+
+                    if ($lastEntry){
+                        $newBalance = $lastEntry->balance;
+                        if ($credit['bill_amount']) $newBalance = $newBalance + $credit['bill_amount'];
+                        if ($credit['amount_paid']) $newBalance = $newBalance - $credit['amount_paid'];
+                    }
+                    else
+                        $newBalance = $credit['bill_amount'] - $credit['amount_paid'];
+
                     DB::table('customer_credits')->insert([
                         'customer_id' => $credit['customer_id'],
                         'bill_amount' => $credit['bill_amount'],
                         'amount_paid' => $credit['amount_paid'],
-                        'balance' => $credit['balance'],
+                        'balance' => $newBalance, #totalCredit
                         'remarks' => $credit['remarks'],
                         'date' => $date,
                     ]);
