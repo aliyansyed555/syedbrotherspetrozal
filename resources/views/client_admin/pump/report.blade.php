@@ -66,15 +66,6 @@
                             @endforeach
 
                             {{-- <th class="fw-bold">Salaries</th> --}}
-                            <th class="fw-bold">Tuck Shop Rent</th>
-                            <th class="fw-bold">Tuck Shop Earning</th>
-                            <th class="fw-bold">Service Station Earning</th>
-                            <th class="fw-bold">Service Station Rent</th>
-                            <th class="fw-bold">Tyre Shop Earning</th>
-                            <th class="fw-bold">Tyre Shop Rent</th>
-                            <th class="fw-bold">Lube Shop Earning</th>
-                            <th class="fw-bold">Lube Shop Rent</th>
-
                             <th class="fw-bold">Expense</th>
                             {{-- <th class="fw-bold">Pump Rent</th> --}}
                             <th class="fw-bold">Bank Deposit</th>
@@ -111,10 +102,10 @@
                                     $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
                                     $profit = $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_price"] - $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_buying_price"];
                                     $fuelsProfit += $profit;
-
+                                    
                                     $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
                                     $profitWithGain = $dipComparison * $reportData[$i]["{$columnBase}_price"];
-
+                                    
                                     $totalProfitWithGain += $profitWithGain;
                                     ?>
                                     <td>
@@ -131,19 +122,8 @@
                                 @endforeach
 
                                 {{-- <td>{{ $reportData[$i]['total_wage'] }}</td> --}}
-                                <td>{{ $reportData[$i]['tuck_shop_rent'] }}</td>
-                                <td>{{ $reportData[$i]['tuck_shop_earning'] }}</td>
-
-                                <td>{{ $reportData[$i]['service_station_earning'] }}</td>
-                                <td>{{ $reportData[$i]['service_station_rent'] }}</td>
-
-                                <td>{{ $reportData[$i]['tyre_shop_earning'] }}</td>
-                                <td>{{ $reportData[$i]['tyre_shop_rent'] }}</td>
-
-                                <td>{{ $reportData[$i]['lube_shop_earning'] }}</td>
-                                <td>{{ $reportData[$i]['lube_shop_rent'] }}</td>
-
-                                <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}</td>
+                                <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}
+                                </td>
                                 {{-- <td>{{ $reportData[$i]['pump_rent']  }}</td> --}}
                                 <td>{{ $reportData[$i]['bank_deposit'] }}</td>
                                 <td>{{ $reportData[$i]['products_amount'] ?? '0.00' }}</td>
@@ -152,19 +132,8 @@
                                 <td class="py-2 px-3 {{ $fuelsProfit + $reportData[$i]['products_profit'] > 0 ? 'bg-success' : 'bg-danger' }}">
                                     {{ $fuelsProfit + $reportData[$i]['products_profit'] ?? '0.00' }}
                                 </td>
-                                @php
-                                    $totalRentings =
-                                        $reportData[$i]['tuck_shop_rent'] +
-                                        $reportData[$i]['tuck_shop_earning'] +
-                                        $reportData[$i]['service_station_earning'] +
-                                        $reportData[$i]['service_station_rent'] +
-                                        $reportData[$i]['tyre_shop_earning'] +
-                                        $reportData[$i]['tyre_shop_rent'] +
-                                        $reportData[$i]['lube_shop_earning'] +
-                                        $reportData[$i]['lube_shop_rent'];
-                                @endphp
                                 <?php
-                                    $totalProfit = $totalRentings + $fuelsProfit + $reportData[$i]['products_profit'] - $reportData[$i]['pump_rent'] - $reportData[$i]['daily_expense'] - $reportData[$i]['total_wage'];
+                                    $totalProfit = $fuelsProfit + $reportData[$i]['products_profit'] - $reportData[$i]['pump_rent'] - $reportData[$i]['daily_expense'] - $reportData[$i]['total_wage'];
                                 ?>
                                 <td class="py-2 px-3 {{ $totalProfit > 0 ? 'bg-success' : 'bg-danger' }}">
                                     {{ $totalProfit }}

@@ -488,7 +488,6 @@ class PetrolPumpController extends Controller
 
     public function getPumpReport($petrolPumpId)
     {
-
         $pumpId = $petrolPumpId;
 
         // Get the fuel types associated with the petrol pump
@@ -605,19 +604,6 @@ class PetrolPumpController extends Controller
             cr.date AS reading_date,
             " . implode(', ', $selectClauses) . ",
             dr.daily_expense,
-
-            dr.tuck_shop_rent,
-            dr.tuck_shop_earning,
-
-            dr.service_station_earning,
-            dr.service_station_rent,
-
-            dr.tyre_shop_earning,
-            dr.tyre_shop_rent,
-
-            dr.lube_shop_earning,
-            dr.lube_shop_rent,
-
             dr.pump_rent,
             dr.bank_deposit,
             COALESCE(ps.amount, 0) AS products_amount,
@@ -645,17 +631,7 @@ class PetrolPumpController extends Controller
         LEFT JOIN
             employee_wages ee ON ee.employee_id = e.id AND ee.date = cr.date
         GROUP BY
-            cr.date, dr.daily_expense,  dr.tuck_shop_rent,
-            dr.tuck_shop_earning,
-
-            dr.service_station_earning,
-            dr.service_station_rent,
-
-            dr.tyre_shop_earning,
-            dr.tyre_shop_rent,
-
-            dr.lube_shop_earning,
-            dr.lube_shop_rent,dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
+            cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
         ORDER BY
             cr.date;
         ";
@@ -674,7 +650,6 @@ class PetrolPumpController extends Controller
 
         // Format the report data
         $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
-
         // return $formattedReport;
         return view('client_admin.pump.report', [
             'reportData' => $formattedReport,
@@ -1025,19 +1000,6 @@ class PetrolPumpController extends Controller
         cr.date AS reading_date,
         " . implode(', ', $selectClauses) . ",
         dr.daily_expense,
-
-        dr.tuck_shop_rent,
-        dr.tuck_shop_earning,
-
-        dr.service_station_earning,
-        dr.service_station_rent,
-
-        dr.tyre_shop_earning,
-        dr.tyre_shop_rent,
-
-        dr.lube_shop_earning,
-        dr.lube_shop_rent,
-
         dr.pump_rent,
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
