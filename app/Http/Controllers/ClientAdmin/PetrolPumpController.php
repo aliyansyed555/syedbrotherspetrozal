@@ -83,7 +83,7 @@ class PetrolPumpController extends Controller
         $totalDebit = $creditsAndDebits['debit'];
 
 
-        $profits = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
+        list($profits , $gain) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
@@ -97,6 +97,7 @@ class PetrolPumpController extends Controller
             'totalDebit',
             'profits',
             'mobilOilProfit',
+            'gain',
         ));
     }
 
@@ -1293,10 +1294,11 @@ class PetrolPumpController extends Controller
             ->get();
 
         $selectClauses = [];
+        $allTanks = [];
         foreach ($fuelTypesWithTanks as $fuelType) {
             $fuelTypeName = $fuelType->name;
             $fuelTypeId = $fuelType->id;
-            $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
+            $allTanks[] = $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
 
             $selectClauses[] = "
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
@@ -1308,7 +1310,6 @@ class PetrolPumpController extends Controller
             MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
         ";
         }
-
         // Update the SQL query with the start_date and end_date
         $query = "
     WITH calculated_readings AS (
@@ -1465,21 +1466,30 @@ class PetrolPumpController extends Controller
         $data = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
         $profitSums = [];
-        // Loop through each array
+        $dipComparisonSums = []; #
         foreach ($data as $entry) {
             foreach ($entry as $key => $value) {
-                // Check if the key ends with '_profit'
                 if (str_ends_with($key, '_profit')) {
-                    // Add the value to the corresponding key in $profitSums
                     if (!isset($profitSums[$key])) {
                         $profitSums[$key] = 0;
                     }
                     $profitSums[$key] += $value;
                 }
             }
+
+            foreach ($allTanks as $tank) {
+
+                $key = $tank . '_gain';
+                $dipComparison = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
+
+                if (!isset($dipComparisonSums[$key])) {
+                    $dipComparisonSums[$key] = $dipComparison;
+                }
+                $dipComparisonSums[$key] += $dipComparison;  #$
+            }
         }
 
-        return $profitSums;
+        return [$profitSums , $dipComparisonSums];
     }
 }
 
