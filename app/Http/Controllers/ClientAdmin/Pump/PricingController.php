@@ -81,7 +81,7 @@ class PricingController extends Controller
             'fuel_type_id' => $validatedData['fuel_type_id'],
             'petrol_pump_id' => $pump_id,
         ])->orderBy('date', 'desc')->first();
-        
+
         $totalgain = 0;
         if ($lastRate && $request->add_loss_gain) {
             $rateChange = $validatedData['selling_price'] - $lastRate->selling_price;

@@ -2,8 +2,9 @@
 
 @section('main-content')
     <div class="container-xxl mt-5">
-        <h1>Card Transactions</h1>
+
         <div class="card mb-5 mb-xl-8 ">
+            <h2 class="p-5">Card Transactions</h2>
             <div class="card-header border-0 py-5">
                 <div>
                     <input class="form-control form-control-solid" data-kt-docs-table-filter="search" placeholder="Pick date rage" id="kt_daterangepicker" />
@@ -24,8 +25,6 @@
                         Transfer Amount
                     </a>
                 </div>
-
-               
             </div>
             <div class="separator"></div>
             <div class="card-body py-3">
@@ -63,7 +62,7 @@
                                     <td>{{ $card_transaction->card_type }}</td>
                                     <td>{{ $card_transaction->amount }}</td>
                                     <td>{{ $card_transaction->remarks }}</td>
-                                   
+
                                     {{-- <td class="text-end">
                                         <a href="#" class="btn btn-sm btn-light-success">
                                             Edit
@@ -147,7 +146,6 @@
     </form>
 @endsection
 
-
 @section('javascript')
     <script>
         var pumpId = @json($pump_id);
@@ -186,11 +184,11 @@
                 footerCallback: function(row, data, start, end, display) {
                     // Get DataTable API instance
                     var api = this.api();
-                    
+
                     var totalAmount = api
                         .column(4, {
                             page: 'current'
-                        }) 
+                        })
                         .data()
                         .reduce(function(a, b) {
                             return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
@@ -237,7 +235,7 @@
                     }
                 });
             });
-            
+
 
 
 

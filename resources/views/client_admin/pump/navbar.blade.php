@@ -87,20 +87,34 @@
                 <span class="menu-title">Products</span>
             </a>
         </div>
-        <div class="menu-item me-lg-1">
-            <a class="menu-link {{ request()->routeIs('pump.get_sales_history') ? 'active' : '' }} py-3" href="/pump/{{$pumpId}}/sales-history">
-                <span class="menu-title">Sales History</span>
-            </a>
-        </div>
-        <div class="menu-item me-lg-1">
-            <a class="menu-link {{ request()->routeIs('pump.get_expenses') ? 'active' : '' }} py-3" href="/pump/{{$pumpId}}/expenses">
-                <span class="menu-title">Expenses</span>
-            </a>
-        </div>
-        <div class="menu-item me-lg-1">
-            <a class="menu-link {{ request()->routeIs('pump.get_card_transactions') ? 'active' : '' }} py-3" href="/pump/{{$pumpId}}/card-payments">
-                <span class="menu-title">Card Payments</span>
-            </a>
+
+        <div data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion me-lg-1">
+            <span class="menu-link {{ request()->routeIs('pump.get_sales_history') || request()->routeIs('pump.get_expenses') || request()->routeIs('pump.get_card_transactions') ? 'active' : '' }} py-3">
+                <span class="menu-title">History Detail</span>
+                <span class="menu-arrow d-lg-none"></span>
+            </span>
+            <div class="menu-sub  menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-rounded-0 py-lg-4 w-lg-225px">
+
+                <div class="menu-item">
+                    <a class="menu-link py-3 {{ request()->routeIs('pump.get_sales_history') ? 'active' : '' }}" href="/pump/{{$pumpId}}/sales-history">
+                        <span class="menu-title">Sales</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link py-3 {{ request()->routeIs('pump.get_expenses') ? 'active' : '' }}" href="/pump/{{$pumpId}}/expenses">
+                        <span class="menu-title">Expenses</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link py-3 {{ request()->routeIs('pump.get_card_transactions') ? 'active' : '' }}" href="/pump/{{$pumpId}}/card-payments">
+                        <span class="menu-title">Card Payments</span>
+                    </a>
+                </div>
+
+
+            </div>
         </div>
 
         {{-- <div data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion me-lg-1">
