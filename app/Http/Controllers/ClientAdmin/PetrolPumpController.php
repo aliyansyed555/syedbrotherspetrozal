@@ -85,7 +85,7 @@ class PetrolPumpController extends Controller
 
         $profits = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
-        $productProfit = @$profits['products_profit'];
+        $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
 
         return view('client_admin.pump.analytics', compact(
@@ -96,6 +96,7 @@ class PetrolPumpController extends Controller
             'totalCredit',
             'totalDebit',
             'profits',
+            'mobilOilProfit',
         ));
     }
 

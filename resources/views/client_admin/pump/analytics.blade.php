@@ -90,7 +90,17 @@
                     </div>
                 </div>
             </div>
-            
+
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Mobiloil Profit</h2>
+                        <ul class="card-text list-unstyled">
+                            <li><strong>Total:</strong> {{ $mobilOilProfit }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
