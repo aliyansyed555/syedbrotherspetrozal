@@ -83,8 +83,9 @@ class PetrolPumpController extends Controller
         $totalCredit = $creditsAndDebits['credit'];
         $totalDebit = $creditsAndDebits['debit'];
 
-        list($profits , $gain , $gainProfit) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
+        list($profits, $gain, $gainProfit, $totalProfit, $totalProfitWithGain) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
+        dd($totalProfit, $totalProfitWithGain);
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
 
@@ -137,6 +138,8 @@ class PetrolPumpController extends Controller
         $sumLossGain = FuelPrice::where('petrol_pump_id', $pump_id)
             ->sum('loss_gain_value');
 
+        $final_profit = $finalProfits['without_gain'];
+        $final_profit_with_gain = $finalProfits['with_gain'];
 
         return view('client_admin.pump.analytics', compact(
             'pump',
@@ -153,6 +156,8 @@ class PetrolPumpController extends Controller
             'shopEarnings',
             'total_loss_gain',
             'sumLossGain',
+            'final_profit',
+            'final_profit_with_gain',
         ));
     }
 
@@ -1521,7 +1526,9 @@ class PetrolPumpController extends Controller
         $data = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
         $gainProfit = [];
+        $finalGainProfit = [];
 
+        $totalProfit = $totalProfitWithGain = 0;
         $lastvalue = [];
         $profitSums = [];
         $dipComparisonSums = []; #
@@ -1535,14 +1542,15 @@ class PetrolPumpController extends Controller
                 }
             }
 
+            $fuelsProfit = 0;
             foreach ($allTanks as $index => $tank) {
 
                 $key = $tank . '_gain';
-                $dipComparison  = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
+                $dipComparison = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
 
-                if(isset($lastvalue[$tank])) $dipComparison = $dipComparison - $lastvalue[$tank];
+                if (isset($lastvalue[$tank])) $dipComparison = $dipComparison - $lastvalue[$tank];
 
-                $gainProfit[$tank] =  ($entry["{$tank}_price"] * $dipComparison ) + @$gainProfit[$tank];
+                $gainProfit[$tank] = ($entry["{$tank}_price"] * $dipComparison) + @$gainProfit[$tank];
 
                 if (!isset($dipComparisonSums[$key])) {
                     $dipComparisonSums[$key] = $dipComparison;
@@ -1551,10 +1559,15 @@ class PetrolPumpController extends Controller
 
                 #last dip jo tha us ko minus krny k liy, dip comparison
                 $lastvalue[$tank] = $dipComparison + @$lastvalue[$tank];
+
+                $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
+                $fuelsProfit += $profit;
             }
+
+            $totalProfit += $fuelsProfit + $entry['products_profit'] - $entry['pump_rent'] - $entry['daily_expense'] - $entry['total_wage'];
         }
 
-        return [$profitSums , $dipComparisonSums , $gainProfit];
+        return [$profitSums, $dipComparisonSums, $gainProfit, $totalProfit, $totalProfitWithGain];
     }
 }
 

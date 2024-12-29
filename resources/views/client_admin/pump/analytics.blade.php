@@ -172,6 +172,27 @@
                 </div>
             </div>
 
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Final Profit</h2>
+                        <ul class="card-text list-unstyled">
+                            <li><strong>Total:</strong> {{ round2Digit($final_profit) }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Final Profit With Gain</h2>
+                        <ul class="card-text list-unstyled">
+                            <li><strong>Total:</strong> {{ round2Digit($final_profit_with_gain) }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
