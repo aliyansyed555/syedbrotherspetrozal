@@ -61,11 +61,31 @@ class PetrolPumpController extends Controller
             ->latest('date')
             ->value('cash_in_hand');
 
+        $customers = $pump->customers()->get();
+
+        $creditsAndDebits = $customers->map(function ($customer) {
+            $lastCredit = $customer->credits()->orderBy('id', 'desc')->first();
+            $customer->total_credit = $lastCredit ? $lastCredit->balance : 0;
+            return $customer;
+        })->reduce(function ($totals, $customer) {
+            if ($customer->total_credit > 0) {
+                $totals['credit'] += $customer->total_credit; // Add positive balances to credit
+            } elseif ($customer->total_credit < 0) {
+                $totals['debit'] += abs($customer->total_credit); // Add absolute values of negative balances to debit
+            }
+            return $totals;
+        }, ['credit' => 0, 'debit' => 0]);
+
+        $totalCredit = $creditsAndDebits['credit'];
+        $totalDebit = $creditsAndDebits['debit'];
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
             'products',
             'cashInhand',
+            'totalCredit',
+            'totalDebit',
         ));
     }
 

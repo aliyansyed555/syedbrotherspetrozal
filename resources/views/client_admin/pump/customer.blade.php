@@ -50,7 +50,6 @@
         </div>
     </div>
 
-
     <form action="" method="POST" id="customer_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="customer_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">
