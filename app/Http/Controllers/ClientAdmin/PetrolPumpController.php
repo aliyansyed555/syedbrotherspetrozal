@@ -87,6 +87,21 @@ class PetrolPumpController extends Controller
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
 
+        $totalWagesSum = DB::table('employee_wages')
+            ->join('employees', 'employee_wages.employee_id', '=', 'employees.id')
+            ->where('employees.petrol_pump_id', $pump_id)
+            ->whereBetween('employee_wages.date', [$startDate, $endDate])
+            ->sum('employee_wages.amount_received');
+
+        $dailyExpenses = DB::table('daily_reports')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('COALESCE(SUM(daily_expense), 0) as daily_expense_sum,
+            COALESCE(SUM(pump_rent), 0) as pump_rent_sum,
+            COALESCE(SUM(daily_expense + pump_rent), 0) as total_sum')->first();
+
+        $dailyExpenses->totalWagesSum = $totalWagesSum;
+        $dailyExpenses->total_sum += $totalWagesSum;
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -98,6 +113,7 @@ class PetrolPumpController extends Controller
             'mobilOilProfit',
             'gain',
             'gainProfit',
+            'dailyExpenses',
         ));
     }
 
