@@ -644,7 +644,6 @@ $(document).ready(function () {
 
     calculateSidebarReport()
 
-
     $('#report-stepper').on('submit', function (e) {
         e.preventDefault();
         fv.validate().then(function (status) {
@@ -702,10 +701,6 @@ $(document).ready(function () {
 
 
     })
-
-
-
-
 
 });
 

@@ -35,7 +35,7 @@
             <div class="col-sm-3">
                 <div class="card border">
                     <div class="card-body">
-                        <h2 class="card-title mb-4">Cash In Hand</h2>
+                        <h2 class="card-title mb-4">Cash in Hand</h2>
                         <ul class="card-text list-unstyled">
                             <li><strong>Total:</strong> {{ $cashInhand }}</li>
                         </ul>

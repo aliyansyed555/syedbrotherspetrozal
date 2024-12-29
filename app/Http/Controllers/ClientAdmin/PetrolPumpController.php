@@ -56,7 +56,11 @@ class PetrolPumpController extends Controller
             ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id), 0) as quantity')
             ->get();
 
-        $cashInhand = rand();
+        $cashInhand = \DB::table('daily_reports')
+            ->where('petrol_pump_id', $pump->id)
+            ->latest('date')
+            ->value('cash_in_hand');
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
