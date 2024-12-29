@@ -95,12 +95,33 @@ class PetrolPumpController extends Controller
 
         $dailyExpenses = DB::table('daily_reports')
             ->whereBetween('date', [$startDate, $endDate])
-            ->selectRaw('COALESCE(SUM(daily_expense), 0) as daily_expense_sum,
-            COALESCE(SUM(pump_rent), 0) as pump_rent_sum,
-            COALESCE(SUM(daily_expense + pump_rent), 0) as total_sum')->first();
+            ->selectRaw('COALESCE(SUM(daily_expense + pump_rent), 0) as total_sum,
+            COALESCE(SUM(daily_expense), 0) as daily_expense_sum,
+            COALESCE(SUM(pump_rent), 0) as pump_rent_sum')
+            ->first();
 
         $dailyExpenses->totalWagesSum = $totalWagesSum;
         $dailyExpenses->total_sum += $totalWagesSum;
+
+        $shopEarnings = DB::table('daily_reports')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->selectRaw('
+        COALESCE(
+            SUM(tuck_shop_rent + tuck_shop_earning +
+                service_station_earning + service_station_rent +
+                tyre_shop_earning + tyre_shop_rent +
+                lube_shop_earning + lube_shop_rent), 0
+        ) as total_sum,
+        COALESCE(SUM(tuck_shop_rent), 0) as tuck_shop_rent,
+        COALESCE(SUM(tuck_shop_earning), 0) as tuck_shop_earning,
+        COALESCE(SUM(service_station_earning), 0) as service_station_earning,
+        COALESCE(SUM(service_station_rent), 0) as service_station_rent,
+        COALESCE(SUM(tyre_shop_earning), 0) as tyre_shop_earning,
+        COALESCE(SUM(tyre_shop_rent), 0) as tyre_shop_rent,
+        COALESCE(SUM(lube_shop_earning), 0) as lube_shop_earning,
+        COALESCE(SUM(lube_shop_rent), 0) as lube_shop_rent
+    ')
+            ->first();
 
         return view('client_admin.pump.analytics', compact(
             'pump',
@@ -114,6 +135,7 @@ class PetrolPumpController extends Controller
             'gain',
             'gainProfit',
             'dailyExpenses',
+            'shopEarnings',
         ));
     }
 

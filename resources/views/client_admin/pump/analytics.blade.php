@@ -129,8 +129,6 @@
                 </div>
             </div>
 
-
-
             <div class="col-sm-3">
                 <div class="card border">
                     <div class="card-body">
@@ -138,6 +136,22 @@
                         <ul class="card-text list-unstyled">
                             @foreach( $dailyExpenses as $name => $value )
                                 <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($value) }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Shops Earnings</h2>
+                        <ul class="card-text list-unstyled">
+                            <li><strong>Total Sum:</strong> {{ $shopEarnings->total_sum }}</li>
+                            @foreach( $shopEarnings as $name => $value )
+                                @if($value && $name!= 'total_sum')
+                                    <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($value) }}</li>
+                                @endif
                             @endforeach
                         </ul>
                     </div>
