@@ -1465,6 +1465,7 @@ class PetrolPumpController extends Controller
         // Format the report data
         $data = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
+        $lastvalue = [];
         $profitSums = [];
         $dipComparisonSums = []; #
         foreach ($data as $entry) {
@@ -1477,18 +1478,23 @@ class PetrolPumpController extends Controller
                 }
             }
 
-            foreach ($allTanks as $tank) {
+            foreach ($allTanks as $index => $tank) {
 
                 $key = $tank . '_gain';
-                $dipComparison = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
+                $dipComparison  = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
+
+                if(isset($lastvalue[$tank])) $dipComparison = $dipComparison - $lastvalue[$tank];
 
                 if (!isset($dipComparisonSums[$key])) {
                     $dipComparisonSums[$key] = $dipComparison;
                 }
-                $dipComparisonSums[$key] += $dipComparison;  #$
+                $dipComparisonSums[$key] += $dipComparison;
+
+                #last dip jo tha us ko minus krny k liy, dip comparison
+                $lastvalue[$tank] = $dipComparison + @$lastvalue[$tank];
             }
         }
-
+        
         return [$profitSums , $dipComparisonSums];
     }
 }
