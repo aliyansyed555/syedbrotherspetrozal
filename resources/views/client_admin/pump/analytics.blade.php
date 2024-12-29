@@ -158,6 +158,20 @@
                 </div>
             </div>
 
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Rate Change Profit</h2>
+                        <ul class="card-text list-unstyled">
+                            <li><strong>Total:</strong> {{ round2Digit($sumLossGain) }}</li>
+                            @foreach( $total_loss_gain as $obj)
+                               <li><strong>{{ ucwords(str_replace('_', ' ', $obj->fuel_name)) }}:</strong> {{ round2Digit($obj->total_loss_gain) }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 

@@ -19,6 +19,7 @@ class FuelPrice extends Model
         'fuel_type_id',
         'petrol_pump_id',
         'date',
+        'loss_gain_value',
     ];
 
     // Define the relationships

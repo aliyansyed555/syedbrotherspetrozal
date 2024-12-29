@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ClientAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyReport;
+use App\Models\FuelPrice;
 use App\Models\FuelType;
 use App\Models\PetrolPump;
 use App\Models\NozzleReading;
@@ -123,6 +124,20 @@ class PetrolPumpController extends Controller
     ')
             ->first();
 
+        $total_loss_gain = FuelPrice::where('petrol_pump_id', $pump_id)
+            ->join('fuel_types', 'fuel_prices.fuel_type_id', '=', 'fuel_types.id')
+            ->select(
+                'fuel_types.name as fuel_name',
+                DB::raw('SUM(fuel_prices.loss_gain_value) as total_loss_gain')
+            )
+            ->groupBy('fuel_types.name')
+            ->orderBy('fuel_types.name', 'asc')
+            ->get();
+
+        $sumLossGain = FuelPrice::where('petrol_pump_id', $pump_id)
+            ->sum('loss_gain_value');
+
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -136,6 +151,8 @@ class PetrolPumpController extends Controller
             'gainProfit',
             'dailyExpenses',
             'shopEarnings',
+            'total_loss_gain',
+            'sumLossGain',
         ));
     }
 

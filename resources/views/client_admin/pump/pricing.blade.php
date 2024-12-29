@@ -61,7 +61,7 @@
             <div class="modal-dialog modal-dialog-centered mw-650px">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modal_title">Add team</h5>
+                        <h5 class="modal-title" id="modal_title">Add Price</h5>
 
                         <!--begin::Close-->
                         <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal"
@@ -90,7 +90,7 @@
                             </label>
                             <input class="form-control form-control-solid date_picker" placeholder="Pick date" name="date" id="date"/>
                         </div>
-                       
+
                         <div class="fv-row mb-5">
                             <label class="d-flex align-items-center fs-5 fw-bold mb-3" for="fuel_type">
                                 <span class="required">Select the Fuel type</span>
@@ -98,19 +98,24 @@
                             </label>
                             <div class="btn-group w-100" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button]">
                                 @foreach ($fuel_types as $fuel_type)
-                                
                                 <label class="btn btn-outline-secondary text-muted text-hover-white text-active-white btn-outline btn-active-success"data-kt-button="true">
                                     <input class="btn-check" type="radio" name="fuel_type_id" value="{{$fuel_type->id}}" />
                                     {{$fuel_type->name}}
                                 </label>
-                                    
                                 @endforeach
                             </div>
                         </div>
-                        
+
                         <div class="fv-row mb-5">
                             <label for="selling_price" class="required form-label">Selling Price</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Price goes here" id="selling_price" name="selling_price" />
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" name="add_loss_gain" id="rate_change_profit">
+                            <label class="form-check-label" for="rate_change_profit">
+                                Add Rate Change Profit
+                            </label>
                         </div>
 
                     </div>
@@ -268,7 +273,7 @@
                         KTMenu.createInstances();
                     });
                 }
-                
+
                 return {
                     init: function() {
                         initDatatable();
@@ -283,14 +288,14 @@
 
             $('#pricing_table').on('click', '.edit_btn', function (e) {
                 e.preventDefault();
-                
+
                 const dataObj = JSON.parse($(this).attr('data-obj'));
                 console.log(dataObj);
-                
+
                 $('#id').val(dataObj.id);
                 $('#selling_price').val(dataObj.selling_price);
                 $('#date').val(dataObj.date);
-                
+
                 $(`input[name="fuel_type_id"][value="${dataObj.fuel_type_id}"]`).prop('checked', "checked");
                 $(`input[name="fuel_type_id"][value="${dataObj.fuel_type_id}"]`).closest('label').addClass('active');
                 // Show the modal
@@ -301,7 +306,7 @@
             handlingForms('pricing', prefix);
             deleteFn('pricing', prefix)
         });
-        
+
 
     </script>
 @endsection
