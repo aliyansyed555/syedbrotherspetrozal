@@ -22,7 +22,7 @@
         </div>
         <div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1">
             <div class="d-flex align-items-stretch" id="kt_header_nav">
-                @if(request()->is('pump/*') )
+                @if(request()->is('pump/*') && !request()->is('pump/*/analytics'))
                     @include('client_admin.pump.navbar')
                 @endif
             </div>
@@ -49,7 +49,7 @@
                                         @else
                                             <div class="symbol-label fs-2 fw-bold text-success">{{ substr(auth()->user()->name, 0, 1) }}</div>
                                         @endif
-                                        
+
                                     </div>
                                     <div class="d-flex flex-column">
                                         <div class="fw-bolder d-flex align-items-center fs-5">{{ auth()->user()->name }}

@@ -89,7 +89,7 @@ class CustomerController extends Controller
             'date' => 'required',
             'remarks' => 'nullable|string',
         ]);
-        
+
         $lastEntry = DB::table('customer_credits')
             ->where('customer_id', $request->customer_id)
             ->orderBy('id', 'desc') // Assuming 'id' is the primary key
@@ -105,12 +105,11 @@ class CustomerController extends Controller
             'balance' => 0, #will update in next step
         ]);
 
-        if ($lastEntry){
+        if ($lastEntry) {
             $newBalance = $lastEntry->balance;
             if ($request->bill_amount) $newBalance = $newBalance + $request->bill_amount;
             if ($request->amount_paid) $newBalance = $newBalance - $request->amount_paid;
-        }
-        else
+        } else
             $newBalance = $request->bill_amount - $request->amount_paid;
 
         $customerCredit->update([

@@ -31,10 +31,42 @@ class PetrolPumpController extends Controller
         return view('client_admin.pumps');
     }
 
+    public function showAnalytics($pump_id)
+    {
+        $pump = PetrolPump::where('id', $pump_id)->first();
+
+        $stocks = $pump->tanks()
+            ->join('tank_stocks', 'tank_stocks.tank_id', '=', 'tanks.id')  // Join tank_stocks to tanks
+            ->join('fuel_types', 'fuel_types.id', '=', 'tanks.fuel_type_id') // Join fuel_types to tanks
+            ->selectRaw('fuel_types.name as fuel_type_name, tanks.fuel_type_id, SUM(tank_stocks.reading_in_ltr) as total_stock')
+            ->groupBy('fuel_types.name', 'tanks.fuel_type_id')  // Group by fuel_type_id and fuel_type_name
+            ->get();
+
+//        $tanks = $pump->tanks()
+//            ->withSum('tankStocks as total_stock', 'reading_in_ltr')
+//            ->get();
+//
+//        $tanks = $tanks->map(function ($tank) {
+//            $fuelType = DB::table('fuel_types')->find($tank->fuel_type_id);
+//            $tank->fuel_type_name = $fuelType ? $fuelType->name : null;
+//            return $tank;
+//        });
+
+        $products = $pump->products()
+            ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id), 0) as quantity')
+            ->get();
+
+        $cashInhand = rand();
+        return view('client_admin.pump.analytics', compact(
+            'pump',
+            'stocks',
+            'products',
+            'cashInhand',
+        ));
+    }
 
     function get_expenses($pump_id)
     {
-
         $pump = PetrolPump::where('id', $pump_id)->first();
         $daily_reports = $pump->dailyReports()->get();
 

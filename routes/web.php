@@ -93,8 +93,6 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
 
     Route::post('/{pump_id}/daily-reports/create', 'save_bank_deposit')->middleware('verify.pump')->name('pump.save_bank_deposit');
 
-
-
     Route::get('/{pump_id}/sales-history', 'get_sales_history')->middleware('verify.pump')->name('pump.get_sales_history');
     Route::post('/{pump_id}/sales-history-pdf', 'get_sales_history_pdf')->middleware('verify.pump')->name('pump.get_sales_history_pdf');
 
@@ -104,6 +102,9 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
     Route::put('/update/{id}', 'update')->name('pump.update');
     Route::delete('/delete/{id}',  'delete')->name('pump.delete');
     Route::get('/{pump_id}', 'show')->name('pump.show');
+
+    Route::get('/{pump_id}/analytics', 'showAnalytics')->name('pump.show.analytics');
+
 
     Route::get('/getProducts/{pump_id}', 'getProducts')->name('pump.getProducts');
     Route::get('/getEmployees/{pump_id}', 'getEmployees')->name('pump.getEmployees');

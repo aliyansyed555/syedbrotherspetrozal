@@ -74,8 +74,6 @@
         </div>
     </div>
 
-
-
     <form action="" method="POST" id="pump_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="pump_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">

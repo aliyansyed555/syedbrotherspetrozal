@@ -9,12 +9,12 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user(); 
-        $companyName = 'No Company Assigned'; 
+        $user = Auth::user();
+        $companyName = 'No Company Assigned';
 
         if ($user->hasRole('manager')) {
             if ($user->teamMembers->isNotEmpty()) {
-                $companyName = $user->teamMembers->first()->company->name; 
+                $companyName = $user->teamMembers->first()->company->name;
             }
         } else {
             if ($user->company) {
