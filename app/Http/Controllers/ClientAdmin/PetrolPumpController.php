@@ -34,6 +34,8 @@ class PetrolPumpController extends Controller
 
     public function showAnalytics($pump_id)
     {
+        #todo: date filters for first few queries needs to add.
+        
         $startDate = request('start_date', now()->toDateString());
         $endDate = request('end_date', now()->toDateString());
 
