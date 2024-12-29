@@ -60,10 +60,12 @@ class PricingController extends Controller
 
     public function create(Request $request, $pump_id)
     {
+
         $validatedData = $request->validate([
             'selling_price' => 'required|numeric|between:0,999999.99',
             'fuel_type_id' => 'required|integer|exists:fuel_types,id,company_id,' . $this->company->id, // Ensure fuel_type belongs to user's company
             'date' => 'required|date',  // Ensure the date is in a valid date format
+            'add_loss_gain' => 'nullable',  // Ensure the date is in a valid date format
         ], [
             'selling_price.required' => 'The selling price is required.',
             'selling_price.numeric' => 'The selling price must be a valid number.',
@@ -79,7 +81,7 @@ class PricingController extends Controller
             'fuel_type_id' => $validatedData['fuel_type_id'],
             'petrol_pump_id' => $pump_id,
         ])->orderBy('date', 'desc')->first();
-
+        
         $totalgain = 0;
         if ($lastRate && $request->add_loss_gain) {
             $rateChange = $validatedData['selling_price'] - $lastRate->selling_price;

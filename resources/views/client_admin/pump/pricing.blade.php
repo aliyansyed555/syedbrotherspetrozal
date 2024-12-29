@@ -54,8 +54,6 @@
         </div>
     </div>
 
-
-
     <form action="" method="POST" id="pricing_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="pricing_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">
