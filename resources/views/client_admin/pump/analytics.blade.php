@@ -84,7 +84,7 @@
                         <h2 class="card-title mb-4">Fuel Profit</h2>
                         <ul class="card-text list-unstyled">
                             @foreach( $profits as $name => $profit )
-                                <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ $profit }}</li>
+                                <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($profit) }}</li>
                             @endforeach
                         </ul>
                     </div>
@@ -96,7 +96,7 @@
                     <div class="card-body">
                         <h2 class="card-title mb-4">Mobiloil Profit</h2>
                         <ul class="card-text list-unstyled">
-                            <li><strong>Total:</strong> {{ $mobilOilProfit }}</li>
+                            <li><strong>Total:</strong> {{ round2Digit($mobilOilProfit) }}</li>
                         </ul>
                     </div>
                 </div>
@@ -109,7 +109,20 @@
                         <h2 class="card-title mb-4">Fuel Gain</h2>
                         <ul class="card-text list-unstyled">
                             @foreach( $gain as $name => $profit )
-                                <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ $profit }}</li>
+                                <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($profit) }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Gain Profit</h2>
+                        <ul class="card-text list-unstyled">
+                            @foreach( $gainProfit as $name => $profit )
+                                <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($profit) }}</li>
                             @endforeach
                         </ul>
                     </div>

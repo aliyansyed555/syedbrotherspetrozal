@@ -116,6 +116,8 @@
                                     $profitWithGain = $dipComparison * $reportData[$i]["{$columnBase}_price"];
 
                                     $totalProfitWithGain += $profitWithGain;
+
+                                    $dipComparisonFinal =  $dipComparison - $firstDipComparisons[$columnBase];
                                     ?>
                                     <td>
                                         {{ $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_transfer_quantity"] }}
@@ -125,8 +127,8 @@
                                     <td>{{ $reportData[$i]["{$columnBase}_stock_quantity"] }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_transfer_quantity"] }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_dip_quantity"] }}</td>
-                                    <td class="py-2 px-3 {{ $dipComparison >= 0 ? 'bg-success' : 'bg-danger' }}">
-                                        {{ $dipComparison - $firstDipComparisons[$columnBase] }}
+                                    <td class="py-2 px-3 {{ $dipComparisonFinal >= 0 ? 'bg-success' : 'bg-danger' }}">
+                                        {{$dipComparisonFinal}}
                                     </td>
                                 @endforeach
 
