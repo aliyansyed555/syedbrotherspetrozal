@@ -83,9 +83,8 @@ class PetrolPumpController extends Controller
         $totalCredit = $creditsAndDebits['credit'];
         $totalDebit = $creditsAndDebits['debit'];
 
-        list($profits, $gain, $gainProfit, $totalProfit, $totalProfitWithGain) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
+        list($profits, $gain, $gainProfit, $totalProfit, $totalGain) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
-        dd($totalProfit, $totalProfitWithGain);
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
 
@@ -138,8 +137,8 @@ class PetrolPumpController extends Controller
         $sumLossGain = FuelPrice::where('petrol_pump_id', $pump_id)
             ->sum('loss_gain_value');
 
-        $final_profit = $finalProfits['without_gain'];
-        $final_profit_with_gain = $finalProfits['with_gain'];
+        $final_profit = $totalProfit;
+        $final_profit_with_gain = $totalProfit+ $totalGain;
 
         return view('client_admin.pump.analytics', compact(
             'pump',
@@ -1562,6 +1561,10 @@ class PetrolPumpController extends Controller
 
                 $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
                 $fuelsProfit += $profit;
+
+                $profitWithGain = $dipComparison * $entry["{$tank}_price"];
+
+                $totalProfitWithGain += $profitWithGain;
             }
 
             $totalProfit += $fuelsProfit + $entry['products_profit'] - $entry['pump_rent'] - $entry['daily_expense'] - $entry['total_wage'];
