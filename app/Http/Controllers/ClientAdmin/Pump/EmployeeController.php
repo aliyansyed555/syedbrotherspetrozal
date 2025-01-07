@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ClientAdmin\Pump;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Employee;
@@ -19,8 +20,8 @@ class EmployeeController extends Controller
     {
         // Initialize the user and company properties
         $this->user = Auth::user();
-        $this->company = get_company($this->user); 
-        
+        $this->company = get_company($this->user);
+
         $this->pump = $request->pump;
     }
 
@@ -29,6 +30,7 @@ class EmployeeController extends Controller
         $pump_id = $this->pump->id;
         return view('client_admin.pump.employee', compact(['pump_id']));
     }
+
     function show(Request $request, $pump_id, $employee_id)
     {
         // dd($request->all());
@@ -46,17 +48,17 @@ class EmployeeController extends Controller
             $employee->remaining_salary = $employee->total_salary - $employee->wages()->sum('amount_received');
             return $employee;
         });
-        return response()->json([ 
+        return response()->json([
             'recordsTotal' => $employees->count(),
             'recordsFiltered' => $employees->count(),
             'success' => true,
             'data' => $employees,
         ]);
     }
-    
+
     public function create(Request $request)
     {
-        
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => [
@@ -64,17 +66,23 @@ class EmployeeController extends Controller
                 'regex:/^(\+92|0)?[3][0-9]{9}$/',
             ],
             'address' => 'required|string|max:255',
-            'total_salary' => 'nullable|numeric',
-        
+            'total_salary' => 'nullable|numeric'
         ]);
 
         $validatedData['petrol_pump_id'] = $this->pump->id;
         $employee = Employee::create($validatedData);
 
+        if ($request->advance_salary)
+            DB::table('employee_wages')->insert([
+                'employee_id' => $employee->id,
+                'amount_received' => (int)$request->advance_salary,
+                'date' => now()->toDateString(),
+            ]);
+
         return response()->json(['success' => true, 'message' => 'Employee created successfully.']);
     }
 
-    
+
     public function update(Request $request)
     {
         $employee = Employee::findOrFail($request->id);
@@ -129,20 +137,20 @@ class EmployeeController extends Controller
         }
     }
 
-    public function generate_pdf(Request $request, $pump_id, $employee_id){
+    public function generate_pdf(Request $request, $pump_id, $employee_id)
+    {
         // Generate and download the PDF
 
         $start_date = $request->start_date;
         $end_date = $request->end_date;
 
-        $employee = Employee::findOrFail($employee_id); 
+        $employee = Employee::findOrFail($employee_id);
         $wages = $employee->wages()->whereBetween('date', [$start_date, $end_date])->get();
 
         $pdf = Pdf::loadView('pdfs.employee-wages-history-pdf', [
             'wages' => $wages,
             'employee' => $employee,
         ]);
-        
 
 
         // repeated code

@@ -79,7 +79,7 @@
                     <div class="modal-body">
                         <input type="hidden" id="id" name="id" />
                         @csrf
-                        
+
                         <div class="fv-row mb-5">
                             <label for="name" class="required form-label">Customer Name</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Alex Jones" id="name" name="name" />
@@ -97,9 +97,13 @@
 
                         <div class="fv-row mb-5">
                             <label for="total_salary" class="form-label">Total Salary</label>
-                            <input type="text" class="form-control form-control-solid" placeholder="9999" id="total_salary" name="total_salary" />
+                            <input type="number" class="form-control form-control-solid" placeholder="9999" id="total_salary" name="total_salary" />
                         </div>
-                        
+
+                        <div class="fv-row mb-5">
+                            <label for="advance_salary" class="form-label">Advance Salary</label>
+                            <input type="number" class="form-control form-control-solid" placeholder="10000" id="advance_salary" name="advance_salary" />
+                        </div>
 
                     </div>
 
@@ -119,7 +123,7 @@
         $(document).ready(function() {
             // $("#fuel_type_table").DataTable();
 
-            
+
 
             "use strict";
 
@@ -256,7 +260,7 @@
                 KTDatatablesServerSide.init();
             });
 
-            
+
             $('#employee_table').on('click', '.edit_btn', function() {
                 const dataObj = JSON.parse($(this).attr('data-obj'));
                 $('#id').val(dataObj.id);
@@ -270,7 +274,7 @@
             handlingForms('employee', prefix);
             deleteFn('employee', prefix)
         });
-        
+
 
     </script>
 @endsection
