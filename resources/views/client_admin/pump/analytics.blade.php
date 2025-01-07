@@ -26,7 +26,7 @@
                         <h2 class="card-title mb-4">Fuel Stock</h2>
                         <ul class="card-text list-unstyled">
                             @foreach ($stocks as $stock )
-                                <li><strong>{{ $stock['fuel_type_name'] }}:</strong> {{ $stock['total_stock'] }}</li>
+                                <li><strong>{{ $stock['tank_name'] }}:</strong> {{ $stock['total_reading_in_ltr'] }}</li>
                             @endforeach
                         </ul>
                     </div>

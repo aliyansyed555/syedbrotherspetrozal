@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ClientAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyReport;
+use App\Models\DipRecord;
 use App\Models\FuelPrice;
 use App\Models\FuelType;
 use App\Models\PetrolPump;
@@ -41,11 +42,22 @@ class PetrolPumpController extends Controller
 
         $pump = PetrolPump::where('id', $pump_id)->first();
 
-        $stocks = $pump->tanks()
-            ->join('tank_stocks', 'tank_stocks.tank_id', '=', 'tanks.id')  // Join tank_stocks to tanks
-            ->join('fuel_types', 'fuel_types.id', '=', 'tanks.fuel_type_id') // Join fuel_types to tanks
-            ->selectRaw('fuel_types.name as fuel_type_name, tanks.fuel_type_id, SUM(tank_stocks.reading_in_ltr) as total_stock')
-            ->groupBy('fuel_types.name', 'tanks.fuel_type_id')  // Group by fuel_type_id and fuel_type_name
+        $tanks = $pump->tanks();
+
+        $stocks = DipRecord::select(
+            'dip_records.date',
+            'dip_records.tank_id',
+            'tanks.name as tank_name',
+            DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr')
+        )
+            ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
+            ->whereIn('dip_records.tank_id', $tanks->pluck('id'))
+            ->where('dip_records.date', function ($query) {
+                $query->select(DB::raw('MAX(date)'))
+                    ->from('dip_records')
+                    ->whereColumn('dip_records.tank_id', 'tank_id');
+            })
+            ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.name')
             ->get();
 
 //        $tanks = $pump->tanks()
@@ -59,7 +71,7 @@ class PetrolPumpController extends Controller
 //        });
 
         $products = $pump->products()
-            ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id), 0) as quantity')
+            ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id and product_inventory.date between ? and ?), 0) as quantity', [$startDate, $endDate])
             ->get();
 
         $cashInhand = \DB::table('daily_reports')
@@ -69,8 +81,11 @@ class PetrolPumpController extends Controller
 
         $customers = $pump->customers()->get();
 
-        $creditsAndDebits = $customers->map(function ($customer) {
-            $lastCredit = $customer->credits()->orderBy('id', 'desc')->first();
+        $creditsAndDebits = $customers->map(function ($customer) use ($startDate, $endDate) {
+            $lastCredit = $customer->credits()
+                ->whereBetween('date', [$startDate, $endDate]) // Apply date filter
+                ->orderBy('id', 'desc')
+                ->first();
             $customer->total_credit = $lastCredit ? $lastCredit->balance : 0;
             return $customer;
         })->reduce(function ($totals, $customer) {
