@@ -112,6 +112,11 @@
                                 id="location" name="location" />
                         </div>
 
+                        <div class="fv-row mb-5">
+                            <label for="cash_in_hand" class="required form-label">Cash inHand</label>
+                            <input type="number" class="form-control form-control-solid" placeholder="99999" id="cash_in_hand" name="cash_in_hand" />
+                        </div>
+
                     </div>
 
                     <div class="modal-footer flex-center">

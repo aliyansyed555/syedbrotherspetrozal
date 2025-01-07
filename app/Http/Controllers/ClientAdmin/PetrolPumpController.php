@@ -100,7 +100,7 @@ class PetrolPumpController extends Controller
         $totalCredit = $creditsAndDebits['credit'];
         $totalDebit = $creditsAndDebits['debit'];
 
-        list($profits, $gain, $gainProfit, $totalProfit, $totalGain , $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
+        list($profits, $gain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
@@ -155,7 +155,7 @@ class PetrolPumpController extends Controller
             ->sum('loss_gain_value');
 
         $final_profit = $totalProfit;
-        $final_profit_with_gain = $totalProfit+ $totalGain;
+        $final_profit_with_gain = $totalProfit + $totalGain;
 
         $total_arrivals = $pump->fuelPurchases()
             ->whereBetween('fuel_purchases.purchase_date', [$startDate, $endDate])
@@ -378,11 +378,18 @@ class PetrolPumpController extends Controller
             'location.required' => 'Email field is required.',
         ]);
 
-        PetrolPump::create([
+        $pump = PetrolPump::create([
             'name' => $validatedData['name'],
             'location' => $validatedData['location'],
             'company_id' => $this->company->id,
         ]);
+
+        if ($request->cash_in_hand)
+            DB::table('daily_reports')->insert([
+                'date' => now()->toDateString(),
+                'petrol_pump_id' => $pump->id,
+                'cash_in_hand' => $request->cash_in_hand,
+            ]);
 
         return response()->json(['success' => true, 'message' => 'Petrol Pump created successfully.']);
     }
@@ -1584,7 +1591,7 @@ class PetrolPumpController extends Controller
                 if (!isset($totalSold[$tank])) {
                     $totalSold[$tank] = 0; // Initialize if not already set
                 }
-                $totalSold[$tank] += ($entry["{$tank}_digital_sold"]) ;
+                $totalSold[$tank] += ($entry["{$tank}_digital_sold"]);
 
                 if (!isset($dipComparisonSums[$key])) {
                     $dipComparisonSums[$key] = $dipComparison;
@@ -1606,7 +1613,7 @@ class PetrolPumpController extends Controller
         }
 
 
-        return [$profitSums, $dipComparisonSums, $gainProfit, $totalProfit, $totalProfitWithGain , $totalSold];
+        return [$profitSums, $dipComparisonSums, $gainProfit, $totalProfit, $totalProfitWithGain, $totalSold];
     }
 }
 
