@@ -193,6 +193,35 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Total Arrivals</h2>
+                        <ul class="card-text list-unstyled">
+                            @foreach( $total_arrivals as $obj)
+                                <li><strong>{{ ucwords(str_replace('_', ' ', $obj->fuel_type_name)) }}:</strong> {{ round2Digit($obj->total_quantity_ltr) }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Total Sold</h2>
+                        <ul class="card-text list-unstyled">
+                            @foreach( $totalSold as $name => $sold )
+                                <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($sold) }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
     </div>
 

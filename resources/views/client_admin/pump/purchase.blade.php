@@ -91,7 +91,7 @@
                             </label>
                             <input class="form-control form-control-solid date_picker" placeholder="Pick date" name="purchase_date" id="purchase_date"/>
                         </div>
-                       
+
                         <div class="fv-row mb-5">
                             <label class="d-flex align-items-center fs-6 mb-3" for="fuel_type">
                                 <span class="required">Select the Fuel type</span>
@@ -99,12 +99,12 @@
                             </label>
                             <div class="btn-group w-100" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button]">
                                 @foreach ($fuel_types as $fuel_type)
-                                
+
                                 <label class="btn btn-outline-secondary text-muted text-hover-white text-active-white btn-outline btn-active-success"data-kt-button="true">
                                     <input class="btn-check" type="radio" name="fuel_type_id" value="{{$fuel_type->id}}" />
                                     {{$fuel_type->name}}
                                 </label>
-                                    
+
                                 @endforeach
                             </div>
                         </div>
@@ -120,10 +120,10 @@
                             <div id="tank-container">
                                 <i>Select Fuel Type please firs*</i>
                             </div>
-                            
+
                         </div>
-                        
-                       
+
+
                         <div class="fv-row mb-5">
                             <label for="buying_price_per_ltr" class="required form-label">Buying Price Per Ltr</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Price goes here" id="buying_price_per_ltr" name="buying_price_per_ltr" />
@@ -277,7 +277,7 @@
                         KTMenu.createInstances();
                     });
                 }
-                
+
                 return {
                     init: function() {
                         initDatatable();
@@ -290,19 +290,17 @@
                 KTDatatablesServerSide.init();
             });
 
-            
-
             let fv; // Define fv in a broader scope
 
             $('input[name="fuel_type_id"]').on('change', function () {
                 let fuelTypeId = $(this).val();
                 $.ajax({
                     url: `/pump/getTanksByFuelType`,
-                    method: 'POST', 
+                    method: 'POST',
                     data: {
                         petrol_pump_id: pumpId,
                         fuel_type_id: fuelTypeId,
-                        _token: $('meta[name="csrf-token"]').attr('content') 
+                        _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (response) {
                         $('#tank-container').html(''); // Clear previous tank fields
@@ -328,7 +326,7 @@
                                                 message: 'Quantity cannot be empty'
                                             },
                                             regexp: {
-                                                regexp: /^[0-9]+(\.[0-9]{1,2})?$/, 
+                                                regexp: /^[0-9]+(\.[0-9]{1,2})?$/,
                                                 message: 'Please enter a valid number (no letters allowed)'
                                             }
                                         }
@@ -364,12 +362,12 @@
                                                 callback: function (input) {
                                                     const totalQuantity = parseFloat(document.querySelector('[name="fuel_quantity"]').value) || 0;
                                                     const tankInputs = document.querySelectorAll('.tank-stock-input');
-                                                    
+
                                                     let sumOfTanks = 0;
                                                     tankInputs.forEach(function (tankInput) {
                                                         sumOfTanks += parseFloat(tankInput.value) || 0;
                                                     });
-                                                    
+
                                                     return sumOfTanks === totalQuantity;
                                                 },
                                             },
@@ -400,12 +398,12 @@
             // Form submission handling
             $('#purchase_form').on('submit', function (e) {
                 e.preventDefault(); // Prevent form submission to validate first
-                var formData = new FormData(this);  
-                
+                var formData = new FormData(this);
+
                 var tankStocks = [];
                 $('.tank-stock-input').each(function() {
-                    var tankId = $(this).data('tank-id');  
-                    var stockQuantity = $(this).val();     
+                    var tankId = $(this).data('tank-id');
+                    var stockQuantity = $(this).val();
                     tankStocks.push({ tank_id: tankId, quantity: stockQuantity });
                 });
 
@@ -417,10 +415,10 @@
                 fv.validate().then(function (status) {
                     if (status === 'Valid') {
                         $.ajax({
-                            url: `/pump/${pumpId}/purchase/create`,  
+                            url: `/pump/${pumpId}/purchase/create`,
                             method: 'POST',
                             data: formData,
-                            processData: false, 
+                            processData: false,
                             contentType: false,
                             success: function(response) {
                                 if (response.success) {
@@ -428,7 +426,7 @@
                                     $('#purchase_modal').modal('hide');
                                     $('#purchase_form').trigger('reset');
                                     $('#purchase_table').DataTable().ajax.reload();
-                                    
+
                                 } else {
                                     toastr.err('There was an error saving the data.');
                                 }
@@ -446,27 +444,27 @@
 
             // $('#purchase_table').on('click', '.edit_btn', function (e) {
             //     e.preventDefault();
-                
+
             //     const dataObj = JSON.parse($(this).attr('data-obj'));
             //     console.log(dataObj);
-                
+
             //     $('#id').val(dataObj.id);
             //     $('#selling_price').val(dataObj.selling_price);
             //     $('#date').val(dataObj.date);
-                
+
             //     $(`input[name="fuel_type_id"][value="${dataObj.fuel_type_id}"]`).prop('checked', "checked");
             //     $(`input[name="fuel_type_id"][value="${dataObj.fuel_type_id}"]`).closest('label').addClass('active');
             //     // Show the modal
             //     $('#purchase_modal').modal('show');
             // });
 
-            
+
 
             let prefix = `pump/${pumpId}`
             // handlingForms('purchase', prefix);
             deleteFn('purchase', prefix)
         });
-        
+
 
     </script>
 @endsection

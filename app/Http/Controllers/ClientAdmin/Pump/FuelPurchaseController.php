@@ -28,6 +28,8 @@ class FuelPurchaseController extends Controller
     function index(Request $request)
     {
         $fuel_types = get_fuel_types_with_tanks($this->pump);
+
+        #dd($fuel_types);
         $pump_id = $this->pump->id;
         return view('client_admin.pump.purchase', compact(['pump_id', 'fuel_types']));
     }
@@ -40,10 +42,10 @@ class FuelPurchaseController extends Controller
             ->join('fuel_types', 'fuel_types.id', '=', 'fuel_purchases.fuel_type_id')
             ->select('fuel_purchases.*', 'fuel_types.name as fuel_type_name')
             ->get();
-        
+
 
         // Return the pricing data as a JSON response
-        return response()->json([ 
+        return response()->json([
             'recordsTotal' => $fuelPurchases->count(),
             'recordsFiltered' => $fuelPurchases->count(),
             'success' => true,
