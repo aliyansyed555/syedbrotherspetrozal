@@ -68,7 +68,6 @@ class CustomerController extends Controller
 
     public function create(Request $request)
     {
-
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => [
@@ -77,8 +76,23 @@ class CustomerController extends Controller
             ],
             'address' => 'required|string|max:255',
         ]);
+
         $validatedData['petrol_pump_id'] = $this->pump->id;
         $customer = Customer::create($validatedData);
+
+        if ($request->closing_balance) {
+            $balance = ($request->transaction_type == 'debit' ? '-' : '+') . (int)$request->closing_balance;
+
+            $customerCredit = CustomerCredit::create([
+                'customer_id' => $customer->id,
+                'bill_amount' => $balance > 0 ? (int)$request->closing_balance : 0, #plus
+                'amount_paid' => $balance < 0 ? (int)$request->closing_balance : 0, #subtract
+                'remarks' => '',
+                'date' => now()->toDateString(),
+                'balance' => $balance
+            ]);
+        }
+
         return response()->json(['success' => true, 'message' => 'Customer created successfully.']);
     }
 

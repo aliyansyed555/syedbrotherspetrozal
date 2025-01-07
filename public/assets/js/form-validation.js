@@ -51,7 +51,7 @@ function initializeFormValidation(form) {
                             message: 'The pricing field cannot be empty'
                         },
                         regexp: {
-                            regexp: /^[0-9]+(\.[0-9]{1,2})?$/, 
+                            regexp: /^[0-9]+(\.[0-9]{1,2})?$/,
                             message: 'Please enter a valid number (no letters allowed)'
                         }
                     }
@@ -76,7 +76,7 @@ function initializeFormValidation(form) {
                             message: 'Reading cannot be empty'
                         },
                         regexp: {
-                            regexp: /^[0-9]+(\.[0-9]{1,2})?$/, 
+                            regexp: /^[0-9]+(\.[0-9]{1,2})?$/,
                             message: 'Please enter a valid number (no letters allowed)'
                         }
                     }
@@ -87,7 +87,7 @@ function initializeFormValidation(form) {
                             message: 'Reading cannot be empty'
                         },
                         regexp: {
-                            regexp: /^[0-9]+(\.[0-9]{1,2})?$/, 
+                            regexp: /^[0-9]+(\.[0-9]{1,2})?$/,
                             message: 'Please enter a valid number (no letters allowed)'
                         }
                     }
@@ -113,9 +113,9 @@ function initializeFormValidation(form) {
                 'address': {
                     validators: {
                         stringLength: {
-                            max: 50,
+                            max: 250,
                             min: 8,
-                            message: 'The address must be more than 8 and less than 50 characters',
+                            message: 'The address must be more than 8 and less than 250 characters',
                         },
                     }
                 },

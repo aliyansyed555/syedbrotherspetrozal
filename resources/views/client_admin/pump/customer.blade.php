@@ -92,8 +92,30 @@
                             <input type="text" class="form-control form-control-solid" placeholder="Address, 304. Floor 2 Lhr" id="address" name="address" />
                         </div>
 
+                        <!-- New Credit/Debit Radio Buttons -->
+                        <div class="fv-row mb-5">
+
+                            <!-- New Integer Value Input -->
+                            <div class="fv-row mb-5">
+                                <label for="closing_balance" class="form-label">Closing Balance</label>
+                                <input type="number" class="form-control form-control-solid" placeholder="Enter amount" id="closing_balance" name="closing_balance" />
+                            </div>
+
+                            <label class="form-label">Transaction Type</label>
+                            <div class="d-flex align-items-center">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" id="credit" checked name="transaction_type" value="credit" />
+                                    <label class="form-check-label" for="credit">Credit</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="debit" name="transaction_type" value="debit" />
+                                    <label class="form-check-label" for="debit">Debit</label>
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
+
 
                     <div class="modal-footer flex-center">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
@@ -230,7 +252,6 @@
             KTUtil.onDOMContentLoaded(function() {
                 KTDatatablesServerSide.init();
             });
-
 
             $('#customer_table').on('click', '.edit_btn', function() {
                 const dataObj = JSON.parse($(this).attr('data-obj'));
