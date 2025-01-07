@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ClientAdmin\Pump;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\Nozzle;
 use App\Models\PetrolPump;
@@ -14,11 +15,12 @@ class NozzleController extends Controller
 {
     private $user;
     private $company;
+
     public function __construct()
     {
         // Initialize the user and company properties
         $this->user = Auth::user();
-        $this->company = get_company($this->user); 
+        $this->company = get_company($this->user);
     }
 
     /**
@@ -38,7 +40,7 @@ class NozzleController extends Controller
             ->get();
 
         // Return the pricing data as a JSON response
-        return response()->json([ 
+        return response()->json([
             'recordsTotal' => $nozzles->count(),
             'recordsFiltered' => $nozzles->count(),
             'success' => true,
@@ -70,9 +72,11 @@ class NozzleController extends Controller
      */
     public function create(Request $request)
     {
-        
+
         $pump = $request->pump;
         $validatedData = $request->validate([
+            'analog_reading' => ['required', 'integer'],
+            'digital_reading' => ['required', 'integer'],
             'name' => [
                 'required',
                 'string',
@@ -107,14 +111,22 @@ class NozzleController extends Controller
             'fuel_type_id' => $validatedData['fuel_type_id'],
         ]);
 
+        if ($request->analog_reading && $request->digital_reading)
+            DB::table('nozzle_readings')->insert([
+                'nozzle_id' => $nozzle->id,
+                'analog_reading' => $request->analog_reading,
+                'digital_reading' => $request->digital_reading,
+                'date' => now()->toDateString(),
+            ]);
+
         return response()->json(['success' => true, 'message' => 'Nozzle created successfully.']);
-    }    
-    
+    }
+
     public function update(Request $request)
     {
-        
+
         $pump = $request->pump;
-        
+
         $nozzle = Nozzle::findOrFail($request->id);
         if (!$nozzle) {
             return response()->json([
@@ -161,19 +173,19 @@ class NozzleController extends Controller
         $nozzle->tank_id = $validatedData['tank_id'];
         $nozzle->fuel_type_id = $validatedData['fuel_type_id'];
         $nozzle->save();
-        
+
         return response()->json(['success' => true, 'message' => 'Nozzle updated successfully.']);
     }
-    
+
     public function getTanksByFuelType(Request $request)
     {
         $pump = $request->pump;
         $fuel_type_id = $request->fuel_type_id;
-        
-        $tanks = $pump->tanks()->whereHas('fuelType', function($q) use ($fuel_type_id) {
+
+        $tanks = $pump->tanks()->whereHas('fuelType', function ($q) use ($fuel_type_id) {
             $q->where('id', $fuel_type_id);
         })->get();
-        
+
         return response()->json(['success' => true, 'tanks' => $tanks]);
     }
 

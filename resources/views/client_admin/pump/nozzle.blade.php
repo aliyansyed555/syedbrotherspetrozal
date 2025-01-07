@@ -77,7 +77,7 @@
                     <div class="modal-body">
                         <input type="hidden" id="id" name="id" />
                         @csrf
-                       
+
                         <div class="fv-row mb-5">
                             <label class="d-flex align-items-center fs-5 fw-bold mb-3" for="fuel_type_id">
                                 <span class="required">Select Fuel type</span>
@@ -102,10 +102,22 @@
                                 @endforeach
                             </select>
                         </div>
-                        
+
                         <div class="fv-row mb-5">
                             <label for="name" class="required form-label">Nozzle Name</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Name of Nozzle" id="name" name="name" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-5">
+                                <label for="analog_reading" class="form-label">Analog Reading</label>
+                                <input type="number" class="form-control form-control-solid" placeholder="Enter analog reading" id="analog_reading" name="analog_reading" />
+                            </div>
+
+                            <div class="col-md-6 mb-5">
+                                <label for="digital_reading" class="form-label">Digital Reading</label>
+                                <input type="number" class="form-control form-control-solid" placeholder="Enter digital reading" id="digital_reading" name="digital_reading" />
+                            </div>
                         </div>
 
                     </div>
@@ -126,7 +138,7 @@
         $(document).ready(function() {
             // $("#fuel_type_table").DataTable();
 
-            
+
 
             "use strict";
 
@@ -269,20 +281,20 @@
                 }
             });
 
-            
+
             $('#nozzle_table').on('click', '.edit_btn', function() {
                 const dataObj = JSON.parse($(this).attr('data-obj'));
                 $('#id').val(dataObj.id);
                 $('#name').val(dataObj.name);
                 $('#fuel_type_id').val(dataObj.fuel_type_id).trigger('change');
-                
+
                 const tankId = dataObj.tank_id;
                 const dropdown = $('#tank_id');
 
                 const optionExists = dropdown.find(`option[value="${tankId}"]`).length > 0;
 
                 if (optionExists) {
-                    dropdown.val(tankId).trigger('change'); 
+                    dropdown.val(tankId).trigger('change');
                 } else {
                     console.error('The specified tankId does not exist in the dropdown.');
                 }
@@ -292,7 +304,7 @@
             handlingForms('nozzle', prefix);
             deleteFn('nozzle', prefix)
         });
-        
+
 
     </script>
 @endsection
