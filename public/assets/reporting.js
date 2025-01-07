@@ -282,6 +282,8 @@ $(document).ready(function () {
     // *****************************************
 
     var totalCredit = 0;
+    var totalReceive = 0;
+
     var allCredits = [];
     $('#add_credit').click(function () {
         const selectedOption = $('#customer_id option:selected');
@@ -323,8 +325,9 @@ $(document).ready(function () {
 
         $('#credit_table_container').show();
 
-        // Update total credit
-        totalCredit = (bill_amount - amount_paid) + totalCredit;
+        // Update total credit  BEFORE  totalCredit = (bill_amount - amount_paid) + totalCredit;
+        totalCredit = bill_amount + totalCredit;
+        totalReceive = amount_paid + totalReceive;
         updateTotalCredit();
 
         // Reset input fields
@@ -341,13 +344,18 @@ $(document).ready(function () {
         // const customerId = row.data('product-id');
         allCredits = allCredits.filter(credit => credit.customer_id != row.data('product-id'));
 
-        totalCredit -= rowBalance;
+        totalCredit -= rowBalance; //todo login needs to check
         row.remove();
         updateTotalCredit();
     });
+
     function updateTotalCredit() {
         $('#total_credit').text(totalCredit.toFixed(2));
+        $('#totalReceive').text(totalReceive.toFixed(2));
+
         $('#sidebar_credit').text(totalCredit.toFixed(2));
+
+        $('#sidebar_receive_from_customers').text(totalReceive.toFixed(2));
     }
 
 
@@ -422,7 +430,7 @@ $(document).ready(function () {
     //         Stepper Form Submission
     // *****************************************
     var fuelSoldAmounts = [];
-    var fuelMoney = 0, daily_expense = 0, pump_rent = 0, bank_deposit = 0, amount_received = 0;
+    var fuelMoney = 0, daily_expense = 0, pump_rent = 0, bank_deposit = 0, amount_received = 0 , amount_credit = 0;
     var cashInHand;
 
     $('.exp_track').on('input', function() {
@@ -520,8 +528,9 @@ $(document).ready(function () {
         bank_deposit = parseFloat($('#bank_deposit').val() || '0');
 
         amount_received = allCredits.reduce((total, credit) => total + parseFloat(credit.amount_paid || '0'), 0);
+        amount_credit = allCredits.reduce((total, credit) => total + parseFloat(credit.bill_amount || '0'), 0);
 
-        $('#sidebar_receive_from_customers').text(amount_received.toFixed(2));
+        // $('#sidebar_receive_from_customers').text(amount_received.toFixed(2));
         $('#sidebar_bank_deposit').text(bank_deposit.toFixed(2));
         $('#sidebar_expense').text(daily_expense + pump_rent);
 
@@ -593,7 +602,7 @@ $(document).ready(function () {
         </tr>`);
         // Ensure totalCredit is always positive
 
-        cashInHand = previousCashInHand + fuelMoney - totalWages + totalPrice - bank_deposit + amount_received - daily_expense - pump_rent - totalCardPayments+totalRentingSum;
+        cashInHand = previousCashInHand + fuelMoney - totalWages + totalPrice - bank_deposit + amount_received - amount_credit - daily_expense - pump_rent - totalCardPayments+totalRentingSum;
 
         // cashInHand = previousCashInHand + fuelMoney - totalWages + totalPrice - bank_deposit + amount_received - totalCredit - daily_expense - pump_rent - totalCardPayments;
 

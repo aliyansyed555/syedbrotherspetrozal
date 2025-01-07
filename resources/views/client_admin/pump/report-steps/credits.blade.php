@@ -32,9 +32,9 @@
         <div class="col-md-4 mt-5">
             <button type="button" class="btn btn-primary" id="add_credit">Add Credit</button>
         </div>
-    
+
     </div>
-        
+
     <!-- Table to display selected customers credits -->
     <div class="mt-5" id="credit_table_container" style="display:none;">
         <table class="table table-rounded table-row-bordered border gy-7 gs-7" id="credit_table">
@@ -51,7 +51,8 @@
         </table>
         <!-- Total Price Display -->
         <div class="mt-3 text-end">
-            <h5>Total Price: <span id="total_credit">0</span></h5>
+            <h5>Total Credit: <span id="total_credit">0</span></h5>
+            <h5>Total Received: <span id="totalReceive">0</span></h5>
         </div>
     </div>
 
