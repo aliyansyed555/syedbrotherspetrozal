@@ -79,7 +79,7 @@
                     <div class="modal-body">
                         <input type="hidden" id="id" name="id" />
                         @csrf
-                        
+
                         <div class="fv-row mb-5">
                             <label for="name" class="required form-label">Product</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Mobil" id="name" name="name" />
@@ -90,7 +90,7 @@
                             <input type="text" class="form-control form-control-solid" placeholder="Company" id="company" name="company" />
                         </div>
 
-                        
+
                         <div class="fv-row mb-5">
                             <label for="price" class="form-label">Price</label>
                             <input type="text" class="form-control form-control-solid" placeholder="999" id="price" name="price" />
@@ -137,9 +137,9 @@
 
                     <div class="modal-body">
                         <input type="hidden" id="product_id" name="product_id" />
-                        
+
                         @csrf
-                        
+
                         <div class="fv-row mb-5">
                             <label class="fs-6 fw-bold form-label mb-2">
                                 <span class="required">Date </span>
@@ -303,7 +303,7 @@
                 KTDatatablesServerSide.init();
             });
 
-            
+
             $('#product_table').on('click', '.edit_btn', function() {
                 const dataObj = JSON.parse($(this).attr('data-obj'));
                 $('#id').val(dataObj.id);
@@ -312,7 +312,7 @@
                 $('#price').val(dataObj.price);
             });
 
-            // data-bs-toggle="modal" data-bs-target="#inventory_modal" 
+            // data-bs-toggle="modal" data-bs-target="#inventory_modal"
             var productId;
             $('#product_table').on('click', '.stock_btn', function(e) {
                 e.preventDefault();
@@ -320,15 +320,15 @@
                 productId = $(this).data('id');
 
                 console.log("Getting product id: ", productId);
-                
+
                 $('#inventory_modal').modal('show');
             });
 
             $('#inventory_form').on('submit', function(e) {
                 e.preventDefault();
-                
+
                 const formData = new FormData(this);
-                
+
                 formData.append('product_id', productId);
 
                 $.ajax({
@@ -342,7 +342,7 @@
                         if (response.success) {
                             toastr.success('Stock added successfully.');
                             $('#product_table').DataTable().ajax.reload();
-                            $('#product_modal').modal('hide');
+                            $('#inventory_modal').modal('hide');
                         } else {
                             toastr.error('Failed to add stock. Please try again.');
                         }
@@ -357,7 +357,7 @@
             handlingForms('product', prefix);
             deleteFn('product', prefix)
         });
-        
+
 
     </script>
 @endsection
