@@ -221,6 +221,20 @@
                 </div>
             </div>
 
+            <div class="col-sm-3">
+                <div class="card border">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Total Stock Amount</h2>
+                        <ul class="card-text list-unstyled">
+                            @foreach ($stocks as $stock )
+                                @if(isset($fuelPurchasesPrices[$stock['fuel_type_id']]))
+                                    <li><strong>{{ $stock['tank_name'] }}:</strong> {{ $stock['total_reading_in_ltr'] * $fuelPurchasesPrices[$stock['fuel_type_id']] }}</li>
+                               @endif
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>

@@ -42,11 +42,21 @@ class PetrolPumpController extends Controller
 
         $pump = PetrolPump::where('id', $pump_id)->first();
 
+        $fuelPurchasesPrices = $pump->fuelPurchases()
+            ->join('fuel_types', 'fuel_types.id', '=', 'fuel_purchases.fuel_type_id')
+            ->whereBetween('purchase_date', [$startDate, $endDate]) // Apply the date range filter
+            ->select('fuel_types.id', 'fuel_purchases.buying_price_per_ltr') // Select only required fields
+             ->pluck('buying_price_per_ltr','id')
+            ->toArray();
+
+        $pump = PetrolPump::where('id', $pump_id)->first();
+
         $tanks = $pump->tanks();
 
         $stocks = DipRecord::select(
             'dip_records.date',
             'dip_records.tank_id',
+            'tanks.fuel_type_id',
             'tanks.name as tank_name',
             DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr')
         )
@@ -168,7 +178,7 @@ class PetrolPumpController extends Controller
             )
             ->groupBy('fuel_types.name')
             ->get();
-
+        
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -188,6 +198,7 @@ class PetrolPumpController extends Controller
             'final_profit_with_gain',
             'total_arrivals',
             'totalSold',
+            'fuelPurchasesPrices',
         ));
     }
 
