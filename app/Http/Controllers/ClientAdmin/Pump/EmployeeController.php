@@ -76,7 +76,7 @@ class EmployeeController extends Controller
             DB::table('employee_wages')->insert([
                 'employee_id' => $employee->id,
                 'amount_received' => (int)$request->advance_salary,
-                'date' => now()->toDateString(),
+                'date' => $request->employee_date ?? now()->toDateString(),
             ]);
 
         return response()->json(['success' => true, 'message' => 'Employee created successfully.']);

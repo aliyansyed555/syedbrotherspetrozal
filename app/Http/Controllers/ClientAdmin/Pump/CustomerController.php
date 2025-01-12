@@ -88,7 +88,7 @@ class CustomerController extends Controller
                 'bill_amount' => $balance > 0 ? (int)$request->closing_balance : 0, #plus
                 'amount_paid' => $balance < 0 ? (int)$request->closing_balance : 0, #subtract
                 'remarks' => '',
-                'date' => now()->toDateString(),
+                'date' => $request->customer_date ?? now()->toDateString(),
                 'balance' => $balance
             ]);
         }

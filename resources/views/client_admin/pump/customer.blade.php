@@ -78,6 +78,11 @@
                         @csrf
 
                         <div class="fv-row mb-5">
+                            <label for="customer_date" class="form-label">Date</label>
+                            <input type="date" class="form-control form-control-solid" id="customer_date" name="customer_date" />
+                        </div>
+
+                        <div class="fv-row mb-5">
                             <label for="name" class="required form-label">Customer Name</label>
                             <input type="text" class="form-control form-control-solid" placeholder="Alex Jones" id="name" name="name" />
                         </div>
@@ -150,6 +155,8 @@
                         pageLength: 10,
                         searchDelay: 500,
                         processing: true,
+                        searching: true,
+                        dom: 'frtp', // Exclude 'i' to hide the "total records per page" text
                         // serverSide: true,
                         order: [
                             [1, 'asc']
