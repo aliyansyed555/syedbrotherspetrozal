@@ -249,13 +249,37 @@
                 </div>
             </div>
 
+           @php
+            // Convert Eloquent collections to arrays
+            $stocksArray = $stocks->toArray(); // Convert $stocks to array
+            $productsArray = $products->toArray(); // Convert $products to array
+
+            // Calculate Total Stock Amount
+            $totalStockAmount = array_sum(array_map(function($stock) use ($fuelPurchasesPrices) {
+                return isset($fuelPurchasesPrices[$stock['fuel_type_id']])
+                    ? $stock['total_reading_in_ltr'] * $fuelPurchasesPrices[$stock['fuel_type_id']]
+                    : 0;
+            }, $stocksArray));
+
+            // Calculate Total Mobiloil Amount
+            $totalMobiloilAmount = array_sum(array_map(function($product) {
+                return $product['quantity'] * $product['buying_price'];
+            }, $productsArray));
+
+            // Fully Final Profit/Loss Calculation
+            $fullyFinalProfitLoss = $totalStockAmount
+                + $totalMobiloilAmount
+                - $totalDebit
+                + $totalCredit
+                + $final_profit_with_gain;
+        @endphp
+
             <div class="col-sm-3">
                 <div class="card border">
                     <div class="card-body">
                         <h2 class="card-title mb-4">Fully Final Profit/Loss</h2>
                         <ul class="card-text list-unstyled">
-                            <li>Testing 123</li>
-                            <li>Testing 456</li>
+                            <li><strong>Total:</strong> {{ round2Digit($fullyFinalProfitLoss) }}</li>
                         </ul>
                     </div>
                 </div>
@@ -265,7 +289,6 @@
     </div>
 
 @endsection
-
 
 @section('javascript')
 
