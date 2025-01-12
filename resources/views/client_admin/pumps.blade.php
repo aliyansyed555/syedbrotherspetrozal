@@ -122,6 +122,13 @@
                             <input type="number" class="form-control form-control-solid" placeholder="99999" id="cash_in_hand" name="cash_in_hand" />
                         </div>
 
+                        <div class="fv-row mb-5">
+                            <label for="total_investment" class="required form-label">Total Investment</label>
+                            <input type="number" class="form-control form-control-solid" placeholder="99999" id="total_investment" name="total_investment" />
+                        </div>
+
+
+
                     </div>
 
                     <div class="modal-footer flex-center">

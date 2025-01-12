@@ -220,6 +220,11 @@
                                     <td class="text-gray-800 p-1"><span id="sidebar_cash_in_hand">00</span></td>
                                 </tr>
 
+                                <tr>
+                                    <td class="text-gray-400 p-1">Total Investment</td>
+                                    <td class="text-gray-800 p-1"><span>{{$pump->total_investment}}</span></td>
+                                </tr>
+
                             </table>
                         </div>
 

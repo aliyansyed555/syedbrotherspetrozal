@@ -395,6 +395,7 @@ class PetrolPumpController extends Controller
             'name' => $validatedData['name'],
             'location' => $validatedData['location'],
             'company_id' => $this->company->id,
+            'total_investment' => $request->total_investment,
         ]);
 
         if ($request->cash_in_hand)

@@ -13,6 +13,7 @@ class PetrolPump extends Model
         'name',
         'location',
         'company_id',
+        'total_investment',
     ];
 
     // Define the relationship with the 'Company' model
@@ -78,7 +79,7 @@ class PetrolPump extends Model
     {
         static::addGlobalScope('company', function ($query) {
             $user = auth()->user();
-    
+
             if ($user->hasRole('client_admin') && $user->company) {
                 // Apply scope for client_admin
                 $query->where('company_id', $user->company->id);
