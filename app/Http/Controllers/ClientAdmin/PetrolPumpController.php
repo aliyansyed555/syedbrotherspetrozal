@@ -52,10 +52,12 @@ class PetrolPumpController extends Controller
         )
             ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
             ->whereIn('dip_records.tank_id', $tanks->pluck('id'))
-            ->where('dip_records.date', function ($query) {
+            ->whereBetween('dip_records.date', [$startDate, $endDate]) // Filter by date range
+            ->where('dip_records.date', function ($query) use ($startDate, $endDate) {
                 $query->select(DB::raw('MAX(date)'))
                     ->from('dip_records')
-                    ->whereColumn('dip_records.tank_id', 'tank_id');
+                    ->whereColumn('dip_records.tank_id', 'tank_id')
+                    ->whereBetween('dip_records.date', [$startDate, $endDate]); // Add date range here too
             })
             ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.name')
             ->get();
