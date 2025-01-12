@@ -73,7 +73,6 @@
 
                             <form class="form" novalidate="novalidate" id="report-stepper">
                                 <div class="mb-5">
-
                                     @include('client_admin.pump.report-steps.readings')
 
                                     @include('client_admin.pump.report-steps.sales')
@@ -87,9 +86,8 @@
                                     @include('client_admin.pump.report-steps.tank-transfer')
 
                                     @include('client_admin.pump.report-steps.renting')
+
                                     @include('client_admin.pump.report-steps.expenses')
-
-
                                 </div>
 
                                 <div class="separator separator mb-7"></div>

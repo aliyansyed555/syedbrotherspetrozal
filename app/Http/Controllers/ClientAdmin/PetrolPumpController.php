@@ -625,27 +625,34 @@ class PetrolPumpController extends Controller
 
             }
 
-            // 6. Save daily report
-            DB::table('daily_reports')->insert([
-                'daily_expense' => $request->input('daily_expense'),
-                'expense_detail' => $request->input('expense_detail'),
-                'pump_rent' => $request->input('pump_rent'),
-                'bank_deposit' => $request->input('bank_deposit'),
-                'cash_in_hand' => $request->input('cashInHand') ?? 0,
-                'account_number' => $request->input('account_number'),
-                'date' => $date,
-                'petrol_pump_id' => $petrolPumpId,
+            // 6. Save daily report TODO: check and test if works fine then ok otherwise we will only create
+            // Check date with petrolPumpId and update or create accordingly
+            DB::table('daily_reports')->updateOrInsert(
+                [
+                    // Matching criteria
+                    'date' => $date,
+                    'petrol_pump_id' => $petrolPumpId,
+                ],
+                [
+                    // Values to update or insert
+                    'daily_expense' => $request->input('daily_expense'),
+                    'expense_detail' => $request->input('expense_detail'),
+                    'pump_rent' => $request->input('pump_rent'),
+                    'bank_deposit' => $request->input('bank_deposit'),
+                    'cash_in_hand' => $request->input('cashInHand') ?? 0,
+                    'account_number' => $request->input('account_number'),
 
-                // New fields
-                'tuck_shop_rent' => $request->input('tuck_shop_rent') ?? 0,
-                'tuck_shop_earning' => $request->input('tuck_shop_earning') ?? 0,
-                'service_station_earning' => $request->input('service_station_earning') ?? 0,
-                'service_station_rent' => $request->input('service_station_rent') ?? 0,
-                'tyre_shop_earning' => $request->input('tyre_shop_earning') ?? 0,
-                'tyre_shop_rent' => $request->input('tyre_shop_rent') ?? 0,
-                'lube_shop_earning' => $request->input('lube_shop_earning') ?? 0,
-                'lube_shop_rent' => $request->input('lube_shop_rent') ?? 0,
-            ]);
+                    // New fields
+                    'tuck_shop_rent' => $request->input('tuck_shop_rent') ?? 0,
+                    'tuck_shop_earning' => $request->input('tuck_shop_earning') ?? 0,
+                    'service_station_earning' => $request->input('service_station_earning') ?? 0,
+                    'service_station_rent' => $request->input('service_station_rent') ?? 0,
+                    'tyre_shop_earning' => $request->input('tyre_shop_earning') ?? 0,
+                    'tyre_shop_rent' => $request->input('tyre_shop_rent') ?? 0,
+                    'lube_shop_earning' => $request->input('lube_shop_earning') ?? 0,
+                    'lube_shop_rent' => $request->input('lube_shop_rent') ?? 0,
+                ]
+            );
 
 
             DB::commit(); // Commit the transaction

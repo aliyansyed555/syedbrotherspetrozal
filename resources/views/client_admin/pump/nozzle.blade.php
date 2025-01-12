@@ -110,15 +110,30 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-5">
-                                <label for="analog_reading" class="form-label">Analog Reading</label>
-                                <input type="number" class="form-control form-control-solid" placeholder="Enter analog reading" id="analog_reading" name="analog_reading" />
+                                <label for="analog_reading" class="form-label">Hidden Reading</label>
+                                <input
+                                    type="number"
+                                    class="form-control form-control-solid"
+                                    placeholder="Enter analog reading"
+                                    id="analog_reading"
+                                    name="analog_reading"
+                                    step="0.01"
+                                />
                             </div>
 
                             <div class="col-md-6 mb-5">
                                 <label for="digital_reading" class="form-label">Digital Reading</label>
-                                <input type="number" class="form-control form-control-solid" placeholder="Enter digital reading" id="digital_reading" name="digital_reading" />
+                                <input
+                                    type="number"
+                                    class="form-control form-control-solid"
+                                    placeholder="Enter digital reading"
+                                    id="digital_reading"
+                                    name="digital_reading"
+                                    step="0.01"
+                                />
                             </div>
                         </div>
+
 
                     </div>
 
@@ -136,9 +151,9 @@
 @section('javascript')
     <script>
         $(document).ready(function() {
+
+
             // $("#fuel_type_table").DataTable();
-
-
 
             "use strict";
 

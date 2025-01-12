@@ -114,8 +114,8 @@ class NozzleController extends Controller
         if ($request->analog_reading && $request->digital_reading)
             DB::table('nozzle_readings')->insert([
                 'nozzle_id' => $nozzle->id,
-                'analog_reading' => $request->analog_reading,
-                'digital_reading' => $request->digital_reading,
+                'analog_reading' => round2Digit($request->analog_reading),
+                'digital_reading' => round2Digit($request->digital_reading),
                 'date' => now()->toDateString(),
             ]);
 

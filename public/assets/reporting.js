@@ -341,12 +341,29 @@ $(document).ready(function () {
         const row = $(this).closest('tr');
         const rowBalance = parseFloat(row.find('.balance').text());
 
-        // const customerId = row.data('product-id');
         allCredits = allCredits.filter(credit => credit.customer_id != row.data('product-id'));
 
-        totalCredit -= rowBalance; //todo login needs to check
-        row.remove();
+        console.log(allCredits , rowBalance);
+
+        // Update total values
+        if (rowBalance > 0) {
+            totalCredit -= rowBalance;
+        }
+        else{
+            totalReceive += rowBalance;
+        }
         updateTotalCredit();
+
+        row.remove();
+
+
+        //amount_received = allCredits.reduce((total, credit) => total + parseFloat(credit.amount_paid || '0'), 0);
+        //amount_credit = allCredits.reduce((total, credit) => total + parseFloat(credit.bill_amount || '0'), 0);
+
+        // Update total credit  BEFORE  totalCredit = (bill_amount - amount_paid) + totalCredit;
+        //totalCredit = bill_amount - totalCredit;
+        //totalReceive = amount_paid - totalReceive;
+
     });
 
     function updateTotalCredit() {
@@ -354,7 +371,6 @@ $(document).ready(function () {
         $('#totalReceive').text(totalReceive.toFixed(2));
 
         $('#sidebar_credit').text(totalCredit.toFixed(2));
-
         $('#sidebar_receive_from_customers').text(totalReceive.toFixed(2));
     }
 
@@ -668,8 +684,6 @@ $(document).ready(function () {
                             formData[element.name] = element.value;
                         }
                     });
-
-
 
                     const additionalData = {
                         cashInHand: cashInHand,

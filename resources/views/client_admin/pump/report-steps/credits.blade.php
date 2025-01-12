@@ -12,6 +12,7 @@
             <div class="fv-row">
                 <label class="required form-label" for="bill_amount">Bill Amount</label>
                 <input type="text" class="form-control form-control-solid" placeholder="00" id="bill_amount" name="bill_amount" />
+                <small><b>**Only one value, either 'Bill Amount' or 'Received Amount.</b></small>
             </div>
         </div>
 
@@ -19,6 +20,7 @@
             <div class="fv-row">
                 <label class="required form-label" for="amount_paid">Amount Received</label>
                 <input type="text" class="form-control form-control-solid" placeholder="00" id="amount_paid" name="amount_paid" />
+                <small><b>**Only one value, either 'Bill Amount' or 'Received Amount.</b></small>
             </div>
         </div>
 
@@ -32,7 +34,6 @@
         <div class="col-md-4 mt-5">
             <button type="button" class="btn btn-primary" id="add_credit">Add Credit</button>
         </div>
-
     </div>
 
     <!-- Table to display selected customers credits -->
