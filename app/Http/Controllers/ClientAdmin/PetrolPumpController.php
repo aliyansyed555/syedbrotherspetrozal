@@ -178,7 +178,7 @@ class PetrolPumpController extends Controller
             )
             ->groupBy('fuel_types.name')
             ->get();
-        
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
