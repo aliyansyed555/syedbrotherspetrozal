@@ -55,8 +55,6 @@
         </div>
     </div>
 
-
-
     <form method="POST" id="purchase_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="purchase_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">
@@ -99,30 +97,25 @@
                             </label>
                             <div class="btn-group w-100" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button]">
                                 @foreach ($fuel_types as $fuel_type)
-
                                 <label class="btn btn-outline-secondary text-muted text-hover-white text-active-white btn-outline btn-active-success"data-kt-button="true">
                                     <input class="btn-check" type="radio" name="fuel_type_id" value="{{$fuel_type->id}}" />
                                     {{$fuel_type->name}}
                                 </label>
-
                                 @endforeach
                             </div>
                         </div>
 
                         <div class="fv-row mb-5">
                             <label for="fuel_quantity" class="required form-label">Quantity Ltr</label>
-                            <input type="text" class="form-control form-control-solid" id="fuel_quantity" name="fuel_quantity" />
+                            <input type="text" class="form-control form-control-solid" value="0"  id="fuel_quantity" name="fuel_quantity" />
                         </div>
-
 
                         <div class="fv-row mb-5">
                             <label class="required form-label">Quantity in Tank</label>
                             <div id="tank-container">
                                 <i>Select Fuel Type please firs*</i>
                             </div>
-
                         </div>
-
 
                         <div class="fv-row mb-5">
                             <label for="buying_price_per_ltr" class="required form-label">Buying Price Per Ltr</label>
@@ -140,7 +133,6 @@
         </div>
     </form>
 @endsection
-
 
 @section('javascript')
     <script>
@@ -309,7 +301,7 @@
                                 <div class="tank-item">
                                     <div class="input-group mb-5">
                                         <span class="input-group-text" id="basic-addon3">${tank.name}</span>
-                                        <input type="text" class="form-control tank-stock-input" data-tank-id="${tank.id}" aria-describedby="basic-addon3" name="tank_stocks[]" />
+                                        <input type="text" class="form-control tank-stock-input" value="0" data-tank-id="${tank.id}" aria-describedby="basic-addon3" name="tank_stocks[]" />
                                     </div>
                                 </div>
                             `);

@@ -72,7 +72,7 @@ class FuelPurchaseController extends Controller
         $fuel_types = get_fuel_types_with_tanks($this->pump);
 
         $validatedData = $request->validate([
-            'fuel_quantity' => 'required|numeric|min:1',
+            'fuel_quantity' => 'required|numeric',
             'fuel_type_id' => [
                 'required',
                 'integer',
