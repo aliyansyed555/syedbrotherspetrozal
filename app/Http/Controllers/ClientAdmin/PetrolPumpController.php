@@ -33,6 +33,14 @@ class PetrolPumpController extends Controller
         return view('client_admin.pumps');
     }
 
+    public function updateInvestment(Request $request, $id)
+    {
+        $pump = PetrolPump::where('id', $id)->first();
+        $pump->total_investment = $request->input('total_investment');
+        $pump->save();
+
+        return redirect()->back()->with('success', 'Total Investment updated successfully.');
+    }
     public function showAnalytics($pump_id)
     {
         #todo: date filters for first few queries needs to add.

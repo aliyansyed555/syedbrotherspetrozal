@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
+Route::put('/pump/updateInvestment/{id}', [PetrolPumpController::class, 'updateInvestment'])->name('pump.updateInvestment');
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
