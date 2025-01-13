@@ -48,6 +48,7 @@ class EmployeeController extends Controller
             $employee->remaining_salary = $employee->total_salary - $employee->wages()->sum('amount_received');
             return $employee;
         });
+
         return response()->json([
             'recordsTotal' => $employees->count(),
             'recordsFiltered' => $employees->count(),
@@ -108,6 +109,17 @@ class EmployeeController extends Controller
             'address' => 'required|string|max:255',
             'total_salary' => 'nullable|numeric',
         ]);
+
+
+
+        if ($request->advance_salary){
+            DB::table('employee_wages')->insert([
+                'employee_id' => $employee->id,
+                'amount_received' => (int)$request->advance_salary,
+                'date' => $request->employee_date ?? now()->toDateString(),
+            ]);
+        }
+
 
         $employee->name = $validatedData['name'];
         $employee->phone = $validatedData['phone'];
