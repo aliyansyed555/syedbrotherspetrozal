@@ -668,7 +668,6 @@ class PetrolPumpController extends Controller
                 ]
             );
 
-
             DB::commit(); // Commit the transaction
 
             return response()->json(['message' => 'Data saved successfully!'], 200);

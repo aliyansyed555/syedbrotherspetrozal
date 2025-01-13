@@ -77,6 +77,10 @@
                     <div class="modal-body">
                         <input type="hidden" id="id" name="id" />
                         @csrf
+                        <div class="fv-row mb-5">
+                            <label for="nozzles_date" class="form-label">Date</label>
+                            <input type="date" class="form-control form-control-solid" id="nozzles_date" name="nozzles_date" />
+                        </div>
 
                         <div class="fv-row mb-5">
                             <label class="d-flex align-items-center fs-5 fw-bold mb-3" for="fuel_type_id">

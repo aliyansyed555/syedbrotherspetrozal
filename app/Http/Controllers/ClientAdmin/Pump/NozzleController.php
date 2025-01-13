@@ -116,7 +116,7 @@ class NozzleController extends Controller
                 'nozzle_id' => $nozzle->id,
                 'analog_reading' => round2Digit($request->analog_reading),
                 'digital_reading' => round2Digit($request->digital_reading),
-                'date' => now()->toDateString(),
+                'date' => $request->nozzles_date ?? now()->toDateString(),
             ]);
 
         return response()->json(['success' => true, 'message' => 'Nozzle created successfully.']);

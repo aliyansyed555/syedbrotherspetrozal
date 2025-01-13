@@ -120,7 +120,6 @@ class EmployeeController extends Controller
             ]);
         }
 
-
         $employee->name = $validatedData['name'];
         $employee->phone = $validatedData['phone'];
         $employee->address = $validatedData['address'];
