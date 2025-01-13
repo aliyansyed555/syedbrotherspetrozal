@@ -75,8 +75,8 @@ class NozzleController extends Controller
 
         $pump = $request->pump;
         $validatedData = $request->validate([
-            'analog_reading' => ['required', 'integer'],
-            'digital_reading' => ['required', 'integer'],
+            'analog_reading' => ['required', 'numeric'],
+            'digital_reading' => ['required', 'numeric'],
             'name' => [
                 'required',
                 'string',
