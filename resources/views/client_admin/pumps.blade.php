@@ -126,9 +126,6 @@
                             <label for="total_investment" class="required form-label">Total Investment</label>
                             <input type="number" class="form-control form-control-solid" value="0" placeholder="99999" id="total_investment" name="total_investment" />
                         </div>
-
-
-
                     </div>
 
                     <div class="modal-footer flex-center">

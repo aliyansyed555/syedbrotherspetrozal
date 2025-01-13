@@ -267,11 +267,10 @@
             }, $productsArray));
 
             // Fully Final Profit/Loss Calculation
-            $fullyFinalProfitLoss = $totalStockAmount
-                + $totalMobiloilAmount
-                - $totalDebit - $pump->total_investment
-                + $totalCredit
-                + $final_profit_with_gain;
+            $customValuesSum = ($totalStockAmount + $totalMobiloilAmount + $totalCredit) - $totalDebit;
+            $finalProfitCustom = $final_profit_with_gain > 0 ? $customValuesSum - $final_profit_with_gain : $customValuesSum + $final_profit_with_gain;
+
+            $fullyFinalProfitLoss = $finalProfitCustom - $pump->total_investment;
         @endphp
 
             <div class="col-sm-3">
