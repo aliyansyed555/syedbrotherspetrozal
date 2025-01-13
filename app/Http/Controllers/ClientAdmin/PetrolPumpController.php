@@ -384,11 +384,13 @@ class PetrolPumpController extends Controller
     public function create(Request $request)
     {
         $validatedData = $request->validate([
+            'created_date' => 'required',
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
         ], [
             'name.required' => 'Name is required.',
-            'location.required' => 'Email field is required.',
+            'location.required' => 'Location field is required.',
+            'created_date.required' => 'Date is required for cash in hand report.',
         ]);
 
         $pump = PetrolPump::create([
@@ -400,7 +402,7 @@ class PetrolPumpController extends Controller
 
         if ($request->cash_in_hand)
             DB::table('daily_reports')->insert([
-                'date' => now()->toDateString(),
+                'date' => $request->created_date ?? now()->toDateString(),
                 'petrol_pump_id' => $pump->id,
                 'cash_in_hand' => $request->cash_in_hand,
             ]);

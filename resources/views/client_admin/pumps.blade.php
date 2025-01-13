@@ -100,10 +100,10 @@
                     <div class="modal-body">
                         <input type="hidden" id="id" name="id" />
                         @csrf
-{{--                        <div class="fv-row mb-5">--}}
-{{--                            <label for="created_date" class="form-label">Created Date</label>--}}
-{{--                            <input type="date" class="form-control form-control-solid" id="created_date" name="created_date" />--}}
-{{--                        </div>--}}
+                        <div class="fv-row mb-5">
+                            <label for="created_date" class="form-label">Created Date</label>
+                            <input type="date" class="form-control form-control-solid" id="created_date" name="created_date" />
+                        </div>
 
                         <div class="fv-row mb-5">
                             <label for="" class="required form-label">Name</label>
