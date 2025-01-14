@@ -199,7 +199,7 @@
                             <!--end::Input-->
                         </div>
                         <!--end::Input group-->
-                        
+
                         <!--begin::Actions-->
                         {{-- <div class="text-center">
                             <button type="reset" id="report_generation_form_cancel" class="btn btn-light me-3" data-bs-dismiss="modal">Discard</button>
@@ -217,7 +217,7 @@
                                 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                             </button>
                         </div>
-                        
+
                         <!--end::Actions-->
                         <!--end::Actions-->
                     </form>
@@ -246,7 +246,7 @@
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range"
-            }); 
+            });
 
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
@@ -296,7 +296,7 @@
 
             $(document).on('click', '.open_order_detail', function(e) {
                 e.preventDefault();
-                let orderData = $(this).data('obj'); 
+                let orderData = $(this).data('obj');
                 console.log(orderData);
                 $('#invoice-id').text(orderData.id);
                 $('#invoice-date').text(orderData.date);
@@ -305,7 +305,7 @@
                 $('#total-amount').text(orderData.amount.toFixed(2));
                 $('#product-details').empty();
 
-                const products = JSON.parse(orderData.product_data); 
+                const products = JSON.parse(orderData.product_data);
                 products.forEach(product => {
                     const productTotal = product.product_qty * product.product_price;
                     totalAmount += productTotal;
@@ -313,14 +313,14 @@
                         <tr class="fw-bolder text-gray-700 fs-5 text-end">
                             <td class="d-flex align-items-center pt-6">${product.product_name}</td>
                             <td class="pt-6">${product.product_qty}</td>
-                            <td class="pt-6">$${product.product_price}</td>
-                            <td class="fs-6 text-dark fw-boldest pt-6">$${product.total}</td>
+                            <td class="pt-6">${product.product_price}</td>
+                            <td class="fs-6 text-dark fw-boldest pt-6">${product.total}</td>
                         </tr>
                     `;
                     $('#product-details').append(productRow);
                 });
 
-                $('#total-amount').text('$' + totalAmount.toFixed(2));
+                $('#total-amount').text(totalAmount.toFixed(2));
                 // Show the modal
                 $('#order_modal').modal('show');
             });
@@ -335,7 +335,7 @@
                 formData.append('start_date', start_date);
                 formData.append('end_date', end_date);
 
-                
+
                 $.ajax({
                     url: `/pump/${pumpId}/sales-history-pdf` ,
                     method: 'POST',
@@ -344,7 +344,7 @@
                     processData: false,
                     success: function(response) {
                         console.log(response);
-                        
+
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
