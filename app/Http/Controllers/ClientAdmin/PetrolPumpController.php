@@ -221,6 +221,17 @@ class PetrolPumpController extends Controller
 
     }
 
+    function get_bank_payments($pump_id)
+    {
+        $pump = PetrolPump::where('id', $pump_id)->first();
+        $daily_reports = $pump->dailyReports()->get();
+
+        $pump_id = $pump->id;
+
+        return view('client_admin.pump.bank-payments', compact('daily_reports', 'pump_id'));
+
+    }
+
     function save_bank_deposit(Request $request)
     {
         $pump_id = $request->pump->id;

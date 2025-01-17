@@ -113,6 +113,12 @@
                     </a>
                 </div>
 
+                <div class="menu-item">
+                    <a class="menu-link py-3 {{ request()->routeIs('pump.get_bank_payments') ? 'active' : '' }}" href="/pump/{{$pumpId}}/bank-payments">
+                        <span class="menu-title">Bank Payments</span>
+                    </a>
+                </div>
+
 
             </div>
         </div>

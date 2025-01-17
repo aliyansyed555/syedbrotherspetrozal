@@ -54,11 +54,11 @@
                         <thead>
                             <tr class="fw-bolder text-muted">
                                 <th class="min-w-150px">Date</th>
-                                <th class="min-w-150px">Daily Expense</th>
-                                <th class="min-w-150px">Detail</th>
-                                <th class="min-w-150px">Pump Rent</th>
-{{--                                <th class="min-w-150px">Bank Deposit</th>--}}
-{{--                                <th class="min-w-150px">Account Number</th>--}}
+{{--                                <th class="min-w-150px">Daily Expense</th>--}}
+{{--                                <th class="min-w-150px">Detail</th>--}}
+{{--                                <th class="min-w-150px">Pump Rent</th>--}}
+                                <th class="min-w-150px">Bank Deposit</th>
+                                <th class="min-w-150px">Account Number</th>
                                 {{-- <th class="min-w-100px text-end">Actions</th> --}}
                             </tr>
                         </thead>
@@ -67,11 +67,11 @@
                                 <tr class="{{ $daily_report->bank_deposit < 0 ? 'bg-danger bg-opacity-10' : '' }}">
 
                                     <td>{{ $daily_report->date }}</td>
-                                    <td>{{ $daily_report->daily_expense }}</td>
-                                    <td>{{ $daily_report->expense_detail }}</td>
-                                    <td>{{ $daily_report->pump_rent }}</td>
-{{--                                    <td>{{ $daily_report->bank_deposit }}</td>--}}
-{{--                                    <td>{{ $daily_report->account_number }}</td>--}}
+{{--                                    <td>{{ $daily_report->daily_expense }}</td>--}}
+{{--                                    <td>{{ $daily_report->expense_detail }}</td>--}}
+{{--                                    <td>{{ $daily_report->pump_rent }}</td>--}}
+                                    <td>{{ $daily_report->bank_deposit }}</td>
+                                    <td>{{ $daily_report->account_number }}</td>
 
                                     {{-- <td class="text-end">
                                         <a href="#" class="btn btn-sm btn-light-success">

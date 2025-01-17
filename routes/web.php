@@ -90,6 +90,8 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
 
     Route::get('/{pump_id}/expenses', 'get_expenses')->middleware('verify.pump')->name('pump.get_expenses');
 
+    Route::get('/{pump_id}/bank-payments', 'get_bank_payments')->middleware('verify.pump')->name('pump.get_bank_payments');
+
     Route::post('/{pump_id}/get_expenses_pdf', 'get_expenses_pdf')->middleware('verify.pump')->name('pump.get_expenses_pdf');
 
     Route::post('/{pump_id}/daily-reports/create', 'save_bank_deposit')->middleware('verify.pump')->name('pump.save_bank_deposit');
