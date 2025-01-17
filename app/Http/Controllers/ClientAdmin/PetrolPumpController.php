@@ -1287,11 +1287,11 @@ class PetrolPumpController extends Controller
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
                 LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-                0
+                digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
                 LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-                0
+                analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
             (
@@ -1366,7 +1366,34 @@ class PetrolPumpController extends Controller
             AND tt.date BETWEEN ? AND ?  -- Filtering by start and end dates
         GROUP BY
             t.fuel_type_id, transfer_date
+    ),
+	    credit_balance AS (
+        SELECT
+            cc.date,
+            SUM(DISTINCT cc.balance) AS total_credit
+        FROM
+            customers c
+        LEFT JOIN
+            customer_credits cc ON cc.customer_id = c.id AND cc.is_special = 0
+        WHERE
+            c.petrol_pump_id = ?
+        GROUP BY
+            cc.date
+    ),
+    wages AS (
+        SELECT
+            ee.date,
+            COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage
+        FROM
+            employees e
+        LEFT JOIN
+            employee_wages ee ON ee.employee_id = e.id
+        WHERE
+            e.petrol_pump_id = ?
+        GROUP BY
+            ee.date
     )
+
     SELECT
         cr.date AS reading_date,
         " . implode(', ', $selectClauses) . ",
@@ -1375,8 +1402,8 @@ class PetrolPumpController extends Controller
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-        COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage, -- Removed DISTINCT here to sum all wages
-        SUM(DISTINCT cc.balance) AS total_credit
+		SUM(total_wage) AS total_wage,
+        SUM(total_credit) AS total_credit
     FROM
         calculated_readings cr
     LEFT JOIN
@@ -1390,13 +1417,9 @@ class PetrolPumpController extends Controller
     LEFT JOIN
         tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
     LEFT JOIN
-        customers c ON c.petrol_pump_id = ?
+        credit_balance cc ON cc.date = cr.date
     LEFT JOIN
-        customer_credits cc ON cc.customer_id = c.id AND cc.date = cr.date
-    LEFT JOIN
-        employees e ON e.petrol_pump_id = ?
-    LEFT JOIN
-        employee_wages ee ON ee.employee_id = e.id AND ee.date = cr.date
+        wages ee ON ee.date = cr.date
     WHERE
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
