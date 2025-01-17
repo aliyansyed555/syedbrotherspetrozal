@@ -123,7 +123,7 @@
                                         {{ $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_transfer_quantity"] }}
                                     </td>
                                     <td>{{ $reportData[$i]["{$columnBase}_price"] }}</td>
-                                    <td>{{ $reportData[$i]["{$columnBase}_profit"] }}</td>
+                                    <td>{{ round2Digit($reportData[$i]["{$columnBase}_profit"]) }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_stock_quantity"] }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_transfer_quantity"] }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_dip_quantity"] }}</td>

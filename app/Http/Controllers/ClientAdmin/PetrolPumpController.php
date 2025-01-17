@@ -690,7 +690,6 @@ class PetrolPumpController extends Controller
 
     public function getPumpReport($petrolPumpId)
     {
-
         $pumpId = $petrolPumpId;
 
         // Get the fuel types associated with the petrol pump
@@ -699,6 +698,7 @@ class PetrolPumpController extends Controller
             ->join('tanks', 'fuel_types.id', '=', 'tanks.fuel_type_id')
             ->join('petrol_pumps', 'tanks.petrol_pump_id', '=', 'petrol_pumps.id')
             ->where('petrol_pumps.company_id', $this->company->id)
+            #->limit(1)
             ->distinct()
             ->get();
 
@@ -709,178 +709,179 @@ class PetrolPumpController extends Controller
             $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
 
             $selectClauses[] = "
-                SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
-                SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
-                MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
-                AVG(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
-                MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
-                MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
-                MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
-            ";
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
+            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
+            AVG(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
+            MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
+            MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
+            MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
+        ";
         }
 
         $query = "
-        WITH calculated_readings AS (
-            SELECT
-                nr.nozzle_id,
-                nr.date,
-                ft.id AS fuel_type_id,
-                nr.digital_reading - COALESCE(
-                    LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-                    0
-                ) AS digital_sold_ltrs,
-                nr.analog_reading - COALESCE(
-                    LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-                    0
-                ) AS analog_sold_ltrs,
-                fr.selling_price,
-                (
-                    SELECT AVG(fp.buying_price_per_ltr)
-                    FROM fuel_purchases fp
-                    WHERE fp.fuel_type_id = ft.id
-                    AND fp.petrol_pump_id = ?
-                    AND fp.purchase_date <= nr.date
-                ) AS buying_price_per_ltr
-            FROM
-                nozzle_readings nr
-            JOIN
-                nozzles n ON nr.nozzle_id = n.id
-            JOIN
-                fuel_types ft ON n.fuel_type_id = ft.id
-            LEFT JOIN
-                fuel_prices fr ON fr.fuel_type_id = n.fuel_type_id
-                AND fr.petrol_pump_id = n.petrol_pump_id
-                AND fr.date = (
-                    SELECT MAX(fp.date)
-                    FROM fuel_prices fp
-                    WHERE fp.fuel_type_id = fr.fuel_type_id
-                    AND fp.petrol_pump_id = fr.petrol_pump_id
-                    AND fp.date <= nr.date
-                )
-            WHERE
-                fr.petrol_pump_id = ?
-        ),
-        tank_stocks AS (
-            SELECT
-                tanks.fuel_type_id,
-                DATE(tank_stocks.date) AS stock_date,
-                SUM(tank_stocks.reading_in_ltr) AS daily_quantity,
-                SUM(SUM(tank_stocks.reading_in_ltr)) OVER (PARTITION BY tanks.fuel_type_id ORDER BY DATE(tank_stocks.date)) AS cumulative_quantity
-            FROM
-                tank_stocks
-            JOIN
-                tanks ON tank_stocks.tank_id = tanks.id
-            WHERE
-                tanks.petrol_pump_id = ?
-            GROUP BY
-                tanks.fuel_type_id, stock_date
-        ),
-        dip_records AS (
-            SELECT
-                tanks.fuel_type_id,
-                DATE(dip_records.date) AS dip_record_date,
-                SUM(dip_records.reading_in_ltr) AS dip_quantity
-            FROM
-                dip_records
-            JOIN
-                tanks ON dip_records.tank_id = tanks.id
-            WHERE
-                tanks.petrol_pump_id = ?
-            GROUP BY
-                tanks.fuel_type_id, dip_record_date
-        ),
-        tank_transfers AS (
-            SELECT
-                t.fuel_type_id,
-                DATE(tt.date) AS transfer_date,
-                SUM(tt.quantity_ltr) AS quantity_ltr
-            FROM
-                tank_transfers tt
-            JOIN
-                tanks t ON tt.tank_id = t.id
-            WHERE
-                t.petrol_pump_id = ?
-            GROUP BY
-                t.fuel_type_id, transfer_date
-        )
+    WITH calculated_readings AS (
         SELECT
-            cr.date AS reading_date,
-            " . implode(', ', $selectClauses) . ",
-            dr.daily_expense,
-
-            dr.tuck_shop_rent,
-            dr.tuck_shop_earning,
-
-            dr.service_station_earning,
-            dr.service_station_rent,
-
-            dr.tyre_shop_earning,
-            dr.tyre_shop_rent,
-
-            dr.lube_shop_earning,
-            dr.lube_shop_rent,
-
-            dr.pump_rent,
-            dr.bank_deposit,
-            COALESCE(ps.amount, 0) AS products_amount,
-            COALESCE(ps.profit, 0) AS products_profit,
-            COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage, -- Removed DISTINCT here to sum all wages
+            nr.nozzle_id,
+            nr.date,
+            ft.id AS fuel_type_id,
+            nr.digital_reading - COALESCE(
+                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                digital_reading
+            ) AS digital_sold_ltrs,
+            nr.analog_reading - COALESCE(
+                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                analog_reading
+            ) AS analog_sold_ltrs,
+            fr.selling_price,
+            (
+                SELECT AVG(fp.buying_price_per_ltr)
+                FROM fuel_purchases fp
+                WHERE fp.fuel_type_id = ft.id
+                AND fp.petrol_pump_id = ?
+                AND fp.purchase_date <= nr.date
+            ) AS buying_price_per_ltr
+        FROM
+            nozzle_readings nr
+        JOIN
+            nozzles n ON nr.nozzle_id = n.id
+        JOIN
+            fuel_types ft ON n.fuel_type_id = ft.id
+        LEFT JOIN
+            fuel_prices fr ON fr.fuel_type_id = n.fuel_type_id
+            AND fr.petrol_pump_id = n.petrol_pump_id
+            AND fr.date = (
+                SELECT MAX(fp.date)
+                FROM fuel_prices fp
+                WHERE fp.fuel_type_id = fr.fuel_type_id
+                AND fp.petrol_pump_id = fr.petrol_pump_id
+                AND fp.date <= nr.date
+            )
+        WHERE
+            fr.petrol_pump_id = ?
+    ),
+    tank_stocks AS (
+        SELECT
+            tanks.fuel_type_id,
+            DATE(tank_stocks.date) AS stock_date,
+            SUM(tank_stocks.reading_in_ltr) AS daily_quantity,
+            SUM(SUM(tank_stocks.reading_in_ltr)) OVER (PARTITION BY tanks.fuel_type_id ORDER BY DATE(tank_stocks.date)) AS cumulative_quantity
+        FROM
+            tank_stocks
+        JOIN
+            tanks ON tank_stocks.tank_id = tanks.id
+        WHERE
+            tanks.petrol_pump_id = ?
+        GROUP BY
+            tanks.fuel_type_id, stock_date
+    ),
+    dip_records AS (
+        SELECT
+            tanks.fuel_type_id,
+            DATE(dip_records.date) AS dip_record_date,
+            SUM(dip_records.reading_in_ltr) AS dip_quantity
+        FROM
+            dip_records
+        JOIN
+            tanks ON dip_records.tank_id = tanks.id
+        WHERE
+            tanks.petrol_pump_id = ?
+        GROUP BY
+            tanks.fuel_type_id, dip_record_date
+    ),
+    tank_transfers AS (
+        SELECT
+            t.fuel_type_id,
+            DATE(tt.date) AS transfer_date,
+            SUM(tt.quantity_ltr) AS quantity_ltr
+        FROM
+            tank_transfers tt
+        JOIN
+            tanks t ON tt.tank_id = t.id
+        WHERE
+            t.petrol_pump_id = ?
+        GROUP BY
+            t.fuel_type_id, transfer_date
+    ),
+    credit_balance AS (
+        SELECT
+            cc.date,
             SUM(DISTINCT cc.balance) AS total_credit
         FROM
-            calculated_readings cr
+            customers c
         LEFT JOIN
-            daily_reports dr ON cr.date = dr.date AND dr.petrol_pump_id = ?
-        LEFT JOIN
-            product_sales ps ON ps.petrol_pump_id = ? AND ps.date = cr.date
-        LEFT JOIN
-            tank_stocks ts ON cr.date = ts.stock_date AND cr.fuel_type_id = ts.fuel_type_id
-        LEFT JOIN
-            dip_records ds ON cr.date = ds.dip_record_date AND cr.fuel_type_id = ds.fuel_type_id
-        LEFT JOIN
-            tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
-        LEFT JOIN
-            customers c ON c.petrol_pump_id = ?
-        LEFT JOIN
-            customer_credits cc ON cc.customer_id = c.id AND cc.date = cr.date AND cc.is_special = 0
-        LEFT JOIN
-            employees e ON e.petrol_pump_id = ?
-        LEFT JOIN
-            employee_wages ee ON ee.employee_id = e.id AND ee.date = cr.date
+            customer_credits cc ON cc.customer_id = c.id AND cc.is_special = 0
+        WHERE
+            c.petrol_pump_id = ?
         GROUP BY
-            cr.date, dr.daily_expense,
-            dr.tuck_shop_rent,
-            dr.tuck_shop_earning,
-
-            dr.service_station_earning,
-            dr.service_station_rent,
-
-            dr.tyre_shop_earning,
-            dr.tyre_shop_rent,
-
-            dr.lube_shop_earning,
-            dr.lube_shop_rent,
-
-            dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
-        ORDER BY
-            cr.date;
-        ";
+            cc.date
+    ),
+    wages AS (
+        SELECT
+            ee.date,
+            COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage
+        FROM
+            employees e
+        LEFT JOIN
+            employee_wages ee ON ee.employee_id = e.id
+        WHERE
+            e.petrol_pump_id = ?
+        GROUP BY
+            ee.date
+    )
+    SELECT
+        cr.date AS reading_date,
+        " . implode(', ', $selectClauses) . ",
+        dr.daily_expense,
+        dr.tuck_shop_rent,
+        dr.tuck_shop_earning,
+        dr.service_station_earning,
+        dr.service_station_rent,
+        dr.tyre_shop_earning,
+        dr.tyre_shop_rent,
+        dr.lube_shop_earning,
+        dr.lube_shop_rent,
+        dr.pump_rent,
+        dr.bank_deposit,
+        COALESCE(ps.amount, 0) AS products_amount,
+        COALESCE(ps.profit, 0) AS products_profit,
+        SUM(total_wage) AS total_wage,
+        SUM(total_credit) AS total_credit
+    FROM
+        calculated_readings cr
+    LEFT JOIN
+        daily_reports dr ON cr.date = dr.date AND dr.petrol_pump_id = ?
+    LEFT JOIN
+        product_sales ps ON ps.petrol_pump_id = ? AND ps.date = cr.date
+    LEFT JOIN
+        tank_stocks ts ON cr.date = ts.stock_date AND cr.fuel_type_id = ts.fuel_type_id
+    LEFT JOIN
+        dip_records ds ON cr.date = ds.dip_record_date AND cr.fuel_type_id = ds.fuel_type_id
+    LEFT JOIN
+        tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
+    LEFT JOIN
+        credit_balance cc ON cc.date = cr.date
+    LEFT JOIN
+        wages ee ON ee.date = cr.date
+    GROUP BY
+        cr.date, dr.daily_expense,
+        dr.tuck_shop_rent, dr.tuck_shop_earning,
+        dr.service_station_earning, dr.service_station_rent,
+        dr.tyre_shop_earning, dr.tyre_shop_rent,
+        dr.lube_shop_earning, dr.lube_shop_rent,
+        dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
+    ORDER BY
+        cr.date;
+    ";
 
         $reportData = DB::select($query, [
-            $pumpId,
-            $pumpId,
-            $pumpId,
-            $pumpId,
-            $pumpId,
-            $pumpId,
-            $pumpId,
-            $pumpId,
-            $pumpId
+            $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId
         ]);
 
+        #dd($reportData[0]->diesel_digital_sold);
         // Format the report data
         $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
-        // return $formattedReport;
         return view('client_admin.pump.report', [
             'reportData' => $formattedReport,
             'fuelTypes' => $fuelTypesWithTanks,
