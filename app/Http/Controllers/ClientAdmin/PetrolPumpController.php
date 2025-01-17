@@ -41,6 +41,7 @@ class PetrolPumpController extends Controller
 
         return redirect()->back()->with('success', 'Total Investment updated successfully.');
     }
+
     public function showAnalytics($pump_id)
     {
         #todo: date filters for first few queries needs to add.
@@ -54,7 +55,7 @@ class PetrolPumpController extends Controller
             ->join('fuel_types', 'fuel_types.id', '=', 'fuel_purchases.fuel_type_id')
             ->whereBetween('purchase_date', [$startDate, $endDate]) // Apply the date range filter
             ->select('fuel_types.id', 'fuel_purchases.buying_price_per_ltr') // Select only required fields
-             ->pluck('buying_price_per_ltr','id')
+            ->pluck('buying_price_per_ltr', 'id')
             ->toArray();
 
         $pump = PetrolPump::where('id', $pump_id)->first();
@@ -244,7 +245,7 @@ class PetrolPumpController extends Controller
 
         DailyReport::create([
             'date' => $validatedData['date'],
-            'bank_deposit' => -$validatedData['bank_deposit'],
+            'bank_deposit' => $validatedData['bank_deposit'],
             'account_number' => $validatedData['account_number'],
             'expense_detail' => $validatedData['expense_detail'],
             'petrol_pump_id' => $pump_id,
@@ -917,187 +918,6 @@ class PetrolPumpController extends Controller
         return response()->json(['success' => true, 'tanks' => $tanks]);
     }
 
-    // public function generatePdf(Request $request,$pump_id)
-    // {
-    //     dd($request->all());
-    //     $start_date = $request->start_date;
-    //     $end_date = $request->end_date;
-
-    //     $pump = PetrolPump::find($pump_id);
-
-
-    //     $fuelTypesWithTanks = DB::table('fuel_types')
-    //         ->select('fuel_types.name', 'fuel_types.id')
-    //         ->join('tanks', 'fuel_types.id', '=', 'tanks.fuel_type_id')
-    //         ->join('petrol_pumps', 'tanks.petrol_pump_id', '=', 'petrol_pumps.id')
-    //         ->where('petrol_pumps.company_id', $this->company->id)
-    //         ->distinct()
-    //         ->get();
-
-    //     $selectClauses = [];
-    //     foreach ($fuelTypesWithTanks as $fuelType) {
-    //         $fuelTypeName = $fuelType->name;
-    //         $fuelTypeId = $fuelType->id;
-    //         $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
-
-    //         $selectClauses[] = "
-    //             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
-    //             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
-    //             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
-    //             AVG(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
-    //             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
-    //             MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
-    //             MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
-    //         ";
-    //     }
-
-    //     $query = "
-    //     WITH calculated_readings AS (
-    //         SELECT
-    //             nr.nozzle_id,
-    //             nr.date,
-    //             ft.id AS fuel_type_id,
-    //             nr.digital_reading - COALESCE(
-    //                 LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-    //                 0
-    //             ) AS digital_sold_ltrs,
-    //             nr.analog_reading - COALESCE(
-    //                 LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-    //                 0
-    //             ) AS analog_sold_ltrs,
-    //             fr.selling_price,
-    //             (
-    //                 SELECT AVG(fp.buying_price_per_ltr)
-    //                 FROM fuel_purchases fp
-    //                 WHERE fp.fuel_type_id = ft.id
-    //                 AND fp.petrol_pump_id = ?
-    //                 AND fp.purchase_date <= nr.date
-    //             ) AS buying_price_per_ltr
-    //         FROM
-    //             nozzle_readings nr
-    //         JOIN
-    //             nozzles n ON nr.nozzle_id = n.id
-    //         JOIN
-    //             fuel_types ft ON n.fuel_type_id = ft.id
-    //         LEFT JOIN
-    //             fuel_prices fr ON fr.fuel_type_id = n.fuel_type_id
-    //             AND fr.petrol_pump_id = n.petrol_pump_id
-    //             AND fr.date = (
-    //                 SELECT MAX(fp.date)
-    //                 FROM fuel_prices fp
-    //                 WHERE fp.fuel_type_id = fr.fuel_type_id
-    //                 AND fp.petrol_pump_id = fr.petrol_pump_id
-    //                 AND fp.date <= nr.date
-    //             )
-    //         WHERE
-    //             fr.petrol_pump_id = ?
-    //     ),
-    //     tank_stocks AS (
-    //         SELECT
-    //             tanks.fuel_type_id,
-    //             DATE(tank_stocks.date) AS stock_date,
-    //             SUM(tank_stocks.reading_in_ltr) AS daily_quantity,
-    //             SUM(SUM(tank_stocks.reading_in_ltr)) OVER (PARTITION BY tanks.fuel_type_id ORDER BY DATE(tank_stocks.date)) AS cumulative_quantity
-    //         FROM
-    //             tank_stocks
-    //         JOIN
-    //             tanks ON tank_stocks.tank_id = tanks.id
-    //         WHERE
-    //             tanks.petrol_pump_id = ?
-    //         GROUP BY
-    //             tanks.fuel_type_id, stock_date
-    //     ),
-    //     dip_records AS (
-    //         SELECT
-    //             tanks.fuel_type_id,
-    //             DATE(dip_records.date) AS dip_record_date,
-    //             SUM(dip_records.reading_in_ltr) AS dip_quantity
-    //         FROM
-    //             dip_records
-    //         JOIN
-    //             tanks ON dip_records.tank_id = tanks.id
-    //         WHERE
-    //             tanks.petrol_pump_id = ?
-    //         GROUP BY
-    //             tanks.fuel_type_id, dip_record_date
-    //     ),
-    //     tank_transfers AS (
-    //         SELECT
-    //             t.fuel_type_id,
-    //             DATE(tt.date) AS transfer_date,
-    //             SUM(tt.quantity_ltr) AS quantity_ltr
-    //         FROM
-    //             tank_transfers tt
-    //         JOIN
-    //             tanks t ON tt.tank_id = t.id
-    //         WHERE
-    //             t.petrol_pump_id = ?
-    //         GROUP BY
-    //             t.fuel_type_id, transfer_date
-    //     )
-    //     SELECT
-    //         cr.date AS reading_date,
-    //         " . implode(', ', $selectClauses) . ",
-    //         dr.daily_expense,
-    //         dr.pump_rent,
-    //         dr.bank_deposit,
-    //         COALESCE(ps.amount, 0) AS products_amount,
-    //         COALESCE(ps.profit, 0) AS products_profit,
-    //         COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage, -- Removed DISTINCT here to sum all wages
-    //         SUM(DISTINCT cc.balance) AS total_credit
-    //     FROM
-    //         calculated_readings cr
-    //     LEFT JOIN
-    //         daily_reports dr ON cr.date = dr.date AND dr.petrol_pump_id = ?
-    //     LEFT JOIN
-    //         product_sales ps ON ps.petrol_pump_id = ? AND ps.date = cr.date
-    //     LEFT JOIN
-    //         tank_stocks ts ON cr.date = ts.stock_date AND cr.fuel_type_id = ts.fuel_type_id
-    //     LEFT JOIN
-    //         dip_records ds ON cr.date = ds.dip_record_date AND cr.fuel_type_id = ds.fuel_type_id
-    //     LEFT JOIN
-    //         tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
-    //     LEFT JOIN
-    //         customers c ON c.petrol_pump_id = ?
-    //     LEFT JOIN
-    //         customer_credits cc ON cc.customer_id = c.id AND cc.date = cr.date
-    //     LEFT JOIN
-    //         employees e ON e.petrol_pump_id = ?
-    //     LEFT JOIN
-    //         employee_wages ee ON ee.employee_id = e.id AND ee.date = cr.date
-    //     GROUP BY
-    //         cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
-    //     ORDER BY
-    //         cr.date;
-    //     ";
-
-    //     $reportData = DB::select($query, [
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id,
-    //         $pump_id
-    //     ]);
-
-    //     // Format the report data
-    //     $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
-
-    //     $pdf = Pdf::loadView('pdfs.report-pdf', [
-    //         'reportData' => $formattedReport,
-    //         'fuelTypes' => $fuelTypesWithTanks,
-    //         'pump_id' => $pump_id,
-    //         'pump' => $pump
-    //     ])->setPaper('a4', 'landscape')->setOption('dpi', 180);
-
-    //     $date = Carbon::now()->format('d-m-Y');
-    //     $filename = "{$pump->name}-{$date}.pdf";
-    //     return $pdf->download($filename);
-    // }
-
     public function generatePdf(Request $request, $pump_id)
     {
         // Debugging the request inputs
@@ -1145,11 +965,11 @@ class PetrolPumpController extends Controller
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
                 LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-                0
+                 digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
                 LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
-                0
+                analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
             (
@@ -1224,6 +1044,32 @@ class PetrolPumpController extends Controller
             AND tt.date BETWEEN ? AND ?  -- Filtering by start and end dates
         GROUP BY
             t.fuel_type_id, transfer_date
+    ),
+	    credit_balance AS (
+        SELECT
+            cc.date,
+            SUM(DISTINCT cc.balance) AS total_credit
+        FROM
+            customers c
+        LEFT JOIN
+            customer_credits cc ON cc.customer_id = c.id AND cc.is_special = 0
+        WHERE
+            c.petrol_pump_id = ?
+        GROUP BY
+            cc.date
+    ),
+    wages AS (
+        SELECT
+            ee.date,
+            COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage
+        FROM
+            employees e
+        LEFT JOIN
+            employee_wages ee ON ee.employee_id = e.id
+        WHERE
+            e.petrol_pump_id = ?
+        GROUP BY
+            ee.date
     )
     SELECT
         cr.date AS reading_date,
@@ -1233,8 +1079,8 @@ class PetrolPumpController extends Controller
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-        COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage, -- Removed DISTINCT here to sum all wages
-        SUM(DISTINCT cc.balance) AS total_credit
+        SUM(total_wage) AS total_wage,
+        SUM(total_credit) AS total_credit
     FROM
         calculated_readings cr
     LEFT JOIN
@@ -1247,14 +1093,10 @@ class PetrolPumpController extends Controller
         dip_records ds ON cr.date = ds.dip_record_date AND cr.fuel_type_id = ds.fuel_type_id
     LEFT JOIN
         tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
+	LEFT JOIN
+        credit_balance cc ON cc.date = cr.date
     LEFT JOIN
-        customers c ON c.petrol_pump_id = ?
-    LEFT JOIN
-        customer_credits cc ON cc.customer_id = c.id AND cc.date = cr.date
-    LEFT JOIN
-        employees e ON e.petrol_pump_id = ?
-    LEFT JOIN
-        employee_wages ee ON ee.employee_id = e.id AND ee.date = cr.date
+        wages ee ON ee.date = cr.date
     WHERE
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
