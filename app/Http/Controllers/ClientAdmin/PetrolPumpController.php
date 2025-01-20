@@ -44,7 +44,6 @@ class PetrolPumpController extends Controller
 
     public function showAnalytics($pump_id)
     {
-        #todo: date filters for first few queries needs to add.
 
         $startDate = request('start_date', now()->toDateString());
         $endDate = request('end_date', now()->toDateString());
@@ -163,6 +162,7 @@ class PetrolPumpController extends Controller
             ->first();
 
         $total_loss_gain = FuelPrice::where('petrol_pump_id', $pump_id)
+            ->whereBetween('date', [$startDate, $endDate])
             ->join('fuel_types', 'fuel_prices.fuel_type_id', '=', 'fuel_types.id')
             ->select(
                 'fuel_types.name as fuel_name',
