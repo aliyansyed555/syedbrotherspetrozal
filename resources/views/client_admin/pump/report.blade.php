@@ -113,11 +113,10 @@
                                     $fuelsProfit += $profit;
 
                                     $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
-                                    $profitWithGain = $dipComparison * $reportData[$i]["{$columnBase}_price"];
-
-                                    $totalProfitWithGain += $profitWithGain;
-
                                     $dipComparisonFinal =  $dipComparison - $firstDipComparisons[$columnBase];
+
+                                    $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
+                                    $totalProfitWithGain += $profitWithGain;
                                     ?>
                                     <td>
                                         {{ $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_transfer_quantity"] }}
