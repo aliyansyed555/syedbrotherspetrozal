@@ -9,6 +9,13 @@
                     <span class="card-label fw-bolder fs-3 mb-1">Employees</span>
                 </h3>
 
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
                 <div class="card-toolbar" >
                     <a href="#" class="btn btn-sm btn-primary btn-active-primary new_modal" data-bs-toggle="modal"
                         data-bs-target="#employee_modal">
@@ -23,6 +30,15 @@
                         </span>
                         Add Employee
                     </a>
+
+                    <a href="{{ route('pump.employee.revise_salaries', ['pump_id' => $pump_id]) }}"
+                       class="btn btn-sm btn-danger btn-active-danger"
+                       style="margin-left: 5px"
+                       onclick="return confirm('Are you sure you want to revise salaries?')">
+                        Revise Salaries
+                    </a>
+
+
                 </div>
             </div>
             <div class="card-body py-3">
@@ -50,8 +66,6 @@
             </div>
         </div>
     </div>
-
-
 
     <form action="" method="POST" id="employee_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="employee_modal">
@@ -125,6 +139,15 @@
 
 
 @section('javascript')
+    <script>
+        setTimeout(function() {
+            let alertElement = document.querySelector('.alert');
+            if (alertElement) {
+                alertElement.classList.remove('show'); // Removes the 'show' class
+                alertElement.classList.add('fade'); // Optionally add fade effect
+            }
+        }, 4000);
+    </script>
     <script>
         $(document).ready(function() {
             // $("#fuel_type_table").DataTable();
@@ -283,8 +306,8 @@
 
 
     </script>
-@endsection
 
+@endsection
 
 @section('styles')
 @endsection

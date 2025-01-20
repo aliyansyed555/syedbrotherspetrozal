@@ -214,6 +214,7 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
         Route::put('/update/{employee_id}', 'update')->name('update');
         Route::delete('/delete/{employee_id}', 'delete')->name('delete');
         Route::post('/wages/generate_pdf/{employee_id}', 'generate_pdf')->name('generate_pdf');
+        Route::get('/revise-salaries', 'revise_salaries')->name('revise_salaries');
     });
 
     // products As Subpage of Pump

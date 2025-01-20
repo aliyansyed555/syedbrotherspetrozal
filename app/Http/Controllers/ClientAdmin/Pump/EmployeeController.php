@@ -25,6 +25,41 @@ class EmployeeController extends Controller
         $this->pump = $request->pump;
     }
 
+    public function revise_salaries(){
+        $employees = $this->pump->employees()->get();
+
+        foreach ($employees as $employee){
+
+            $lastMonth = now()->subMonth(); #this will work for last month, if we want to do current month then we can update here to NOW
+
+            // Check if the balance was already calculated for this month
+            if ($employee->last_calculated_at && date('Y-m', strtotime($employee->last_calculated_at)) == $lastMonth->format('Y-m')) {
+               continue;
+            }
+
+            // Calculate total wages for the current month
+            $currentMonthWages = DB::table('employee_wages')
+                ->where('employee_id', $employee->id)
+                ->whereYear('date', $lastMonth->year)
+                ->whereMonth('date', $lastMonth->month)
+                ->sum('amount_received');
+
+            // Calculate the balance
+            $remaining_balance = $employee->remaining_balance + ($employee->total_salary - $currentMonthWages);
+
+            // Update the employee's profile
+            #$currentMonthYear = $lastMonth->format('Y-m');
+            DB::table('employees')
+                ->where('id', $employee->id)
+                ->update([
+                    'remaining_balance' => $remaining_balance,
+                    'last_calculated_at' => $lastMonth,
+                ]);
+        }
+
+        return back()->with('success', 'Salaries updated successfully.');
+    }
+
     function index(Request $request)
     {
         $pump_id = $this->pump->id;
@@ -42,12 +77,23 @@ class EmployeeController extends Controller
 
     public function getAll()
     {
-
         $employees = $this->pump->employees()->get();
-        $employees->map(function ($employee) {
-            $employee->remaining_salary = $employee->total_salary - $employee->wages()->sum('amount_received');
-            return $employee;
+
+        $selectedMonth = now()->month; // Or replace with a specific month, e.g., 1 for January
+
+        $employees->map(function ($employee) use ($selectedMonth) {
+            // Get the total wages for the selected month
+            $wagesForMonth = $employee->wages()
+                ->whereMonth('date', $selectedMonth)
+                ->sum('amount_received'); // Sum wages for the specific month
+
+            // Calculate remaining salary for the selected month
+            $employee->remaining_salary = $employee->total_salary - $wagesForMonth + $employee->remaining_balance;
         });
+
+
+
+        # # + $employee->remaining_balance
 
         return response()->json([
             'recordsTotal' => $employees->count(),
@@ -109,8 +155,6 @@ class EmployeeController extends Controller
             'address' => 'required|string|max:255',
             'total_salary' => 'nullable|numeric',
         ]);
-
-
 
         if ($request->advance_salary){
             DB::table('employee_wages')->insert([
