@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\ClientAdmin\Pump;
 
 use App\Http\Controllers\Controller;
+use App\Models\DipRecord;
 use App\Models\FuelPrice;
 use App\Models\PetrolPump;
 use App\Models\Tank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PricingController extends Controller
 {
@@ -82,15 +84,30 @@ class PricingController extends Controller
             'petrol_pump_id' => $pump_id,
         ])->orderBy('date', 'desc')->first();
 
+
+
         $totalgain = 0;
         if ($lastRate && $request->add_loss_gain) {
-            $rateChange = $validatedData['selling_price'] - $lastRate->selling_price;
 
-            $sumOfStock = \DB::table('tank_stocks')
-                ->join('tanks', 'tank_stocks.tank_id', '=', 'tanks.id')
-                ->where('tanks.fuel_type_id', $validatedData['fuel_type_id'])
-                ->where('tanks.petrol_pump_id', $pump_id)
-                ->sum('tank_stocks.reading_in_ltr');
+            $dateHere = $validatedData['date'];
+            $rateChange = $validatedData['selling_price'] - $lastRate->selling_price;
+            $pump = PetrolPump::where('id', $pump_id)->first();
+            $tanks = $pump->tanks();
+
+            $sumOfStock = DipRecord::select(DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr'))
+                ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
+                ->whereIn('dip_records.tank_id', $tanks->pluck('id'))
+                ->whereBetween('dip_records.date', [$dateHere, $dateHere]) // Filter by date range
+                ->where('dip_records.date', function ($query) use ($dateHere) {
+                    $query->select(DB::raw('MAX(date)'))
+                        ->from('dip_records')
+                        ->whereColumn('dip_records.tank_id', 'tank_id')
+                        ->whereBetween('dip_records.date', [$dateHere, $dateHere]); // Add date range here too
+                })
+                ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.name')
+                ->first();
+
+            $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
 
             $totalgain = $sumOfStock * $rateChange;
         }
@@ -101,6 +118,7 @@ class PricingController extends Controller
             'petrol_pump_id' => $pump_id,
             'date' => $validatedData['date'],
             'loss_gain_value' => $totalgain,
+            #'loss_gain_value' => $totalgain, #if above not works fine then save that $sumOfStock OR in leters here
         ]);
 
         return response()->json(['success' => true, 'message' => 'Fuel type created successfully.']);
