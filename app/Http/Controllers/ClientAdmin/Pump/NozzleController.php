@@ -174,11 +174,11 @@ class NozzleController extends Controller
         $nozzle->fuel_type_id = $validatedData['fuel_type_id'];
         $nozzle->save();
 
-        if ($request->analog_reading && $request->digital_reading)
+        if ($request->analog_reading || $request->digital_reading)
             DB::table('nozzle_readings')->insert([
                 'nozzle_id' => $nozzle->id,
-                'analog_reading' => round2Digit($request->analog_reading),
-                'digital_reading' => round2Digit($request->digital_reading),
+                'analog_reading' => $request->analog_reading ? round2Digit($request->analog_reading) : 0,
+                'digital_reading' => $request->digital_reading ? round2Digit($request->digital_reading) : 0,
                 'date' => $request->nozzles_date ?? now()->toDateString(),
             ]);
 
