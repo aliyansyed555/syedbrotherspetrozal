@@ -7,6 +7,7 @@ use App\Models\DipRecord;
 use App\Models\FuelPrice;
 use App\Models\PetrolPump;
 use App\Models\Tank;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -107,6 +108,8 @@ class PricingController extends Controller
 
             $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
             $totalgain = $sumOfStock * $rateChange;
+
+            $validatedData['date'] = Carbon::parse($validatedData['date'])->addDay()->toDateString();
         }
 
         FuelPrice::create([

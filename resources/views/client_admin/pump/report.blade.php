@@ -113,7 +113,9 @@
                                     $fuelsProfit += $profit;
 
                                     $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
-                                    $dipComparisonFinal =  $dipComparison - $firstDipComparisons[$columnBase];
+
+                                    //JUST for testing and custom logic
+                                    $dipComparisonFinal =  ($i == count($reportData)-1) ? $dipComparison : $dipComparison - $firstDipComparisons[$columnBase];
 
                                     $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
                                     $totalProfitWithGain += $profitWithGain;
@@ -165,6 +167,7 @@
                                 </td>
                             </tr>
                         @endfor
+
                     </tbody>
                     <tfoot>
                         <tr class="fs-5 fw-bolder fst-italic">
@@ -182,7 +185,6 @@
                             @endforeach
 
                             <th class="fw-bold"></th>
-
                             <th class="fw-bold"></th>
                             <th class="fw-bold"></th>
                             <th class="fw-bold"></th>
@@ -375,9 +377,8 @@
                     var totalProfit = sumColumn(-2);
                     var totalProfitWithGain = sumColumn(-1);
 
-
                     // Update the footer
-                    $(api.column(-31).footer()).html(dieselDipCamp.toLocaleString('en-US'));
+                    // $(api.column(-31).footer()).html(dieselDipCamp.toLocaleString('en-US'));
                     $(api.column(-24).footer()).html(petrolDipCamp.toLocaleString('en-US'));
                     $(api.column(-17).footer()).html(dipCamp.toLocaleString('en-US'));
                     $(api.column(-8).footer()).html(totalExpense.toLocaleString('en-US'));
