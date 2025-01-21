@@ -84,15 +84,13 @@ class PricingController extends Controller
             'petrol_pump_id' => $pump_id,
         ])->orderBy('date', 'desc')->first();
 
-
-
         $totalgain = 0;
         if ($lastRate && $request->add_loss_gain) {
 
             $dateHere = $validatedData['date'];
             $rateChange = $validatedData['selling_price'] - $lastRate->selling_price;
             $pump = PetrolPump::where('id', $pump_id)->first();
-            $tanks = $pump->tanks();
+            $tanks = Tank::where('fuel_type_id' , $validatedData['fuel_type_id'])->where('petrol_pump_id' ,$pump_id )->get();
 
             $sumOfStock = DipRecord::select(DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr'))
                 ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
@@ -108,7 +106,6 @@ class PricingController extends Controller
                 ->first();
 
             $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
-
             $totalgain = $sumOfStock * $rateChange;
         }
 

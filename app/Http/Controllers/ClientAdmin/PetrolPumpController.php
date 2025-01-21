@@ -172,7 +172,6 @@ class PetrolPumpController extends Controller
             ->orderBy('fuel_types.name', 'asc')
             ->get();
 
-
         $sumLossGain = FuelPrice::where('petrol_pump_id', $pump_id)
             ->whereBetween('date', [$startDate, $endDate])
             ->sum('loss_gain_value');
