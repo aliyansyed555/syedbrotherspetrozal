@@ -714,7 +714,7 @@ class PetrolPumpController extends Controller
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
-            AVG(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
+            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
             MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
             MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
@@ -737,11 +737,13 @@ class PetrolPumpController extends Controller
             ) AS analog_sold_ltrs,
             fr.selling_price,
             (
-                SELECT AVG(fp.buying_price_per_ltr)
+                SELECT fp.buying_price_per_ltr
                 FROM fuel_purchases fp
                 WHERE fp.fuel_type_id = ft.id
-                AND fp.petrol_pump_id = ?
-                AND fp.purchase_date <= nr.date
+                  AND fp.petrol_pump_id = ?
+                  AND fp.purchase_date <= nr.date
+                ORDER BY fp.purchase_date DESC
+                LIMIT 1
             ) AS buying_price_per_ltr
         FROM
             nozzle_readings nr
@@ -950,7 +952,7 @@ class PetrolPumpController extends Controller
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
-            AVG(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
+            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
             MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
             MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
@@ -974,11 +976,13 @@ class PetrolPumpController extends Controller
             ) AS analog_sold_ltrs,
             fr.selling_price,
             (
-                SELECT AVG(fp.buying_price_per_ltr)
+                SELECT fp.buying_price_per_ltr
                 FROM fuel_purchases fp
                 WHERE fp.fuel_type_id = ft.id
-                AND fp.petrol_pump_id = ?
-                AND fp.purchase_date <= nr.date
+                  AND fp.petrol_pump_id = ?
+                  AND fp.purchase_date <= nr.date
+                ORDER BY fp.purchase_date DESC
+                LIMIT 1
             ) AS buying_price_per_ltr
         FROM
             nozzle_readings nr
@@ -1273,7 +1277,7 @@ class PetrolPumpController extends Controller
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
-            AVG(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
+            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
             MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
             MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
@@ -1296,11 +1300,17 @@ class PetrolPumpController extends Controller
             ) AS analog_sold_ltrs,
             fr.selling_price,
             (
-                SELECT AVG(fp.buying_price_per_ltr)
-                FROM fuel_purchases fp
-                WHERE fp.fuel_type_id = ft.id
-                AND fp.petrol_pump_id = ?
-                AND fp.purchase_date <= nr.date
+
+                SELECT fp.buying_price_per_ltr
+FROM fuel_purchases fp
+WHERE fp.fuel_type_id = ft.id
+  AND fp.petrol_pump_id = ?
+  AND fp.purchase_date <= nr.date
+ORDER BY fp.purchase_date DESC
+LIMIT 1
+
+
+
             ) AS buying_price_per_ltr
         FROM
             nozzle_readings nr
