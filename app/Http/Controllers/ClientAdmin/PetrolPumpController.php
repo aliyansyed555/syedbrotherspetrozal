@@ -120,7 +120,7 @@ class PetrolPumpController extends Controller
         $totalCredit = $creditsAndDebits['credit'];
         $totalDebit = $creditsAndDebits['debit'];
 
-        list($profits, $gain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
+        list($profits, $fuelGain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
 
         $mobilOilProfit = @$profits['products_profit'];
@@ -201,7 +201,7 @@ class PetrolPumpController extends Controller
             'totalDebit',
             'profits',
             'mobilOilProfit',
-            'gain',
+            'fuelGain',
             'gainProfit',
             'dailyExpenses',
             'shopEarnings',
@@ -1441,7 +1441,7 @@ class PetrolPumpController extends Controller
         $pump_id = $pump->id;
 
         #because sql query not wqorking fine here as it add one day in date something like this.
-        $start_date  = Carbon::parse($start_date)->subDay()->toDateString();
+        $start_date = Carbon::parse($start_date)->subDay()->toDateString();
 
         // Execute the query with the necessary parameters
         $reportData = DB::select($query, [
@@ -1476,7 +1476,7 @@ class PetrolPumpController extends Controller
         $totalProfit = $totalProfitWithGain = 0;
         $lastvalue = [];
         $profitSums = [];
-        $dipComparisonSums = []; #
+        $fuelGain = []; #
         foreach ($data as $entry) {
             foreach ($entry as $key => $value) {
                 if (str_ends_with($key, '_profit')) {
@@ -1487,34 +1487,38 @@ class PetrolPumpController extends Controller
                 }
             }
 
+
             #if any change do it also in reports
             $fuelsProfit = 0;
             foreach ($allTanks as $index => $tank) {
 
                 $key = $tank . '_gain';
-                $dipComparison = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
 
-                if (isset($lastvalue[$tank])) $dipComparison = $dipComparison - $lastvalue[$tank];
+                $dipComparisonFinal = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
 
-                $gainProfit[$tank] = ($entry["{$tank}_price"] * $dipComparison) + @$gainProfit[$tank];
+                if (isset($lastvalue[$tank]))
+                    $dipComparisonFinal = ($lastvalue[$tank] - $entry["{$tank}_digital_sold"] - $entry["{$tank}_dip_quantity"]) * -1;
+
+                $gainProfit[$tank] = ($entry["{$tank}_price"] * $dipComparisonFinal) + @$gainProfit[$tank];
 
                 if (!isset($totalSold[$tank])) {
                     $totalSold[$tank] = 0; // Initialize if not already set
                 }
                 $totalSold[$tank] += ($entry["{$tank}_digital_sold"]);
 
-                if (!isset($dipComparisonSums[$key])) {
-                    $dipComparisonSums[$key] = $dipComparison;
-                }
-                $dipComparisonSums[$key] += $dipComparison;
+                if (!isset($fuelGain[$key])) {
+                    $fuelGain[$key] = $dipComparisonFinal;
+                } else
+                    $fuelGain[$key] += $dipComparisonFinal;
 
-                #last dip jo tha us ko minus krny k liy, dip comparison
-                $lastvalue[$tank] = $dipComparison + @$lastvalue[$tank];
+                #last dip ko next main use krny k liy, custom logic today.
+                $lastvalue[$tank] = $entry["{$tank}_dip_quantity"];
+
 
                 $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
                 $fuelsProfit += $profit;
 
-                $profitWithGain = @$dipComparisonFinal * $entry["{$tank}_price"];
+                $profitWithGain = $dipComparisonFinal * $entry["{$tank}_price"];
                 $totalProfitWithGain += $profitWithGain;
             }
 
@@ -1523,7 +1527,7 @@ class PetrolPumpController extends Controller
         }
 
 
-        return [$profitSums, $dipComparisonSums, $gainProfit, $totalProfit, $totalProfitWithGain, $totalSold];
+        return [$profitSums, $fuelGain, $gainProfit, $totalProfit, $totalProfitWithGain, $totalSold];
     }
 }
 

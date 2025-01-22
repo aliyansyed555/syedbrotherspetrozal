@@ -109,22 +109,20 @@
 {{--                            //if any change do it also in Analytics code--}}
                                 @foreach ($fuelTypes as $fuelType)
                                     <?php
-                                    $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
-                                    $profit = $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_price"] - $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_buying_price"];
-                                    $fuelsProfit += $profit;
+                                        $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
+                                        $profit = $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_price"] - $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_buying_price"];
+                                        $fuelsProfit += $profit;
 
-                                    $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
+                                        if($i == 0)
+                                            $dipComparisonFinal = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
+                                        else{
+                                            $lastIndex = $i-1;
+                                            $dipComparisonFinal = ($reportData[$lastIndex]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_dip_quantity"])*-1;
+                                        }
+                                        $dipComparisonFinal = round2Digit($dipComparisonFinal);
 
-                                    if($i == 0)
-                                        $dipComparisonFinal = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
-                                    else{
-                                        $lastIndex = $i-1;
-                                        $dipComparisonFinal = ($reportData[$lastIndex]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_dip_quantity"])*-1;
-                                    }
-                                    $dipComparisonFinal = round2Digit($dipComparisonFinal);
-
-                                    $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
-                                    $totalProfitWithGain += $profitWithGain;
+                                        $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
+                                        $totalProfitWithGain += $profitWithGain;
                                     ?>
                                     <td>
                                         {{ $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_transfer_quantity"] }}
