@@ -161,8 +161,10 @@ class PetrolPumpController extends Controller
     ')
             ->first();
 
+        #because when we add fuel prices we use 1+ day because rate will use next day, but here we need that previouse day profit in current end date so we add 1 extra day to get that date
+        $dayAfterEndDate = Carbon::parse($endDate)->addDay()->toDateString();
         $total_loss_gain = FuelPrice::where('petrol_pump_id', $pump_id)
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereBetween('date', [$startDate, $dayAfterEndDate])
             ->join('fuel_types', 'fuel_prices.fuel_type_id', '=', 'fuel_types.id')
             ->select(
                 'fuel_types.name as fuel_name',
@@ -173,7 +175,7 @@ class PetrolPumpController extends Controller
             ->get();
 
         $sumLossGain = FuelPrice::where('petrol_pump_id', $pump_id)
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereBetween('date', [$startDate, $dayAfterEndDate])
             ->sum('loss_gain_value');
 
         $final_profit = $totalProfit;
