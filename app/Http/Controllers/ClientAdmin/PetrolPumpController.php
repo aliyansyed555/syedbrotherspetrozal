@@ -122,6 +122,7 @@ class PetrolPumpController extends Controller
 
         list($profits, $gain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
+
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
 
@@ -1439,6 +1440,9 @@ class PetrolPumpController extends Controller
 
         $pump_id = $pump->id;
 
+        #because sql query not wqorking fine here as it add one day in date something like this.
+        $start_date  = Carbon::parse($start_date)->subDay()->toDateString();
+
         // Execute the query with the necessary parameters
         $reportData = DB::select($query, [
             $pump_id, // Fuel pump ID for multiple places
@@ -1510,7 +1514,7 @@ class PetrolPumpController extends Controller
                 $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
                 $fuelsProfit += $profit;
 
-                $profitWithGain = $dipComparisonFinal * $entry["{$tank}_price"];
+                $profitWithGain = @$dipComparisonFinal * $entry["{$tank}_price"];
                 $totalProfitWithGain += $profitWithGain;
             }
 
