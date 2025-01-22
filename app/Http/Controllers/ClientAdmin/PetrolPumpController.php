@@ -852,8 +852,8 @@ class PetrolPumpController extends Controller
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-      COALESCE(ee.total_wage,0) AS total_wage,
-COALESCE(cc.total_credit,0) AS total_credit
+        COALESCE(ee.total_wage,0) AS total_wage,
+        COALESCE(cc.total_credit,0) AS total_credit
     FROM
         calculated_readings cr
     LEFT JOIN
@@ -876,7 +876,8 @@ COALESCE(cc.total_credit,0) AS total_credit
         dr.service_station_earning, dr.service_station_rent,
         dr.tyre_shop_earning, dr.tyre_shop_rent,
         dr.lube_shop_earning, dr.lube_shop_rent,
-        dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit, ee.total_wage,
+        dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit,
+        ee.total_wage,
         cc.total_credit
     ORDER BY
         cr.date;
@@ -965,7 +966,7 @@ COALESCE(cc.total_credit,0) AS total_credit
 
         // Update the SQL query with the start_date and end_date
         $query = "
-    WITH calculated_readings AS (
+        WITH calculated_readings AS (
         SELECT
             nr.nozzle_id,
             nr.date,
@@ -1088,8 +1089,8 @@ COALESCE(cc.total_credit,0) AS total_credit
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-        SUM(total_wage) AS total_wage,
-        SUM(total_credit) AS total_credit
+        COALESCE(ee.total_wage,0) AS total_wage,
+        COALESCE(cc.total_credit,0) AS total_credit
     FROM
         calculated_readings cr
     LEFT JOIN
@@ -1110,6 +1111,8 @@ COALESCE(cc.total_credit,0) AS total_credit
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
         cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit,
+        ee.total_wage,
+        cc.total_credit
     ORDER BY
         cr.date;
     ";
@@ -1413,8 +1416,8 @@ COALESCE(cc.total_credit,0) AS total_credit
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-		SUM(total_wage) AS total_wage,
-        SUM(total_credit) AS total_credit
+		COALESCE(ee.total_wage,0) AS total_wage,
+        COALESCE(cc.total_credit,0) AS total_credit
     FROM
         calculated_readings cr
     LEFT JOIN
