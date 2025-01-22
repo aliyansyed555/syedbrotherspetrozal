@@ -114,8 +114,17 @@
 
                                     $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
 
+                                    if($i == 0)
+                                        $dipComparisonFinal = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
+                                    else{
+                                        $lastIndex = $i-1;
+                                        $dipComparisonFinal = ($reportData[$lastIndex]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_dip_quantity"])*-1;
+                                    }
+
+                                    $dipComparisonFinal = round2Digit($dipComparisonFinal);
+
                                     //JUST for testing and custom logic
-                                    $dipComparisonFinal =  ($i == count($reportData)-1) ? $dipComparison : $dipComparison - $firstDipComparisons[$columnBase];
+                                    //$dipComparisonFinal =  ($i == count($reportData)-1) ? $dipComparison : $dipComparison - $firstDipComparisons[$columnBase];
 
                                     $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
                                     $totalProfitWithGain += $profitWithGain;
