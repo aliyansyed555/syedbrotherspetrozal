@@ -852,8 +852,8 @@ class PetrolPumpController extends Controller
         dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-        SUM(total_wage) AS total_wage,
-        SUM(total_credit) AS total_credit
+      COALESCE(ee.total_wage,0) AS total_wage,
+COALESCE(cc.total_credit,0) AS total_credit
     FROM
         calculated_readings cr
     LEFT JOIN
@@ -876,7 +876,8 @@ class PetrolPumpController extends Controller
         dr.service_station_earning, dr.service_station_rent,
         dr.tyre_shop_earning, dr.tyre_shop_rent,
         dr.lube_shop_earning, dr.lube_shop_rent,
-        dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
+        dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit, ee.total_wage,
+        cc.total_credit
     ORDER BY
         cr.date;
     ";
@@ -1514,7 +1515,6 @@ class PetrolPumpController extends Controller
                 #last dip ko next main use krny k liy, custom logic today.
                 $lastvalue[$tank] = $entry["{$tank}_dip_quantity"];
 
-
                 $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
                 $fuelsProfit += $profit;
 
@@ -1525,7 +1525,6 @@ class PetrolPumpController extends Controller
             #this one ok here.
             $totalProfit += $fuelsProfit + $entry['products_profit'] - $entry['pump_rent'] - $entry['daily_expense'] - $entry['total_wage'];
         }
-
 
         return [$profitSums, $fuelGain, $gainProfit, $totalProfit, $totalProfitWithGain, $totalSold];
     }
