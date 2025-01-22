@@ -1302,17 +1302,13 @@ class PetrolPumpController extends Controller
             ) AS analog_sold_ltrs,
             fr.selling_price,
             (
-
                 SELECT fp.buying_price_per_ltr
-FROM fuel_purchases fp
-WHERE fp.fuel_type_id = ft.id
-  AND fp.petrol_pump_id = ?
-  AND fp.purchase_date <= nr.date
-ORDER BY fp.purchase_date DESC
-LIMIT 1
-
-
-
+                FROM fuel_purchases fp
+                WHERE fp.fuel_type_id = ft.id
+                  AND fp.petrol_pump_id = ?
+                  AND fp.purchase_date <= nr.date
+                ORDER BY fp.purchase_date DESC
+                LIMIT 1
             ) AS buying_price_per_ltr
         FROM
             nozzle_readings nr
@@ -1487,6 +1483,7 @@ LIMIT 1
                 }
             }
 
+            #if any change do it also in reports
             $fuelsProfit = 0;
             foreach ($allTanks as $index => $tank) {
 
@@ -1513,11 +1510,11 @@ LIMIT 1
                 $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
                 $fuelsProfit += $profit;
 
-                $profitWithGain = $dipComparison * $entry["{$tank}_price"];
-
+                $profitWithGain = $dipComparisonFinal * $entry["{$tank}_price"];
                 $totalProfitWithGain += $profitWithGain;
             }
 
+            #this one ok here.
             $totalProfit += $fuelsProfit + $entry['products_profit'] - $entry['pump_rent'] - $entry['daily_expense'] - $entry['total_wage'];
         }
 

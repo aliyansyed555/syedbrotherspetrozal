@@ -106,6 +106,7 @@
                                     }
 
                                 @endphp
+{{--                            //if any change do it also in Analytics code--}}
                                 @foreach ($fuelTypes as $fuelType)
                                     <?php
                                     $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
@@ -120,11 +121,7 @@
                                         $lastIndex = $i-1;
                                         $dipComparisonFinal = ($reportData[$lastIndex]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_dip_quantity"])*-1;
                                     }
-
                                     $dipComparisonFinal = round2Digit($dipComparisonFinal);
-
-                                    //JUST for testing and custom logic
-                                    //$dipComparisonFinal =  ($i == count($reportData)-1) ? $dipComparison : $dipComparison - $firstDipComparisons[$columnBase];
 
                                     $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
                                     $totalProfitWithGain += $profitWithGain;
