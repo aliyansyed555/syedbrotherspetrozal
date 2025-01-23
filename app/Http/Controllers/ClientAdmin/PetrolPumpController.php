@@ -91,7 +91,7 @@ class PetrolPumpController extends Controller
 //        });
 
         $products = $pump->products()
-            ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id and product_inventory.date between ? and ?), 0) as quantity', [$startDate, $endDate])
+            ->selectRaw('products.id, products.name, products.price, products.buying_price, products.company, coalesce((select sum(quantity) from product_inventory where product_id = products.id and product_inventory.date <= ?), 0) as quantity', [$endDate])
             ->get();
 
         $cashInhand = \DB::table('daily_reports')
