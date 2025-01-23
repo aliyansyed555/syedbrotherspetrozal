@@ -1518,7 +1518,7 @@ class PetrolPumpController extends Controller
                 if (!isset($totalSold[$tank])) {
                     $totalSold[$tank] = 0; // Initialize if not already set
                 }
-                $totalSold[$tank] += ($entry["{$tank}_digital_sold"]);
+                $totalSold[$tank] += ($entry["{$tank}_digital_sold"] - $entry["{$tank}_transfer_quantity"]);
 
                 if (!isset($fuelGain[$key])) {
                     $fuelGain[$key] = $dipComparisonFinal;
