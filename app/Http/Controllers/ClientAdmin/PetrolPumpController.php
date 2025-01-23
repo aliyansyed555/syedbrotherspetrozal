@@ -1446,7 +1446,8 @@ class PetrolPumpController extends Controller
         $pump_id = $pump->id;
 
         #because sql query not wqorking fine here as it add one day in date something like this.
-        #$start_date = Carbon::parse($start_date)->subDay()->toDateString();
+        $start_date_org_carbon = Carbon::parse($start_date);
+        $start_date = Carbon::parse($start_date)->subDay()->toDateString();
 
         // Execute the query with the necessary parameters
         $reportData = DB::select($query, [
@@ -1475,7 +1476,6 @@ class PetrolPumpController extends Controller
         // Format the report data
         $data = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
-        #dd($data);
         $gainProfit = [];
         $totalSold = [];
         $finalGainProfit = [];
@@ -1484,7 +1484,15 @@ class PetrolPumpController extends Controller
         $lastvalue = [];
         $profitSums = [];
         $fuelGain = []; #
+
+        $end_date_carbon = Carbon::parse($end_date);
         foreach ($data as $entry) {
+
+            $check_date = Carbon::parse($entry['reading_date']);
+
+            if (!$check_date->between($start_date_org_carbon, $end_date_carbon))
+                continue;
+
             foreach ($entry as $key => $value) {
                 if (str_ends_with($key, '_profit')) {
                     if (!isset($profitSums[$key])) {
