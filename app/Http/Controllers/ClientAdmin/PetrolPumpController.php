@@ -1441,12 +1441,12 @@ class PetrolPumpController extends Controller
         cc.total_credit
     ORDER BY
         cr.date;
-    ";
+    "; #analytics query
 
         $pump_id = $pump->id;
 
         #because sql query not wqorking fine here as it add one day in date something like this.
-        $start_date = Carbon::parse($start_date)->subDay()->toDateString();
+        #$start_date = Carbon::parse($start_date)->subDay()->toDateString();
 
         // Execute the query with the necessary parameters
         $reportData = DB::select($query, [
@@ -1471,9 +1471,11 @@ class PetrolPumpController extends Controller
             $end_date, // End date for employee wages
         ]);
 
+        #analytics query
         // Format the report data
         $data = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
+        #dd($data);
         $gainProfit = [];
         $totalSold = [];
         $finalGainProfit = [];
@@ -1491,7 +1493,6 @@ class PetrolPumpController extends Controller
                     $profitSums[$key] += $value;
                 }
             }
-
 
             #if any change do it also in reports
             $fuelsProfit = 0;
