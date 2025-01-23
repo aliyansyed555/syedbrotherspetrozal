@@ -1437,7 +1437,8 @@ class PetrolPumpController extends Controller
     WHERE
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
-        cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit
+        cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit,ee.total_wage,
+        cc.total_credit
     ORDER BY
         cr.date;
     ";
