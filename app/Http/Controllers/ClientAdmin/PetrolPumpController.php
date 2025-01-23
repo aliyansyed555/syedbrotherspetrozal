@@ -52,7 +52,7 @@ class PetrolPumpController extends Controller
 
         $fuelPurchasesPrices = $pump->fuelPurchases()
             ->join('fuel_types', 'fuel_types.id', '=', 'fuel_purchases.fuel_type_id')
-            ->whereBetween('purchase_date', [$startDate, $endDate]) // Apply the date range filter
+            ->whereDate('purchase_date', '<=', $endDate) // Apply the date range filter
             ->select('fuel_types.id', 'fuel_purchases.buying_price_per_ltr') // Select only required fields
             ->pluck('buying_price_per_ltr', 'id')
             ->toArray();
