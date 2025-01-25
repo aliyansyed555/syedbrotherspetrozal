@@ -47,6 +47,7 @@ class PricingController extends Controller
 
         // Retrieve all fuel prices related to this pump
         $fuel_prices = $pump->fuelPrices()
+            ->where('fuel_prices.is_hidden', 0)
             ->join('fuel_types', 'fuel_prices.fuel_type_id', '=', 'fuel_types.id')
             ->select('fuel_prices.*', 'fuel_types.name as fuel_type_name')
             ->get();
@@ -91,7 +92,7 @@ class PricingController extends Controller
             $dateHere = $validatedData['date'];
             $rateChange = $validatedData['selling_price'] - $lastRate->selling_price;
             $pump = PetrolPump::where('id', $pump_id)->first();
-            $tanks = Tank::where('fuel_type_id' , $validatedData['fuel_type_id'])->where('petrol_pump_id' ,$pump_id )->get();
+            $tanks = Tank::where('fuel_type_id', $validatedData['fuel_type_id'])->where('petrol_pump_id', $pump_id)->get();
 
             $sumOfStock = DipRecord::select(DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr'))
                 ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
@@ -109,16 +110,44 @@ class PricingController extends Controller
             $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
             $totalgain = $sumOfStock * $rateChange;
 
+            // Calculate the date for 1 day before the given date
+            $currentDate = $validatedData['date'];
+
             $validatedData['date'] = Carbon::parse($validatedData['date'])->addDay()->toDateString();
+
+            // Find the last entry with the specific previous date
+            $lastEntry = FuelPrice::where('petrol_pump_id', $pump_id)
+                ->where('fuel_type_id', $validatedData['fuel_type_id'])
+                ->where('date', $currentDate) // Match exactly 1 day before
+                ->first();
+
+            if ($lastEntry) {
+                // If an entry for the previous date exists, update it
+                $lastEntry->update([
+                    'loss_gain_value' => $totalgain,
+                ]);
+            } else {
+
+                if ($totalgain)
+                    // If no entry exists for the previous date, create it first
+                    $newEntry = FuelPrice::create([
+                        'selling_price' => $validatedData['selling_price'], // Or adjust these values as needed
+                        'fuel_type_id' => $validatedData['fuel_type_id'],
+                        'petrol_pump_id' => $pump_id,
+                        'date' => $currentDate, // Ensure it's for the previous date
+                        'loss_gain_value' => $totalgain,
+                        'is_hidden' => 1, #as its sytem generated no need to show for the users
+                    ]);
+            }
         }
 
+        // If no entry exists with a date less than the given date, create a new entry
         FuelPrice::create([
             'selling_price' => $validatedData['selling_price'],
             'fuel_type_id' => $validatedData['fuel_type_id'],
             'petrol_pump_id' => $pump_id,
             'date' => $validatedData['date'],
-            'loss_gain_value' => $totalgain,
-            #'loss_gain_value' => $totalgain, #if above not works fine then save that $sumOfStock OR in leters here
+            #'loss_gain_value' => $totalgain, #for the first entry no need to add loss again.
         ]);
 
         return response()->json(['success' => true, 'message' => 'Fuel type created successfully.']);

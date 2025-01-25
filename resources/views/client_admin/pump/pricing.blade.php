@@ -43,7 +43,7 @@
                                 </th>
                                 <th class="min-w-150px">Selling Price</th>
                                 <th class="min-w-150px">Fuel Type</th>
-                                <th class="min-w-150px">Date</th>
+                                <th class="min-w-150px">Implement Date</th>
                                 <th class="min-w-100px text-end">Actions</th>
                             </tr>
                         </thead>
