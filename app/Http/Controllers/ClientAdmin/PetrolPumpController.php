@@ -1306,7 +1306,7 @@ class PetrolPumpController extends Controller
         foreach ($fuelTypesWithTanks as $fuelType) {
             $fuelTypeName = $fuelType->name;
             $fuelTypeId = $fuelType->id;
-            $allTanks[] = $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
+            $allTanks[$fuelTypeId] = $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
 
             $selectClauses[] = "
             SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
@@ -1534,12 +1534,15 @@ class PetrolPumpController extends Controller
             $fuelsProfit = 0;
             foreach ($allTanks as $index => $tank) {
 
+                $dipComparison = DipComparison::where([
+                    'report_date' => $entry['reading_date'],
+                    'fuel_type_id' => $index, #if records wrong then this id need to make with tank OR with fules etc
+                    'pump_id' => $pump_id,
+                ])->first();
+
                 $key = $tank . '_gain';
 
-                $dipComparisonFinal = $entry["{$tank}_dip_quantity"] - $entry["{$tank}_stock_quantity"];
-
-                if (isset($lastvalue[$tank]))
-                    $dipComparisonFinal = ($lastvalue[$tank] - $entry["{$tank}_digital_sold"] - $entry["{$tank}_dip_quantity"]) * -1;
+                $dipComparisonFinal = $dipComparison ? $dipComparison->final_dip : 0;
 
                 $gainProfit[$tank] = ($entry["{$tank}_price"] * $dipComparisonFinal) + @$gainProfit[$tank];
 
@@ -1560,6 +1563,7 @@ class PetrolPumpController extends Controller
                 $fuelsProfit += $profit;
 
                 $profitWithGain = $dipComparisonFinal * $entry["{$tank}_price"];
+
                 $totalProfitWithGain += $profitWithGain;
             }
 
