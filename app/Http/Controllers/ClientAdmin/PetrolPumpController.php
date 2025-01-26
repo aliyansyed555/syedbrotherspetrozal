@@ -4,6 +4,7 @@ namespace App\Http\Controllers\ClientAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyReport;
+use App\Models\DipComparison;
 use App\Models\DipRecord;
 use App\Models\FuelPrice;
 use App\Models\FuelType;
@@ -40,6 +41,33 @@ class PetrolPumpController extends Controller
         $pump->save();
 
         return redirect()->back()->with('success', 'Total Investment updated successfully.');
+    }
+
+    public function refreshDipCamparision(Request $request)
+    {
+        $pump_id = $request->pump->id;
+        $dataAll = $request->all()['rows'];
+
+        foreach ($dataAll as $data) {
+            DipComparison::updateOrCreate(
+                [
+                    // Matching condition
+                    'report_date' => $data['report_date'],
+                    'fuel_type_id' => $data['fuel_type_id'],
+                    'pump_id' => $pump_id,
+                ],
+                [
+                    // Fields to update or insert
+                    'tank_dip' => $data['tank_dip'],
+                    'tank_stock' => $data['tank_stock'],
+                    'previous_stock' => $data['previous_stock'],
+                    'final_dip' => $data['final_dip'],
+                    'updated_at' => Carbon::now(),
+                ]
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Stats updated successfully!']);
     }
 
     public function showAnalytics($pump_id)

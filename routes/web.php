@@ -84,6 +84,9 @@ Route::controller(TeamController::class)
 // PetrolPumpController
 Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('client_admin')->group(function(){
     Route::post('/{pump_id}/saveReport', 'saveReport')->middleware('verify.pump')->name('pump.saveReport');
+
+    Route::post('/{pump_id}/report-refresh-dip', 'refreshDipCamparision')->middleware('verify.pump')->name('pump.refreshDipNozlle');
+
     Route::get('/{pump_id}/report', 'getPumpReport')->middleware('verify.pump')->name('pump.getPumpReport');
 
     Route::post('/{pump_id}/reports/pdf', 'generatePdf')->middleware('verify.pump')->name('pump.getPumpReportPdf');
@@ -111,7 +114,6 @@ Route::controller(PetrolPumpController::class)->prefix('pump')->middleware('clie
     Route::get('/getEmployees/{pump_id}', 'getEmployees')->name('pump.getEmployees');
     Route::get('/getCustomers/{pump_id}', 'getCustomers')->name('pump.getCustomers');
     Route::post('/getTanksByFuelType', 'getTanksByFuelType')->name('pump.purchase.getTanksByFuelType');
-
 
     Route::post('/{pump_id}/saveReport', 'saveReport')->name('pump.saveReport');
 

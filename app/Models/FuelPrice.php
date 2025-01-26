@@ -24,7 +24,6 @@ class FuelPrice extends Model
     ];
 
     // Define the relationships
-
     // FuelPrice belongs to FuelType
     public function fuelType()
     {

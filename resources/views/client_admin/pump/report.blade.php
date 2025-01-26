@@ -8,13 +8,20 @@
 
                 <!--begin::Card title-->
                 <div class="card-title">
-                    <!--begin::Search-->
                     <div class="d-flex align-items-center my-1">
-
                         <input class="form-control form-control-solid" data-kt-docs-table-filter="search"
                             placeholder="Pick date rage" id="kt_daterangepicker" />
                     </div>
-                    <!--end::Search-->
+
+                    <button
+                        title="Click to refresh reports dip to the table to update records on analytics page"
+                        type="button"
+                        class="btn btn-light-danger me-3"
+                        id="refresh-dip-button"
+                        data-pump-id="33">
+                        Refresh DIP
+                    </button>
+
                 </div>
                 <!--begin::Card title-->
                 <!--begin::Card toolbar-->
@@ -103,27 +110,53 @@
                                                 ? $reportData[$i - 1]["{$columnBase}_dip_quantity"] -
                                                     $reportData[$i - 1]["{$columnBase}_stock_quantity"]
                                                 : 0;
+
                                     }
 
                                 @endphp
 {{--                            //if any change do it also in Analytics code--}}
                                 @foreach ($fuelTypes as $fuelType)
-                                    <?php
+                                        <?php
+                                        // Define variables for repeated expressions
                                         $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
-                                        $profit = $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_price"] - $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_buying_price"];
+                                        $digitalSold = $reportData[$i]["{$columnBase}_digital_sold"];
+                                        $price = $reportData[$i]["{$columnBase}_price"];
+                                        $buyingPrice = $reportData[$i]["{$columnBase}_buying_price"];
+                                        $dipQuantity = $reportData[$i]["{$columnBase}_dip_quantity"];
+                                        $stockQuantity = $reportData[$i]["{$columnBase}_stock_quantity"];
+                                        $readingDate = $reportData[$i]['reading_date'];
+
+                                        // Calculate profit
+                                        $profit = $digitalSold * $price - $digitalSold * $buyingPrice;
                                         $fuelsProfit += $profit;
 
-                                        if($i == 0)
-                                            $dipComparisonFinal = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
-                                        else{
-                                            $lastIndex = $i-1;
-                                            $dipComparisonFinal = ($reportData[$lastIndex]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_dip_quantity"])*-1;
-                                        }
+                                        // Calculate dip comparison
+                                        $lastDipQty = $i == 0 ? 0 : $reportData[$i - 1]["{$columnBase}_dip_quantity"];
+                                        $dipComparisonFinal = $i == 0
+                                            ? $dipQuantity - $stockQuantity
+                                            : ($lastDipQty - $digitalSold - $dipQuantity) * -1;
+
                                         $dipComparisonFinal = round2Digit($dipComparisonFinal);
 
-                                        $profitWithGain = $dipComparisonFinal * $reportData[$i]["{$columnBase}_price"];
+                                        // Calculate profit with gain
+                                        $profitWithGain = $dipComparisonFinal * $price;
                                         $totalProfitWithGain += $profitWithGain;
-                                    ?>
+                                        ?>
+
+                                    <script>
+                                        // Call the addData function with Blade variables
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            addData(
+                                                '{{ $dipQuantity }}',
+                                                '{{ $stockQuantity }}',
+                                                '{{ $lastDipQty }}',
+                                                '{{ $dipComparisonFinal }}',
+                                                '{{ $readingDate }}',
+                                                '{{ $fuelType->id }}'
+                                            );
+                                        });
+                                    </script>
+
                                     <td>
                                         {{ $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_transfer_quantity"] }}
                                     </td>
@@ -136,7 +169,6 @@
                                         {{$dipComparisonFinal}}
                                     </td>
                                 @endforeach
-
                                 <td>{{ $reportData[$i]['tuck_shop_rent'] }}</td>
                                 <td>{{ $reportData[$i]['tuck_shop_earning'] }}</td>
 
@@ -204,7 +236,6 @@
             </div>
         </div>
     </div>
-
 
     <!--begin::Modal - Adjust Balance-->
     <div class="modal fade" id="report_generation_form_modal" tabindex="-1" aria-hidden="true">
@@ -298,6 +329,14 @@
 
 @section('javascript')
     <script>
+
+        let reportDataArray = [];
+        function addData(tank_dip, tank_stock, previous_stock,final_dip,report_date,fuel_type_id) {
+            reportDataArray.push({
+                tank_dip, tank_stock, previous_stock,final_dip,report_date,fuel_type_id
+            });
+        }
+
         $(document).ready(function() {
             const pumpId = @json($pump_id);
             const datepicker = $("[name=daterange]");
@@ -325,6 +364,32 @@
                 $("#reports_table").DataTable().draw();
             });
 
+
+            $('#refresh-dip-button').on('click', function() {
+                const button = $(this);
+                if (reportDataArray.length === 0) {
+                    alert("No data to save!");
+                    return;
+                }
+
+                // Send an AJAX request to the Laravel controller
+                $.ajax({
+                    url: `/pump/${pumpId}/report-refresh-dip`,
+                    type: "POST",
+                    data: {
+                        rows: reportDataArray,
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        alert("Data saved successfully!");
+                        reportDataArray = [];
+                    },
+                    complete: function() {
+                        // Re-enable the button after the request is complete
+                        button.prop('disabled', false);
+                    }
+                });
+            });
 
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
 
