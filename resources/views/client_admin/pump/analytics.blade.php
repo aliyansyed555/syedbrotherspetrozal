@@ -340,7 +340,7 @@
 
                     $customValuesSum = ($totalStockAmount + $totalMobiloilAmount + $totalCredit) - $totalDebit;
                     $finalProfitCustom = $final_profit_with_gain > 0 ? $customValuesSum - $final_profit_with_gain : $customValuesSum + $final_profit_with_gain;
-                    $fullyFinalProfitLoss = $finalProfitCustom - $pump->total_investment;
+                    $fullyFinalProfitLoss = $finalProfitCustom - $pump->total_investment + $cashInhand;
                 @endphp
 
                 <div class="col-sm-3">

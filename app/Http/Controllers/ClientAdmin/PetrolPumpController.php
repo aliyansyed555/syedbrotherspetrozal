@@ -217,6 +217,11 @@ class PetrolPumpController extends Controller
             ->groupBy('fuel_types.name')
             ->get();
 
+        $cashInhand = \DB::table('daily_reports')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('petrol_pump_id', $pump->id)
+            ->sum('cash_in_hand');
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -237,6 +242,7 @@ class PetrolPumpController extends Controller
             'total_arrivals',
             'totalSold',
             'fuelPurchasesPrices',
+            'cashInhand',
         ));
     }
 
