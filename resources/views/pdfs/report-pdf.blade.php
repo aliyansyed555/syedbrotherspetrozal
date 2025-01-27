@@ -27,7 +27,7 @@
             background-color: #d4edda;
             color: #155724;
         }
-        
+
         .bg-danger {
             background-color: #f8d7da;
             color: #721c24;
@@ -49,7 +49,7 @@
                     <th>{{ $fuelType->name }} Dip</th>
                     <th>{{ $fuelType->name }} Dip Comparison</th>
                 @endforeach
-                
+
                 {{-- <th>Salaries</th> --}}
                 <th>Expense</th>
                 {{-- <th>Pump Rent</th> --}}
@@ -67,22 +67,22 @@
                 <tr>
                     <td>{{ date('d_m_Y', strtotime($reportData[$i]['reading_date'])) }}</td>
                     @php
-                        
+
                         $fuelsProfit = 0;
-                        $totalProfitWithGain = 0; 
+                        $totalProfitWithGain = 0;
                         // $firstDipComparison = 0;
                         $firstDipComparisons = [];
                         foreach ($fuelTypes as $fuelType) {
                             $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
                             $firstDipComparisons[$columnBase] = $i > 0 ? $reportData[$i - 1]["{$columnBase}_dip_quantity"] - $reportData[$i - 1]["{$columnBase}_stock_quantity"] : 0;
-                        } 
+                        }
 
                     @endphp
                     @foreach ($fuelTypes as $fuelType)
-                        <?php 
+                        <?php
                             $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
                             $profit = $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_price"] - $reportData[$i]["{$columnBase}_digital_sold"] * $reportData[$i]["{$columnBase}_buying_price"];
-                            $fuelsProfit += $profit; 
+                            $fuelsProfit += $profit;
 
                             $dipComparison = $reportData[$i]["{$columnBase}_dip_quantity"] - $reportData[$i]["{$columnBase}_stock_quantity"];
                             $profitWithGain = $dipComparison * $reportData[$i]["{$columnBase}_price"];
@@ -99,22 +99,22 @@
                             {{ number_format($dipComparison - $firstDipComparisons[$columnBase], 2) }}
                         </td>
                     @endforeach
-                    
+
                     {{-- <td>{{ $reportData[$i]['total_wage'] }}</td> --}}
                     <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}</td>
                     {{-- <td>{{ $reportData[$i]['pump_rent']  }}</td> --}}
-                    <td>{{ $reportData[$i]['bank_deposit'] }}</td>
+                    <td>{{ @$reportData[$i]['bank_deposit'] }}</td>
                     <td>{{ $reportData[$i]['products_amount'] ?? '0.00' }}</td>
                     <td>{{ $reportData[$i]['products_profit'] ?? '0.00' }}</td>
                     <td>{{ $reportData[$i]['total_credit'] ?? '0.00' }}</td>
                     <td class="{{ $fuelsProfit + $reportData[$i]['products_profit']  > 0 ? 'bg-success' : 'bg-danger' }}">
-                        
+
                         {{ number_format($fuelsProfit + $reportData[$i]['products_profit'], 2) }}
-                       
-                    
+
+
                     </td>
-                    <?php 
-                        $totalProfit = $fuelsProfit + $reportData[$i]['products_profit'] - $reportData[$i]['pump_rent'] - $reportData[$i]['daily_expense'] - $reportData[$i]['total_wage'] 
+                    <?php
+                        $totalProfit = $fuelsProfit + $reportData[$i]['products_profit'] - $reportData[$i]['pump_rent'] - $reportData[$i]['daily_expense'] - $reportData[$i]['total_wage']
                     ?>
                     <td class="{{ $totalProfit  > 0 ? 'bg-success' : 'bg-danger' }}">
                         {{ number_format($totalProfit, 2) }}

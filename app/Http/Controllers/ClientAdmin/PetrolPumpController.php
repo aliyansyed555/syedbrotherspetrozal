@@ -730,9 +730,6 @@ class PetrolPumpController extends Controller
                 ]
             );
 
-            //                    'bank_deposit' =>
-//                    'expense_detail' => ,
-
             BankDeposit::updateOrCreate(
                 [
                     'date' => $validatedData['date'],
@@ -1154,7 +1151,6 @@ class PetrolPumpController extends Controller
         " . implode(', ', $selectClauses) . ",
         dr.daily_expense,
         dr.pump_rent,
-        dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
         COALESCE(ee.total_wage,0) AS total_wage,
@@ -1178,7 +1174,7 @@ class PetrolPumpController extends Controller
     WHERE
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
-        cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit,
+        cr.date, dr.daily_expense, dr.pump_rent, ps.amount, ps.profit,
         ee.total_wage,
         cc.total_credit
     ORDER BY
@@ -1292,7 +1288,26 @@ class PetrolPumpController extends Controller
         $pump = PetrolPump::where('id', $pump_id)->first();
         $start_date = $request->input('start_date');
         $end_date = $request->input('end_date');
-        $daily_reports = $pump->dailyReports()->whereBetween('date', [$start_date, $end_date])->get();
+
+        $daily_reports = DB::table('daily_reports as dr')
+            ->leftJoin('bank_deposits as bd', function ($join) {
+                $join->on('dr.date', '=', 'bd.date')
+                    ->on('dr.petrol_pump_id', '=', 'bd.pump_id');
+            })
+            ->select(
+                'dr.date',
+                'dr.daily_expense',
+                'dr.pump_rent',
+                'bd.expense_detail',
+                'bd.account_number',
+                DB::raw('SUM(bd.bank_deposit) as bank_deposit')
+            )
+            ->where('dr.petrol_pump_id', $pump_id)
+            ->groupBy('dr.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
+            ->whereBetween('dr.date', [$start_date, $end_date])
+            ->get();
+
+        #$daily_reports = $pump->dailyReports()->whereBetween('date', [$start_date, $end_date])->get();
 
         // dd($daily_reports);
         $pdf = Pdf::loadView('pdfs.daily-report-pdf', [
@@ -1481,7 +1496,6 @@ class PetrolPumpController extends Controller
         " . implode(', ', $selectClauses) . ",
         dr.daily_expense,
         dr.pump_rent,
-        dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
 		COALESCE(ee.total_wage,0) AS total_wage,
@@ -1505,7 +1519,7 @@ class PetrolPumpController extends Controller
     WHERE
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
-        cr.date, dr.daily_expense, dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit,ee.total_wage,
+        cr.date, dr.daily_expense, dr.pump_rent, ps.amount, ps.profit,ee.total_wage,
         cc.total_credit
     ORDER BY
         cr.date;
