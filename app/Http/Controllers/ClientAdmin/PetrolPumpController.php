@@ -249,13 +249,24 @@ class PetrolPumpController extends Controller
 
     function get_expenses($pump_id)
     {
-        $pump = PetrolPump::where('id', $pump_id)->first();
-        $daily_reports = $pump->dailyReports()->get();
+        $expense_data = DB::table('daily_reports as dr')
+            ->leftJoin('bank_deposits as bd', function ($join) {
+                $join->on('dr.date', '=', 'bd.date')
+                    ->on('dr.petrol_pump_id', '=', 'bd.pump_id');
+            })
+            ->select(
+                'dr.date',
+                'dr.daily_expense',
+                'dr.pump_rent',
+                'bd.expense_detail',
+                'bd.account_number',
+                DB::raw('SUM(bd.bank_deposit) as bank_deposit')
+            )
+            ->where('dr.petrol_pump_id', $pump_id)
+            ->groupBy('dr.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
+            ->get();
 
-        $pump_id = $pump->id;
-
-        return view('client_admin.pump.expenses', compact('daily_reports', 'pump_id'));
-
+        return view('client_admin.pump.expenses', compact('expense_data', 'pump_id'));
     }
 
     function save_bank_deposit(Request $request)
@@ -936,7 +947,7 @@ class PetrolPumpController extends Controller
         $bankDeposits = BankDeposit::select('date', DB::raw('COALESCE(SUM(bank_deposit), 0) as total_deposit'))
             ->where('pump_id', $pumpId)
             ->groupBy('date')
-            ->pluck('total_deposit','date')
+            ->pluck('total_deposit', 'date')
             ->toArray();
 
         $reportData = DB::select($query, [

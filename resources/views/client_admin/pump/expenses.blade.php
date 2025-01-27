@@ -63,15 +63,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($daily_reports as $daily_report)
-                                <tr class="{{ $daily_report->bank_deposit < 0 ? 'bg-danger bg-opacity-10' : '' }}">
-                                    
-                                    <td>{{ $daily_report->date }}</td>
-                                    <td>{{ $daily_report->daily_expense }}</td>
-                                    <td>{{ $daily_report->expense_detail }}</td>
-                                    <td>{{ $daily_report->pump_rent }}</td>
-                                    <td>{{ $daily_report->bank_deposit }}</td>
-                                    <td>{{ $daily_report->account_number }}</td>
+                            @foreach ($expense_data as $expense)
+                                <tr class="{{ $expense->bank_deposit < 0 ? 'bg-danger bg-opacity-10' : '' }}">
+
+                                    <td>{{ $expense->date }}</td>
+                                    <td>{{ $expense->daily_expense }}</td>
+                                    <td>{{ $expense->expense_detail }}</td>
+                                    <td>{{ $expense->pump_rent }}</td>
+                                    <td>{{ $expense->bank_deposit }}</td>
+                                    <td>{{ $expense->account_number }}</td>
 
                                     {{-- <td class="text-end">
                                         <a href="#" class="btn btn-sm btn-light-success">
@@ -177,7 +177,7 @@
                             <label class="fs-5 fw-bold form-label mb-5">Select Date Range:</label>
                             <input class="form-control form-control-solid" placeholder="Pick a date" name="daterange" />
                         </div>
-                        
+
                         <div class="fv-row mb-10">
                             <label class="fs-5 fw-bold form-label mb-5">Deposit/Expenses</label>
                             <select data-control="select2" data-placeholder="Select a format" data-hide-search="true" name="report_type" class="form-select form-select-solid">
@@ -192,7 +192,7 @@
                                 <option value="pdf" selected>PDF</option>
                             </select>
                         </div>
-                        
+
                         <div class="text-center">
                             <button type="submit" id="report_generation_form_submit" class="btn btn-primary">
                                 <span class="indicator-label">Submit</span>
@@ -200,7 +200,7 @@
                                 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                             </button>
                         </div>
-                        
+
                     </form>
                 </div>
             </div>
@@ -222,7 +222,7 @@
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range"
-            }); 
+            });
 
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
@@ -337,7 +337,7 @@
                 formData.append('start_date', start_date);
                 formData.append('end_date', end_date);
 
-                
+
                 $.ajax({
                     url: `/pump/${pumpId}/get_expenses_pdf` ,
                     method: 'POST',
@@ -346,7 +346,7 @@
                     processData: false,
                     success: function(response) {
                         console.log(response);
-                        
+
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
