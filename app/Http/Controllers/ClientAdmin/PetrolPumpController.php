@@ -162,13 +162,10 @@ class PetrolPumpController extends Controller
 
         $dailyExpenses = DB::table('daily_reports')
             ->whereBetween('date', [$startDate, $endDate])
-            ->selectRaw('COALESCE(SUM(daily_expense + pump_rent), 0) as total_sum,
-            COALESCE(SUM(daily_expense), 0) as daily_expense_sum,
-            COALESCE(SUM(pump_rent), 0) as pump_rent_sum')
+            ->selectRaw('COALESCE(SUM(daily_expense), 0) as daily_expense_sum,COALESCE(SUM(pump_rent), 0) as pump_rent_sum')
             ->first();
 
-        $dailyExpenses->totalWagesSum = $totalWagesSum;
-        $dailyExpenses->total_sum += $totalWagesSum;
+        $dailyExpenses->total_wages_sum = $totalWagesSum;
 
         $shopEarnings = DB::table('daily_reports')
             ->whereBetween('date', [$startDate, $endDate])

@@ -46,7 +46,16 @@
         }
 
 
-
+         .total-sum {
+             font-weight: bold; /* Make the text bold */
+             font-size: 1.2rem; /* Adjust the font size */
+             color: #28a745; /* Green color for the text */
+             background-color: #f8f9fa; /* Light gray background */
+             padding: 5px 10px; /* Add some padding around the text */
+             border: 1px solid #ced4da; /* Add a border */
+             border-radius: 5px; /* Make the edges rounded */
+             display: inline-block; /* Ensure proper spacing and alignment */
+         }
     </style>
 @endsection
 @section('main-content')
@@ -175,7 +184,7 @@
                 </div>
             </div>
         </div>
-
+        @php $sum = 0; @endphp
         <div class="card p-5 mb-5">
             <div class="d-flex justify-content-between align-items-center"><h3 class="mb-7">Expenses</h3></div>
             <div class="row">
@@ -186,7 +195,12 @@
                             <ul class="card-text list-unstyled">
                                 @foreach( $dailyExpenses as $name => $value )
                                     <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($value) }}</li>
+                                    @php $sum += $value; @endphp
                                 @endforeach
+                            </ul>
+
+                            <ul class="card-text list-unstyled">
+                                <li><strong>Total Expense:</strong> {{ round2Digit($sum) }}</li>
                             </ul>
                         </div>
                     </div>
