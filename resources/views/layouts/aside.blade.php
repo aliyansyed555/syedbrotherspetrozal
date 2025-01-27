@@ -34,6 +34,9 @@
                 <div class="menu-item">
                     <div class="menu-content pb-2">
                         <span class="menu-section text-muted text-uppercase fs-8 ls-1">Mainframe</span>
+                        <a target="_blank" href="{{route('log-viewer::dashboard')}}">
+                            Log
+                        </a>
                     </div>
                 </div>
 
@@ -81,7 +84,7 @@
                         </a>
                     </div>
                     @endcan
-                    
+
                     <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                         <span class="menu-link">
                             <span class="menu-icon">
@@ -135,7 +138,7 @@
                                     <span class="menu-title">Fuel Types</span>
                                 </a>
                             </div>
-                            
+
                         </div>
                     </div>
                 @endif

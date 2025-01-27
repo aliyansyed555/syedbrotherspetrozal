@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ClientAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BankDeposit;
 use App\Models\DailyReport;
 use App\Models\DipComparison;
 use App\Models\DipRecord;
@@ -278,13 +279,17 @@ class PetrolPumpController extends Controller
             'expense_detail.string' => 'Expense Detail must be a string.',
         ]);
 
-        DailyReport::create([
-            'date' => $validatedData['date'],
-            'bank_deposit' => $validatedData['bank_deposit'],
-            'account_number' => $validatedData['account_number'],
-            'expense_detail' => $validatedData['expense_detail'],
-            'petrol_pump_id' => $pump_id,
-        ]);
+        BankDeposit::updateOrCreate(
+            [
+                'date' => $validatedData['date'],
+                'pump_id' => $pump_id,
+            ],
+            [
+                'bank_deposit' => $validatedData['bank_deposit'],
+                'account_number' => $validatedData['account_number'],
+                'expense_detail' => $validatedData['expense_detail'],
+            ]
+        );
 
         return response()->json(['success' => true, 'message' => 'Amount Transferred successfully.']);
     }
@@ -696,11 +701,11 @@ class PetrolPumpController extends Controller
                 [
                     // Values to update or insert
                     'daily_expense' => $request->input('daily_expense'),
-                    'expense_detail' => $request->input('expense_detail'),
+//                    'bank_deposit' => $request->input('bank_deposit'),
+//                    'expense_detail' => $request->input('expense_detail'),
+//                    'account_number' => $request->input('account_number'),
                     'pump_rent' => $request->input('pump_rent'),
-                    'bank_deposit' => $request->input('bank_deposit'),
                     'cash_in_hand' => $request->input('cashInHand') ?? 0,
-                    'account_number' => $request->input('account_number'),
 
                     // New fields
                     'tuck_shop_rent' => $request->input('tuck_shop_rent') ?? 0,
@@ -711,6 +716,21 @@ class PetrolPumpController extends Controller
                     'tyre_shop_rent' => $request->input('tyre_shop_rent') ?? 0,
                     'lube_shop_earning' => $request->input('lube_shop_earning') ?? 0,
                     'lube_shop_rent' => $request->input('lube_shop_rent') ?? 0,
+                ]
+            );
+
+            //                    'bank_deposit' =>
+//                    'expense_detail' => ,
+
+            BankDeposit::updateOrCreate(
+                [
+                    'date' => $validatedData['date'],
+                    'pump_id' => $pump_id,
+                ],
+                [
+                    'bank_deposit' => $request->input('bank_deposit'),
+                    'account_number' => $request->input('account_number'),
+                    'expense_detail' => $request->input('expense_detail'),
                 ]
             );
 
@@ -880,7 +900,6 @@ class PetrolPumpController extends Controller
         dr.lube_shop_earning,
         dr.lube_shop_rent,
         dr.pump_rent,
-        dr.bank_deposit,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
         COALESCE(ee.total_wage,0) AS total_wage,
@@ -907,12 +926,18 @@ class PetrolPumpController extends Controller
         dr.service_station_earning, dr.service_station_rent,
         dr.tyre_shop_earning, dr.tyre_shop_rent,
         dr.lube_shop_earning, dr.lube_shop_rent,
-        dr.pump_rent, dr.bank_deposit, ps.amount, ps.profit,
+        dr.pump_rent, ps.amount, ps.profit,
         ee.total_wage,
         cc.total_credit
     ORDER BY
         cr.date;
     ";
+
+        $bankDeposits = BankDeposit::select('date', DB::raw('COALESCE(SUM(bank_deposit), 0) as total_deposit'))
+            ->where('pump_id', $pumpId)
+            ->groupBy('date')
+            ->pluck('total_deposit','date')
+            ->toArray();
 
         $reportData = DB::select($query, [
             $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId
@@ -926,6 +951,7 @@ class PetrolPumpController extends Controller
             'reportData' => $formattedReport,
             'fuelTypes' => $fuelTypesWithTanks,
             'pump_id' => $pumpId,
+            'bankDeposits' => $bankDeposits,
         ]);
     }
 

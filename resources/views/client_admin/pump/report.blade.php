@@ -182,10 +182,9 @@
                                 <td>{{ $reportData[$i]['lube_shop_rent'] }}</td>
 
                                 {{-- <td>{{ $reportData[$i]['total_wage'] }}</td> --}}
-                                <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}
-                                </td>
+                                <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}</td>
                                 {{-- <td>{{ $reportData[$i]['pump_rent']  }}</td> --}}
-                                <td>{{ $reportData[$i]['bank_deposit'] }}</td>
+                                <td>{{ @$bankDeposits[$reportData[$i]['reading_date']] }}</td>
                                 <td>{{ $reportData[$i]['products_amount'] ?? '0.00' }}</td>
                                 <td>{{ $reportData[$i]['products_profit'] ?? '0.00' }}</td>
                                 <td>{{ $reportData[$i]['total_credit'] ?? '0.00' }}</td>
