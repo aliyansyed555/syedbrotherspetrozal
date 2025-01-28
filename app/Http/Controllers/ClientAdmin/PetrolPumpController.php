@@ -733,7 +733,7 @@ class PetrolPumpController extends Controller
             BankDeposit::updateOrCreate(
                 [
                     'date' => $date,
-                    'pump_id' => $pump_id,
+                    'pump_id' => $petrolPumpId,
                 ],
                 [
                     'bank_deposit' => $request->input('bank_deposit'),
