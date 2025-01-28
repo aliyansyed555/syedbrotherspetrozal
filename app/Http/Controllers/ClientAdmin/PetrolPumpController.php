@@ -264,6 +264,25 @@ class PetrolPumpController extends Controller
             )
             ->where('dr.petrol_pump_id', $pump_id)
             ->groupBy('dr.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
+
+            ->union(
+                DB::table('bank_deposits as bd')
+                    ->leftJoin('daily_reports as dr', function ($join) {
+                        $join->on('bd.date', '=', 'dr.date')
+                            ->on('bd.pump_id', '=', 'dr.petrol_pump_id');
+                    })
+                    ->select(
+                        'bd.date',
+                        'dr.daily_expense',
+                        'dr.pump_rent',
+                        'bd.expense_detail',
+                        'bd.account_number',
+                        DB::raw('SUM(bd.bank_deposit) as bank_deposit')
+                    )
+                    ->where('bd.pump_id', $pump_id)
+                    ->groupBy('bd.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
+            )
+            ->orderBy('date')
             ->get();
 
         return view('client_admin.pump.expenses', compact('expense_data', 'pump_id'));
@@ -1303,12 +1322,30 @@ class PetrolPumpController extends Controller
                 DB::raw('SUM(bd.bank_deposit) as bank_deposit')
             )
             ->where('dr.petrol_pump_id', $pump_id)
+            ->whereBetween('dr.date', [$start_date, $end_date]) // Apply date filter here
             ->groupBy('dr.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
-            ->whereBetween('dr.date', [$start_date, $end_date])
+
+            ->union(
+                DB::table('bank_deposits as bd')
+                    ->leftJoin('daily_reports as dr', function ($join) {
+                        $join->on('bd.date', '=', 'dr.date')
+                            ->on('bd.pump_id', '=', 'dr.petrol_pump_id');
+                    })
+                    ->select(
+                        'bd.date',
+                        'dr.daily_expense',
+                        'dr.pump_rent',
+                        'bd.expense_detail',
+                        'bd.account_number',
+                        DB::raw('SUM(bd.bank_deposit) as bank_deposit')
+                    )
+                    ->where('bd.pump_id', $pump_id)
+                    ->whereBetween('bd.date', [$start_date, $end_date])
+                    ->groupBy('bd.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
+            )
+            ->orderBy('date')
             ->get();
-
-        #$daily_reports = $pump->dailyReports()->whereBetween('date', [$start_date, $end_date])->get();
-
+        
         // dd($daily_reports);
         $pdf = Pdf::loadView('pdfs.daily-report-pdf', [
             'daily_reports' => $daily_reports,
