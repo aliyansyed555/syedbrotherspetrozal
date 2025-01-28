@@ -315,7 +315,7 @@ class PetrolPumpController extends Controller
                 'pump_id' => $pump_id,
             ],
             [
-                'bank_deposit' => $validatedData['bank_deposit'],
+                'bank_deposit' => -$validatedData['bank_deposit'],
                 'account_number' => $validatedData['account_number'],
                 'expense_detail' => $validatedData['expense_detail'],
             ]
@@ -1345,7 +1345,7 @@ class PetrolPumpController extends Controller
             )
             ->orderBy('date')
             ->get();
-        
+
         // dd($daily_reports);
         $pdf = Pdf::loadView('pdfs.daily-report-pdf', [
             'daily_reports' => $daily_reports,
