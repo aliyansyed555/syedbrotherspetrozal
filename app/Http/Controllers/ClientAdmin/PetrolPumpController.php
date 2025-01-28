@@ -732,7 +732,7 @@ class PetrolPumpController extends Controller
 
             BankDeposit::updateOrCreate(
                 [
-                    'date' => $validatedData['date'],
+                    'date' => $date,
                     'pump_id' => $pump_id,
                 ],
                 [
