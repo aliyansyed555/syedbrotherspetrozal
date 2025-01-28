@@ -380,11 +380,11 @@
                         _token: "{{ csrf_token() }}"
                     },
                     success: function(response) {
-                        alert("Data saved successfully!");
+                        toastr.success('Dips data saved successfully!');
                         reportDataArray = [];
                     },
                     complete: function() {
-                        // Re-enable the button after the request is complete
+                        toastr.error('Something went wrong plz check with manager!');
                         button.prop('disabled', false);
                     }
                 });
@@ -394,7 +394,6 @@
 
                 const dateColumnIndex = 0;
                 const dateValue = data[dateColumnIndex];
-
 
                 if (startDate && endDate) {
                     return dateValue >= startDate && dateValue <= endDate;
@@ -499,7 +498,3 @@
         });
     </script>
 @endsection
-
-@section('styles')
-@endsection
-{{-- [{"product_id":"9","product_name":"open oil","product_price":"1000","buying_price":"950","product_qty":"2","total":"2000"}] --}}
