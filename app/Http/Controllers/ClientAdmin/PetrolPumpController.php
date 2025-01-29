@@ -504,9 +504,24 @@ class PetrolPumpController extends Controller
         $updateData = [
             'name' => $validatedData['name'],
             'location' => $validatedData['location'],
+            'total_investment' => $request->total_investment,
         ];
 
         $petrol_pump->update($updateData);
+
+
+        if ($request->cash_in_hand)
+            DB::table('daily_reports')->updateOrInsert(
+                [
+                    'date' => $request->created_date ?? now()->toDateString(),
+                    'petrol_pump_id' => $id,
+                ],
+                [
+                    'cash_in_hand' => $request->cash_in_hand,
+                    'updated_at' => now(), // Optional: If you want to track updates
+                ]
+            );
+
         return response()->json(['success' => true, 'message' => 'Petrol Pump updated successfully.']);
     }
 
