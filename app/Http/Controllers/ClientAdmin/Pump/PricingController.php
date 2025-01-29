@@ -94,7 +94,13 @@ class PricingController extends Controller
             $pump = PetrolPump::where('id', $pump_id)->first();
             $tanks = Tank::where('fuel_type_id', $validatedData['fuel_type_id'])->where('petrol_pump_id', $pump_id)->get();
 
-            $sumOfStock = DipRecord::select(DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr'))
+            $sumOfStock = DipRecord::select(
+                'dip_records.date',
+                'dip_records.tank_id',
+                'tanks.fuel_type_id', // Include this column
+                'tanks.name as tank_name', // Include this column
+                DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr')
+            )
                 ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
                 ->whereIn('dip_records.tank_id', $tanks->pluck('id'))
                 ->whereBetween('dip_records.date', [$dateHere, $dateHere]) // Filter by date range
@@ -104,8 +110,9 @@ class PricingController extends Controller
                         ->whereColumn('dip_records.tank_id', 'tank_id')
                         ->whereBetween('dip_records.date', [$dateHere, $dateHere]); // Add date range here too
                 })
-                ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.name')
+                ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.fuel_type_id', 'tanks.name') // Add missing columns
                 ->first();
+
 
             $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
             $totalgain = $sumOfStock * $rateChange;
