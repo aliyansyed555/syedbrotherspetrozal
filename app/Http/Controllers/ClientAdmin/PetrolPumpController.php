@@ -93,8 +93,8 @@ class PetrolPumpController extends Controller
         $stocks = DipRecord::select(
             'dip_records.date',
             'dip_records.tank_id',
-            'tanks.fuel_type_id',
-            'tanks.name as tank_name',
+            'tanks.fuel_type_id', // Include in GROUP BY
+            'tanks.name as tank_name', // Include in GROUP BY
             DB::raw('SUM(dip_records.reading_in_ltr) as total_reading_in_ltr')
         )
             ->join('tanks', 'dip_records.tank_id', '=', 'tanks.id')
@@ -106,7 +106,7 @@ class PetrolPumpController extends Controller
                     ->whereColumn('dip_records.tank_id', 'tank_id')
                     ->whereBetween('dip_records.date', [$startDate, $endDate]); // Add date range here too
             })
-            ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.name')
+            ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.fuel_type_id', 'tanks.name') // Include all selected columns
             ->get();
 
 //        $tanks = $pump->tanks()
