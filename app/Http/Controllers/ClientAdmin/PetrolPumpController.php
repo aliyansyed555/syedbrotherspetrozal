@@ -264,7 +264,6 @@ class PetrolPumpController extends Controller
             )
             ->where('dr.petrol_pump_id', $pump_id)
             ->groupBy('dr.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
-
             ->union(
                 DB::table('bank_deposits as bd')
                     ->leftJoin('daily_reports as dr', function ($join) {
@@ -508,7 +507,6 @@ class PetrolPumpController extends Controller
         ];
 
         $petrol_pump->update($updateData);
-
 
         if ($request->cash_in_hand)
             DB::table('daily_reports')->updateOrInsert(
@@ -764,17 +762,18 @@ class PetrolPumpController extends Controller
                 ]
             );
 
-            BankDeposit::updateOrCreate(
-                [
-                    'date' => $date,
-                    'pump_id' => $petrolPumpId,
-                ],
-                [
-                    'bank_deposit' => $request->input('bank_deposit'),
-                    'account_number' => $request->input('account_number'),
-                    'expense_detail' => $request->input('expense_detail'),
-                ]
-            );
+            if ($request->input('bank_deposit') && $request->input('account_number'))
+                BankDeposit::updateOrCreate(
+                    [
+                        'date' => $date,
+                        'pump_id' => $petrolPumpId,
+                    ],
+                    [
+                        'bank_deposit' => $request->input('bank_deposit'),
+                        'account_number' => $request->input('account_number'),
+                        'expense_detail' => $request->input('expense_detail'),
+                    ]
+                );
 
             DB::commit(); // Commit the transaction
 
@@ -1339,7 +1338,6 @@ class PetrolPumpController extends Controller
             ->where('dr.petrol_pump_id', $pump_id)
             ->whereBetween('dr.date', [$start_date, $end_date]) // Apply date filter here
             ->groupBy('dr.date', 'dr.daily_expense', 'dr.pump_rent', 'bd.expense_detail', 'bd.account_number')
-
             ->union(
                 DB::table('bank_deposits as bd')
                     ->leftJoin('daily_reports as dr', function ($join) {
