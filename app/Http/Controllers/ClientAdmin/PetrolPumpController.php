@@ -806,8 +806,8 @@ class PetrolPumpController extends Controller
             $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
 
             $selectClauses[] = "
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.digital_sold_ltrs) ELSE 0 END) AS `{$columnBase}_digital_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.analog_sold_ltrs) ELSE 0 END) AS `{$columnBase}_analog_sold`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
@@ -1052,8 +1052,8 @@ class PetrolPumpController extends Controller
             $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
 
             $selectClauses[] = "
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.digital_sold_ltrs) ELSE 0 END) AS `{$columnBase}_digital_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.analog_sold_ltrs) ELSE 0 END) AS `{$columnBase}_analog_sold`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
@@ -1414,8 +1414,8 @@ class PetrolPumpController extends Controller
             $allTanks[$fuelTypeId] = $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
 
             $selectClauses[] = "
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.digital_sold_ltrs ELSE 0 END) AS `{$columnBase}_digital_sold`,
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.analog_sold_ltrs ELSE 0 END) AS `{$columnBase}_analog_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.digital_sold_ltrs) ELSE 0 END) AS `{$columnBase}_digital_sold`,
+            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.analog_sold_ltrs) ELSE 0 END) AS `{$columnBase}_analog_sold`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
             MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
             MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,

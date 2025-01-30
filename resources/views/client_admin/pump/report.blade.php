@@ -13,7 +13,7 @@
                             placeholder="Pick date rage" id="kt_daterangepicker" />
                     </div>
 
-                    <button
+                    <button style="margin-left: 12px"
                         title="Click to refresh reports dip to the table to update records on analytics page"
                         type="button"
                         class="btn btn-light-danger me-3"
