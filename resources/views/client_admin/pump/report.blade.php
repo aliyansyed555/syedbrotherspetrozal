@@ -384,7 +384,6 @@
                         reportDataArray = [];
                     },
                     complete: function() {
-                        toastr.error('Something went wrong plz check with manager!');
                         button.prop('disabled', false);
                     }
                 });
