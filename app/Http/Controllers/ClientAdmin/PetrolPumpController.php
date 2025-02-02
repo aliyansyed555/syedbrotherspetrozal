@@ -163,6 +163,7 @@ class PetrolPumpController extends Controller
 
         $dailyExpenses = DB::table('daily_reports')
             ->whereBetween('date', [$startDate, $endDate])
+            ->where('petrol_pump_id', $pump_id)
             ->selectRaw('COALESCE(SUM(daily_expense), 0) as daily_expense_sum,COALESCE(SUM(pump_rent), 0) as pump_rent_sum')
             ->first();
 

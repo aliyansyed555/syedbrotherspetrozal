@@ -193,6 +193,7 @@
                         <div class="card-body">
                             <h2 class="card-title mb-4">Pump Expenses</h2>
                             <ul class="card-text list-unstyled">
+
                                 @foreach( $dailyExpenses as $name => $value )
                                     <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($value) }}</li>
                                     @php $sum += $value; @endphp
