@@ -63,7 +63,7 @@
                         <tr>
                             <th class="fw-bold">Date</th>
                             @foreach ($fuelTypes as $fuelType)
-                                <th class="fw-bold">{{ $fuelType->name }} Sold TEST</th>
+                                <th class="fw-bold">{{ $fuelType->name }} Sold</th>
                                 <th class="fw-bold">{{ $fuelType->name }} Price</th>
                                 <th class="fw-bold">{{ $fuelType->name }} Profit</th>
                                 <th class="fw-bold">{{ $fuelType->name }} Stock</th>
