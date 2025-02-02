@@ -136,6 +136,9 @@
                                             ? $dipQuantity - $stockQuantity
                                             : ($lastDipQty - $digitalSold - $dipQuantity) * -1;
 
+                                        if(isset($fulePurchases[$reportData[$i]['reading_date']][$fuelType->id]) && $i > 0)
+                                            $dipComparisonFinal = $dipComparisonFinal-$fulePurchases[$reportData[$i]['reading_date']][$fuelType->id];
+
                                         $dipComparisonFinal = round2Digit($dipComparisonFinal);
 
                                         // Calculate profit with gain

@@ -980,6 +980,20 @@ class PetrolPumpController extends Controller
             ->pluck('total_deposit', 'date')
             ->toArray();
 
+        $fuelPurchasesSummary = DB::table('fuel_purchases')
+            ->select('fuel_type_id', 'purchase_date', DB::raw('SUM(quantity_ltr) AS total_purchased_quantity'))
+            ->where('petrol_pump_id', $pumpId)
+            ->groupBy('fuel_type_id', 'purchase_date')
+            ->get()
+            ->toArray();
+
+        // Convert the result into a structured indexed array
+        $fulePurchases = [];
+
+        foreach ($fuelPurchasesSummary as $data) {
+            $fulePurchases[$data->purchase_date][$data->fuel_type_id] = $data->total_purchased_quantity;
+        }
+
         $reportData = DB::select($query, [
             $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId
         ]);
@@ -993,6 +1007,7 @@ class PetrolPumpController extends Controller
             'fuelTypes' => $fuelTypesWithTanks,
             'pump_id' => $pumpId,
             'bankDeposits' => $bankDeposits,
+            'fulePurchases' => $fulePurchases,
         ]);
     }
 
