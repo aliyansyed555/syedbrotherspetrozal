@@ -825,11 +825,11 @@ class PetrolPumpController extends Controller
             nr.date,
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date,nr.created_at),
+                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
                 digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date,nr.created_at),
+                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
                 analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
@@ -1087,11 +1087,11 @@ class PetrolPumpController extends Controller
 //            nr.date,
 //            ft.id AS fuel_type_id,
 //            nr.digital_reading - COALESCE(
-//                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
+//                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
 //                 digital_reading
 //            ) AS digital_sold_ltrs,
 //            nr.analog_reading - COALESCE(
-//                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
+//                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
 //                analog_reading
 //            ) AS analog_sold_ltrs,
 //            fr.selling_price,
@@ -1448,11 +1448,11 @@ class PetrolPumpController extends Controller
             nr.date,
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
+                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
                 digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
+                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
                 analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
