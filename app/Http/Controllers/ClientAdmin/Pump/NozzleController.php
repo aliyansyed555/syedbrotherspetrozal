@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ClientAdmin\Pump;
 
 use App\Http\Controllers\Controller;
+use App\Models\NozzleReading;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -174,7 +175,7 @@ class NozzleController extends Controller
         $nozzle->fuel_type_id = $validatedData['fuel_type_id'];
         $nozzle->save();
 
-        if ($request->analog_reading || $request->digital_reading){
+        if ($request->analog_reading || $request->digital_reading) {
             $existingRecord = DB::table('nozzle_readings')
                 ->where('nozzle_id', $nozzle->id)
                 ->where('date', $request->nozzles_date ?? now()->toDateString())
@@ -189,12 +190,10 @@ class NozzleController extends Controller
 
             if ($existingRecord) {
                 // Update existing record
-                DB::table('nozzle_readings')
-                    ->where('id', $existingRecord->id)
-                    ->update($data);
+                NozzleReading::where('id', $existingRecord->id)->update($data);
             } else {
                 // Insert new record
-                DB::table('nozzle_readings')->insert($data);
+                NozzleReading::create($data);
             }
 
         }

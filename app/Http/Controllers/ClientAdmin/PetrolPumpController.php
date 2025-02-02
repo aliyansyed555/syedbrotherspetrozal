@@ -618,12 +618,13 @@ class PetrolPumpController extends Controller
                         $tankSales[$tankId] = $amountSoldToday;
                     }
 
-                    DB::table('nozzle_readings')->insert([
+                    NozzleReading::create([
                         'nozzle_id' => $nozzleId,
                         'analog_reading' => $reading['analog_reading'],
                         'digital_reading' => $reading['digital_reading'],
                         'date' => $date,
                     ]);
+
                 }
                 foreach ($tankSales as $tankId => $totalSold) {
                     // Check if there are tank transfers for this tank
@@ -824,11 +825,11 @@ class PetrolPumpController extends Controller
             nr.date,
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
                 digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
                 analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
@@ -1086,11 +1087,11 @@ class PetrolPumpController extends Controller
 //            nr.date,
 //            ft.id AS fuel_type_id,
 //            nr.digital_reading - COALESCE(
-//                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+//                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
 //                 digital_reading
 //            ) AS digital_sold_ltrs,
 //            nr.analog_reading - COALESCE(
-//                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+//                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
 //                analog_reading
 //            ) AS analog_sold_ltrs,
 //            fr.selling_price,
@@ -1447,11 +1448,11 @@ class PetrolPumpController extends Controller
             nr.date,
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
                 digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.created_at),
                 analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
