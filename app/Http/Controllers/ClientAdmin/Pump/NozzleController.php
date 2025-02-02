@@ -174,13 +174,30 @@ class NozzleController extends Controller
         $nozzle->fuel_type_id = $validatedData['fuel_type_id'];
         $nozzle->save();
 
-        if ($request->analog_reading || $request->digital_reading)
-            DB::table('nozzle_readings')->insert([
+        if ($request->analog_reading || $request->digital_reading){
+            $existingRecord = DB::table('nozzle_readings')
+                ->where('nozzle_id', $nozzle->id)
+                ->where('date', $request->nozzles_date ?? now()->toDateString())
+                ->first();
+
+            $data = [
                 'nozzle_id' => $nozzle->id,
                 'analog_reading' => $request->analog_reading ? round2Digit($request->analog_reading) : 0,
                 'digital_reading' => $request->digital_reading ? round2Digit($request->digital_reading) : 0,
                 'date' => $request->nozzles_date ?? now()->toDateString(),
-            ]);
+            ];
+
+            if ($existingRecord) {
+                // Update existing record
+                DB::table('nozzle_readings')
+                    ->where('id', $existingRecord->id)
+                    ->update($data);
+            } else {
+                // Insert new record
+                DB::table('nozzle_readings')->insert($data);
+            }
+
+        }
 
         return response()->json(['success' => true, 'message' => 'Nozzle updated successfully.']);
     }
