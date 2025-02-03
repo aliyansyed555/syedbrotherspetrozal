@@ -125,6 +125,7 @@
                                         $dipQuantity = $reportData[$i]["{$columnBase}_dip_quantity"];
                                         $stockQuantity = $reportData[$i]["{$columnBase}_stock_quantity"];
                                         $readingDate = $reportData[$i]['reading_date'];
+                                        $tank_transfer_tt = $reportData[$i]["{$columnBase}_transfer_quantity"];
 
                                         // Calculate profit
                                         $profit = $digitalSold * $price - $digitalSold * $buyingPrice;
@@ -137,9 +138,9 @@
                                             : ($lastDipQty - $digitalSold - $dipQuantity) * -1;
 
                                         if(isset($fulePurchases[$reportData[$i]['reading_date']][$fuelType->id]) && $i > 0)
-                                            $dipComparisonFinal = $dipComparisonFinal-$fulePurchases[$reportData[$i]['reading_date']][$fuelType->id];
+                                            $dipComparisonFinal = $dipComparisonFinal - $fulePurchases[$reportData[$i]['reading_date']][$fuelType->id];
 
-                                        $dipComparisonFinal = round2Digit($dipComparisonFinal);
+                                        $dipComparisonFinal = round2Digit($dipComparisonFinal) - $tank_transfer_tt; //New logic as shahnshah said.
 
                                         // Calculate profit with gain
                                         $profitWithGain = $dipComparisonFinal * $price;
@@ -161,12 +162,12 @@
                                     </script>
 
                                     <td>
-                                        {{ $reportData[$i]["{$columnBase}_digital_sold"] - $reportData[$i]["{$columnBase}_transfer_quantity"] }}
+                                        {{ $reportData[$i]["{$columnBase}_digital_sold"] - $tank_transfer_tt }}
                                     </td>
                                     <td>{{ $reportData[$i]["{$columnBase}_price"] }}</td>
                                     <td>{{ round2Digit($reportData[$i]["{$columnBase}_profit"]) }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_stock_quantity"] }}</td>
-                                    <td>{{ $reportData[$i]["{$columnBase}_transfer_quantity"] }}</td>
+                                    <td>{{ $tank_transfer_tt }}</td>
                                     <td>{{ $reportData[$i]["{$columnBase}_dip_quantity"] }}</td>
                                     <td class="py-2 px-3 {{ $dipComparisonFinal >= 0 ? 'bg-success' : 'bg-danger' }}">
                                         {{$dipComparisonFinal}}
