@@ -170,6 +170,7 @@ class PetrolPumpController extends Controller
         $dailyExpenses->total_wages_sum = $totalWagesSum;
 
         $shopEarnings = DB::table('daily_reports')
+            ->where('petrol_pump_id', $pump_id)
             ->whereBetween('date', [$startDate, $endDate])
             ->selectRaw('
         COALESCE(
@@ -219,10 +220,11 @@ class PetrolPumpController extends Controller
             ->groupBy('fuel_types.name')
             ->get();
 
-        $cashInhand = \DB::table('daily_reports')
-            ->whereBetween('date', [$startDate, $endDate])
+        $cashInHand = \DB::table('daily_reports')
+            ->whereDate('date', '<=', $endDate)
             ->where('petrol_pump_id', $pump->id)
-            ->sum('cash_in_hand');
+            ->latest()
+            ->value('cash_in_hand'); // This directly fetches the 'cash_in_hand' column value
 
         return view('client_admin.pump.analytics', compact(
             'pump',

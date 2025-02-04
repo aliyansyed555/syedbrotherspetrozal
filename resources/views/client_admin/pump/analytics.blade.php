@@ -230,7 +230,7 @@
                         <div class="card-body">
                             <h2 class="card-title mb-4">Cash in Hand</h2>
                             <ul class="card-text list-unstyled">
-                                <li><strong>Total:</strong> {{ $cashInhand }}</li>
+                                <li><strong>Total:</strong> {{ $cashInHand }}</li>
                             </ul>
                         </div>
                     </div>
@@ -341,7 +341,7 @@
 
                     $customValuesSum = ($totalStockAmount + $totalMobiloilAmount + $totalCredit) - $totalDebit;
                     $finalProfitCustom = $final_profit_with_gain > 0 ? $customValuesSum - $final_profit_with_gain : $customValuesSum + $final_profit_with_gain;
-                    $fullyFinalProfitLoss = ($finalProfitCustom - $pump->total_investment) + $cashInhand;
+                    $fullyFinalProfitLoss = ($finalProfitCustom - $pump->total_investment) + $cashInHand;
                 @endphp
 
                 <div class="col-sm-3">
