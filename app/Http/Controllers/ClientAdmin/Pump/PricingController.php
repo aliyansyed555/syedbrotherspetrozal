@@ -138,7 +138,7 @@ class PricingController extends Controller
                 if ($totalgain)
                     // If no entry exists for the previous date, create it first
                     $newEntry = FuelPrice::create([
-                        'selling_price' => $validatedData['selling_price'], // Or adjust these values as needed
+                        'selling_price' => $lastEntry->selling_price, // Or adjust these values as needed
                         'fuel_type_id' => $validatedData['fuel_type_id'],
                         'petrol_pump_id' => $pump_id,
                         'date' => $currentDate, // Ensure it's for the previous date
