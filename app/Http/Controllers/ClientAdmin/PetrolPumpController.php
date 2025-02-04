@@ -230,7 +230,7 @@ class PetrolPumpController extends Controller
             'pump',
             'stocks',
             'products',
-            'cashInhand',
+            'cashInHand',
             'totalCredit',
             'totalDebit',
             'profits',
