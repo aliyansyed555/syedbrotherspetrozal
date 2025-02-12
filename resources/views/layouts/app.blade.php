@@ -33,7 +33,6 @@
 <body id="kt_body" class="header-fixed header-tablet-and-mobile-fixed aside-enabled aside-fixed"
     style="--kt-toolbar-height:55px;--kt-toolbar-height-tablet-and-mobile:55px">
 
-
     <div class="d-flex flex-column flex-root">
 
         <!--begin::Page-->
@@ -62,10 +61,7 @@
         </div>
         <!--end::Page-->
 
-
     </div>
-
-
 
     <!--begin::Global Javascript Bundle(used by all pages)-->
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
@@ -100,7 +96,7 @@
                 // Find the form as the parent of the modal
                 const form = $(formId); // Now directly target the form using formId
                 // console.log('Form Element:', form);
-                
+
                 // Check if the form exists
                 if (form.length > 0) {
                     form[0].reset(); // Reset the form
@@ -110,7 +106,7 @@
                 }
             });
 
-            
+
             const darkModeToggle = document.getElementById('theme_style_toggle');
             const themeStyle = document.getElementById('theme_style');
             const themeScript = document.getElementById('theme_script');
@@ -118,12 +114,12 @@
             // Check localStorage and set the appropriate theme on load
             const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
 
-            themeStyle.href = darkModeEnabled 
-                ? "{{ asset('assets/css/style.dark.bundle.css') }}" 
+            themeStyle.href = darkModeEnabled
+                ? "{{ asset('assets/css/style.dark.bundle.css') }}"
                 : "{{ asset('assets/css/style.bundle.css') }}";
 
-            themeScript.src = darkModeEnabled 
-                ? "{{ asset('assets/js/scripts.dark.bundle.js') }}" 
+            themeScript.src = darkModeEnabled
+                ? "{{ asset('assets/js/scripts.dark.bundle.js') }}"
                 : "{{ asset('assets/js/scripts.bundle.js') }}";
 
 
@@ -138,16 +134,16 @@
                 localStorage.setItem('darkMode', isDarkMode);
 
                 // Switch the theme
-                themeStyle.href = isDarkMode 
-                    ? "{{ asset('assets/css/style.dark.bundle.css') }}" 
+                themeStyle.href = isDarkMode
+                    ? "{{ asset('assets/css/style.dark.bundle.css') }}"
                     : "{{ asset('assets/css/style.bundle.css') }}";
 
-                themeScript.src = isDarkMode 
-                    ? "{{ asset('assets/js/scripts.dark.bundle.js') }}" 
+                themeScript.src = isDarkMode
+                    ? "{{ asset('assets/js/scripts.dark.bundle.js') }}"
                     : "{{ asset('assets/js/scripts.bundle.js') }}";
             });
         });
-        
+
         // BaseUrL
         window.appBaseUrl = "{{ url('/') }}";
         window.baseUrl = "{{ asset('assets') }}";
@@ -183,7 +179,7 @@
                 e.preventDefault();
                 let id = $(this).attr('data-id');
                 console.log(id);
-                
+
                 let url;
                 if (prefix !== null) {
                     url = `/${prefix}/${elem}/delete/${id}`;
@@ -192,7 +188,7 @@
                 }
 
                 console.log(url);
-                
+
                 swal.fire({
                     text: "Are you sure you would like to delete this?",
                     icon: "warning",
@@ -245,8 +241,6 @@
                 });
             });
         }
-        
-
 
         function handlingForms(elem, prefix = null) {
 
@@ -260,7 +254,7 @@
             submitBtn.on('click', function(e) {
                 e.preventDefault();
 
-                
+
                 let formData = dataObj(form);
                 let url;
                 if (prefix !== null) {
@@ -270,7 +264,7 @@
                 }
 
                 let method = formData.id ? 'PUT' : 'POST';
-                
+
                 formValidator.validate().then(function(status) {
                     if (status === 'Valid') {
                         $.ajax({
@@ -306,7 +300,7 @@
             });
         }
     </script>
-    
+
     @yield('javascript')
 </body>
 <!--end::Body-->

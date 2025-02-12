@@ -12,11 +12,11 @@ class BankAccount extends Model
     protected $table = 'bank_accounts'; // Database table ka naam
 
     protected $fillable = [
-        'account_name',
+        'date',
+        'account_type',
         'bank_name',
         'person_name',
         'account_number',
         'previous_cash',
-        'date',
     ];
 }

@@ -272,11 +272,8 @@
             handlingForms('customer', prefix);
             deleteFn('customer', prefix)
         });
-
-
     </script>
 @endsection
-
 
 @section('styles')
 @endsection

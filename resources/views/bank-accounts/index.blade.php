@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    <form action="" method="POST" id="customer_form" class="validate-form">
+    <form action="{{route('bank.accounts.create')}}" method="POST" id="accounts_form" class="validate-form">
         <div class="modal fade" tabindex="-1" id="customer_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">
                 <div class="modal-content">
@@ -127,7 +127,6 @@
     </form>
 @endsection
 
-
 @section('javascript')
     <script>
         $(document).ready(function () {
@@ -199,6 +198,7 @@
                                                 </svg>
                                             </span>
                                         </button>
+
                                         <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm delete_btn" data-id='${row.id}'>
                                             <span class="svg-icon svg-icon-3">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24"
@@ -256,9 +256,11 @@
                 $('#previous_cash').val(dataObj.previous_cash);
             });
 
-            let prefix = `pump`
+
+            let prefix = ``
             handlingForms('customer', prefix);
             deleteFn('customer', prefix)
+
         });
 
     </script>

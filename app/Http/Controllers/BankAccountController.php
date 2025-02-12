@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\BankAccount;
 
@@ -42,8 +43,10 @@ class BankAccountController extends Controller
 
     public function create(Request $request)
     {
+        $bank = BankAccount::findOrFail($request->id);
+
         // Validate request data
-        $request->validate([
+        $validated = $request->validate([
             'date' => 'required|date',
             'account_type' => 'required|in:current,saving,other', // Match ENUM values
             'bank_name' => 'required|string|max:255',
@@ -52,17 +55,11 @@ class BankAccountController extends Controller
             'previous_cash' => 'required|numeric|min:0',
         ]);
 
-        // Insert into database if validation passes
-        $account = new Account();
-        $account->date = $request->date;
-        $account->account_title = $request->account_title;
-        $account->bank_name = $request->bank_name;
-        $account->person_name = $request->person_name;
-        $account->account_number = $request->account_number;
-        $account->previous_cash = $request->previous_cash;
+        if ($bank)
+            $bank->update($validated);
+        else
+            BankAccount::create($validated);
 
-        $account->save();
-
-        return response()->json(['success' => true, 'message' => 'Account created successfully.']);
+        return redirect()->back()->with('success', 'Bank Account Created/Updated successfully.');
     }
 }
