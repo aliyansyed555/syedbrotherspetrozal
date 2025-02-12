@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BankAccountCredit;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\BankAccount;
@@ -124,5 +125,13 @@ class BankAccountController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while deleting the Account.'], 500);
         }
+    }
+
+    public function get_credit_detail($account_id)
+    {
+        $account = BankAccount::findOrFail($account_id);
+        $credits = BankAccountCredit::where('bank_account_id' , $account_id)->get();
+
+        return view('bank-accounts.credits', compact( 'account', 'credits'));
     }
 }

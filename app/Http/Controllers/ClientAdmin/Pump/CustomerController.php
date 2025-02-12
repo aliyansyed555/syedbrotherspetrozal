@@ -133,7 +133,6 @@ class CustomerController extends Controller
         return back()->with('success', 'Customer credit added successfully.');
     }
 
-
     public function update(Request $request)
     {
         $customer = Customer::findOrFail($request->id);

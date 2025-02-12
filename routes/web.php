@@ -268,7 +268,7 @@ Route::prefix('bank_accounts')
     ->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/getAll', 'getAll')->name('getAll');
-//        Route::get('/credits/{customer_id}', 'get_credits')->name('get_credits');
+        Route::get('/credits/{account_id}', 'get_credit_detail')->name('get_credit_detail');
         Route::post('/create', 'create')->name('create');
         Route::put('/update/{account_id}', 'update')->name('update');
         Route::delete('/delete/{id}', 'delete')->name('delete');

@@ -186,7 +186,7 @@
                                 className: 'text-end',
                                 render: function (data, type, row) {
                                     return `
-                                        <a href="/customer/credits/${row.id}" class="btn btn-bg-light btn-active-color-primary btn-sm me-1 edit_btn" '>Credit History</a>
+                                        <a href="/bank_accounts/credits/${row.id}" class="btn btn-bg-light btn-active-color-primary btn-sm me-1 edit_btn" '>History</a>
 
                                         <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1 edit_btn" data-bs-toggle="modal" data-bs-target="#bank_accounts_modal" data-obj='${JSON.stringify(row)}'>
                                             <span class="svg-icon svg-icon-3">
