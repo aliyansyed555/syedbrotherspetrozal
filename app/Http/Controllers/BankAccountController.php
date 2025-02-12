@@ -43,7 +43,6 @@ class BankAccountController extends Controller
 
     public function create(Request $request)
     {
-        $bank = BankAccount::findOrFail($request->id);
 
         // Validate request data
         $validated = $request->validate([
@@ -54,6 +53,11 @@ class BankAccountController extends Controller
             'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
             'previous_cash' => 'required|numeric|min:0',
         ]);
+
+        $bank = null;
+        if($request->id){
+            $bank = BankAccount::findOrFail($request->id);
+        }
 
         if ($bank)
             $bank->update($validated);

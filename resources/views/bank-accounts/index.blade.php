@@ -28,7 +28,7 @@
 
             <div class="card-body py-3">
                 <div class="table-responsive">
-                    <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4" id="customer_table">
+                    <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4" id="bank_accounts_table">
                         <thead>
                         <tr class="fw-bolder text-muted">
                             <th class="">
@@ -140,7 +140,7 @@
 
                 // Private functions
                 var initDatatable = function () {
-                    dt = $("#customer_table").DataTable({
+                    dt = $("#bank_accounts_table").DataTable({
                         responsive: true,
                         pageLength: 10,
                         searchDelay: 500,
@@ -245,7 +245,7 @@
                 KTDatatablesServerSide.init();
             });
 
-            $('#customer_table').on('click', '.edit_btn', function () {
+            $('#bank_accounts_table').on('click', '.edit_btn', function () {
                 const dataObj = JSON.parse($(this).attr('data-obj'));
                 $('#id').val(dataObj.id);
                 $('#date').val(dataObj.date);
@@ -257,9 +257,7 @@
             });
 
 
-            let prefix = ``
-            handlingForms('customer', prefix);
-            deleteFn('customer', prefix)
+            deleteFn('bank_accounts', '')
 
         });
 
