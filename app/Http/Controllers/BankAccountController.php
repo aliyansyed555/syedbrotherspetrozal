@@ -17,6 +17,7 @@ class BankAccountController extends Controller
         // Initialize the user and company properties
         $this->user = Auth::user();
     }
+
     public function index()
     {
         return view('bank-accounts.index');
@@ -62,14 +63,8 @@ class BankAccountController extends Controller
                 'previous_cash' => 'required|numeric|min:0',
             ]);
 
-            $bank = null;
-            if ($request->id) {
-                $bank = BankAccount::findOrFail($request->id);
-            }
-            if ($bank)
-                $bank->update($validated);
-            else
-                BankAccount::create($validated);
+
+            BankAccount::create($validated);
 
             return response()->json(['success' => true, 'message' => 'Account created successfully.']);
 
@@ -77,6 +72,35 @@ class BankAccountController extends Controller
             Log::error($e->getMessage() . ' line' . $e->getLine());
             return response()->json(['success' => false, 'message' => 'An error occurred while creating account.'], 500);
         }
+    }
+
+    public function update(Request $request)
+    {
+        $account = BankAccount::findOrFail($request->id);
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer not found.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'account_type' => 'required|in:current,saving,other', // Match ENUM values
+            'bank_name' => 'required|string|max:255',
+            'person_name' => 'required|string|max:255',
+            'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
+            'previous_cash' => 'required|numeric|min:0',
+        ]);
+
+        $bank = null;
+        if ($request->id) {
+            $bank = BankAccount::findOrFail($request->id);
+        }
+        if ($bank)
+            $bank->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'Bank Account updated successfully.']);
     }
 
     public function delete($account_id)

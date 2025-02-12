@@ -270,7 +270,7 @@ Route::prefix('bank_accounts')
         Route::get('/getAll', 'getAll')->name('getAll');
 //        Route::get('/credits/{customer_id}', 'get_credits')->name('get_credits');
         Route::post('/create', 'create')->name('create');
-//        Route::put('/update/{customer_id}', 'update')->name('update');
+        Route::put('/update/{account_id}', 'update')->name('update');
         Route::delete('/delete/{id}', 'delete')->name('delete');
     });
 

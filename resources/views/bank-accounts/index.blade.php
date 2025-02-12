@@ -187,7 +187,8 @@
                                 render: function (data, type, row) {
                                     return `
                                         <a href="/customer/credits/${row.id}" class="btn btn-bg-light btn-active-color-primary btn-sm me-1 edit_btn" '>Credit History</a>
-                                        <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1 edit_btn" data-bs-toggle="modal" data-bs-target="#customer_modal" data-obj='${JSON.stringify(row)}'>
+
+                                        <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1 edit_btn" data-bs-toggle="modal" data-bs-target="#bank_accounts_modal" data-obj='${JSON.stringify(row)}'>
                                             <span class="svg-icon svg-icon-3">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24"
                                                     height="24" viewBox="0 0 24 24" fill="none">
