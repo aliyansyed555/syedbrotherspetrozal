@@ -115,8 +115,6 @@
                                 </a>
                             </div>
 
-                        
-
 
                             {{-- <div class="menu-item">
                                 <a class="menu-link" href="#">
@@ -147,10 +145,9 @@
                     </div>
                 @endif
 
-
                 <div class="menu-item">
-                    <a class="menu-link {{ request()->routeIs('accounts') ? 'active' : '' }}"
-                        href="{{ route('accounts') }}">
+                    <a class="menu-link {{ request()->routeIs('bank.accounts') ? 'active' : '' }}"
+                        href="{{ route('bank.accounts.index') }}">
                         <span class="menu-icon">
                             <span class="svg-icon svg-icon-2">
                                 <!--begin::Svg Icon | path: assets/media/icons/duotune/abstract/abs031.svg-->
@@ -166,7 +163,7 @@
                                 <!--end::Svg Icon-->
                             </span>
                         </span>
-                        <span class="menu-title">Accounts</span>
+                        <span class="menu-title">Bank Accounts</span>
                     </a>
                 </div>
 

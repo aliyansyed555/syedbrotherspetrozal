@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BankAccountController;
 
 use App\Http\Controllers\ClientAdmin\Pump\CardPaymentController;
 use App\Http\Controllers\ClientAdmin\Pump\DipRecordController;
@@ -76,9 +77,7 @@ Route::controller(TeamController::class)
         Route::put('/update/{id}', 'update')->name('team.update');
         Route::delete('/delete/{id}',  'delete')->name('team.delete');
         Route::post('/multi_delete',  'multi_delete')->name('team.multi_delete');
-
     }
-
 );
 
 // PetrolPumpController
@@ -246,21 +245,44 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/settings/resend-verification-email', [AccountSettingsController::class, 'resend_verification_email'])->name('account.settings.resend_verificatione_email');
 });
 
-Route::get('verify-email/{token}', [AccountSettingsController::class, 'verify'])->name('account.settings.verify');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/account/settings', [AccountSettingsController::class, 'index'])->name('account.settings');
+    Route::post('/account/settings/update', [AccountSettingsController::class, 'update'])->name('account.settings.update');
+    Route::post('/account/settings/resend-verification-email', [AccountSettingsController::class, 'resend_verification_email'])->name('account.settings.resend_verificatione_email');
+});
 
+//Route::middleware(['auth'])->group(function () {
+//    Route::get('/bank-accounts', [BankAccountController::class, 'index'])->name('bank.accounts');
+//
+////    Route::post('/account/settings/update', [AccountSettingsController::class, 'update'])->name('account.settings.update');
+//
+////    Route::get('/accounts', [AccountController::class, 'store'])->name('accounts');
+////    Route::post('/accounts', [AccountController::class, 'create'])->name('accounts');
+//});
+
+
+Route::prefix('bank-accounts')
+    ->middleware('auth')
+    ->controller(BankAccountController::class)
+    ->name('bank.accounts.')
+    ->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/getAll', 'getAll')->name('getAll');
+//        Route::get('/credits/{customer_id}', 'get_credits')->name('get_credits');
+//        Route::post('/create', 'create')->name('create');
+//        Route::put('/update/{customer_id}', 'update')->name('update');
+//        Route::delete('/delete/{customer_id}', 'delete')->name('delete');
+//        Route::post('/credits/generate_pdf/{customer_id}', 'generate_pdf')->name('generate_pdf');
+    });
+
+
+Route::get('verify-email/{token}', [AccountSettingsController::class, 'verify'])->name('account.settings.verify');
 
 Route::get('/test-email', function () {
     Mail::raw('This is a test email!', function ($message) {
-        $message->to('usmanrana18989@gmail.com')
+        $message->to('amirseersol@gmail.com')
                 ->subject('Test Email');
     });
 
     return 'Email sent!';
 });
-
-// Accounts
-
-use App\Http\Controllers\AccountController;
-
-Route::get('/accounts', [AccountController::class, 'store'])->name('accounts');
-Route::post('/accounts', [AccountController::class, 'create'])->name('accounts');

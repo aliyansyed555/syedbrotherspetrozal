@@ -33,11 +33,12 @@
                     <div class="d-flex align-items-center ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
                         <div class="cursor-pointer symbol  symbol-30px symbol-md-40px" data-kt-menu-trigger="click"
                             data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-                            @if (auth()->user()->image)
-                                <img src="{{ asset('storage/' . auth()->user()->image) }}" alt="user profile" />
-                            @else
-                                <div class="symbol-label fs-2 fw-bold text-success">{{ substr(auth()->user()->name, 0, 1)}}</div>
-                            @endif
+                            <div class="symbol-label fs-2 fw-bold text-success">{{ substr(auth()->user()->name, 0, 5)}}</div>
+{{--                            @if (auth()->user()->image)--}}
+{{--                                <img src="{{ asset('storage/' . auth()->user()->image) }}" alt="user profile" />--}}
+{{--                            @else--}}
+{{--                                <div class="symbol-label fs-2 fw-bold text-success">{{ substr(auth()->user()->name, 0, 1)}}</div>--}}
+{{--                            @endif--}}
                         </div>
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-primary fw-bold py-4 fs-6 w-275px"
                             data-kt-menu="true">
