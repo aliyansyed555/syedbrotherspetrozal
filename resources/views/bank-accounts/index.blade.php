@@ -31,18 +31,18 @@
                     <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4" id="customer_table">
                         <thead>
                         <tr class="fw-bolder text-muted">
-                            <th class="w-25px">
+                            <th class="">
                                 <div class="form-check form-check-sm form-check-custom form-check-solid">
                                     <input class="form-check-input" type="checkbox" value="1" data-kt-check="true"
                                            data-kt-check-target=".widget-9-check">
                                 </div>
                             </th>
-                            <th class="min-w-150px">Date</th>
-                            <th class="min-w-150px">Account Type</th>
-                            <th class="min-w-150px">Bank Name</th>
+                            <th class="min-w-75px">Date</th>
+                            <th class="min-w-50px">Type</th>
+                            <th class="min-w-50px">Bank Name</th>
                             <th class="min-w-150px">Person Name</th>
                             <th class="min-w-150px">Account Number</th>
-                            <th class="min-w-150px">Previous Cash</th>
+                            <th class="min-w-75px">Previous Cash</th>
                             <th class="min-w-100px text-end">Actions</th>
                         </tr>
                         </thead>
@@ -86,35 +86,35 @@
                         </div>
 
                         <div class="fv-row mb-5">
-                            <label for="account_title" class="required form-label">Account Title</label>
-                            <input type="text" class="form-control form-control-solid" placeholder="Saving"
-                                   id="account_title" name="account_title" required/>
+                            <label for="account_type" class="required form-label">Account Type</label>
+                            <select class="form-control form-control-solid" id="account_type" name="account_type" required>
+                                <option value="current">Current</option>
+                                <option value="saving">Saving</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
 
                         <div class="fv-row mb-5">
                             <label for="bank_name" class="form-label">Bank Name</label>
-                            <input type="text" class="form-control form-control-solid" placeholder="UBL" id="bank_name"
-                                   name="bank_name" required/>
+                            <input type="text" class="form-control form-control-solid" placeholder="Enter Bank Name" id="bank_name" name="bank_name" required/>
                         </div>
 
                         <div class="fv-row mb-5">
                             <label for="person_name" class="form-label">Person Name</label>
-                            <input type="text" class="form-control form-control-solid" placeholder="Name"
-                                   id="person_name" name="person_name" required/>
+                            <input type="text" class="form-control form-control-solid" placeholder="Enter Name" id="person_name" name="person_name" required/>
                         </div>
 
                         <div class="fv-row mb-5">
                             <label for="account_number" class="form-label">Account Number</label>
                             <input type="number" class="form-control form-control-solid"
-                                   placeholder="Enter account number" id="account_number" name="account_number"
-                                   required/>
+                                   placeholder="Enter Account Number" id="account_number" name="account_number" required/>
                         </div>
 
                         <div class="fv-row mb-5">
                             <label for="previous_cash" class="form-label">Previous Cash</label>
-                            <input type="number" class="form-control form-control-solid" placeholder="Enter amount"
-                                   id="previous_cash" name="previous_cash" required/>
+                            <input type="number" class="form-control form-control-solid" placeholder="Enter Amount" id="previous_cash" name="previous_cash" required/>
                         </div>
+
                     </div>
 
                     <div class="modal-footer flex-center">
@@ -162,14 +162,14 @@
                             url: `/bank-accounts/getAll`,
                         },
                         columns: [
-                            { data: 'id' },
-                            { data: 'date' },
-                            { data: 'account_type' },
-                            { data: 'bank_name' },
-                            { data: 'person_name' },
-                            { data: 'account_number' },
-                            { data: 'previous_cash' },
-                            { data: null }
+                            {data: 'id'},
+                            {data: 'date'},
+                            {data: 'account_type'},
+                            {data: 'bank_name'},
+                            {data: 'person_name'},
+                            {data: 'account_number'},
+                            {data: 'previous_cash'},
+                            {data: null}
                         ],
                         columnDefs: [{
                             targets: 0,

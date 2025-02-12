@@ -269,10 +269,9 @@ Route::prefix('bank-accounts')
         Route::get('/', 'index')->name('index');
         Route::get('/getAll', 'getAll')->name('getAll');
 //        Route::get('/credits/{customer_id}', 'get_credits')->name('get_credits');
-//        Route::post('/create', 'create')->name('create');
+        Route::post('/create', 'create')->name('create');
 //        Route::put('/update/{customer_id}', 'update')->name('update');
 //        Route::delete('/delete/{customer_id}', 'delete')->name('delete');
-//        Route::post('/credits/generate_pdf/{customer_id}', 'generate_pdf')->name('generate_pdf');
     });
 
 

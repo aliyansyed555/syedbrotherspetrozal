@@ -45,12 +45,11 @@ class BankAccountController extends Controller
         // Validate request data
         $request->validate([
             'date' => 'required|date',
-            'account_title' => 'required|string|max:255',
+            'account_type' => 'required|in:current,saving,other', // Match ENUM values
             'bank_name' => 'required|string|max:255',
             'person_name' => 'required|string|max:255',
-            'account_number' => 'required|string|unique:accounts,account_number',
+            'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
             'previous_cash' => 'required|numeric|min:0',
-
         ]);
 
         // Insert into database if validation passes
@@ -64,6 +63,6 @@ class BankAccountController extends Controller
 
         $account->save();
 
-        return response()->json(['message' => 'Account created successfully']);
+        return response()->json(['success' => true, 'message' => 'Account created successfully.']);
     }
 }
