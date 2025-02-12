@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\BankAccount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 // Ensure that you have created the Account model
 
@@ -49,58 +50,65 @@ class BankAccountController extends Controller
         ]);
     }
 
+
     public function create(Request $request)
     {
         try {
-
-            // Validate request data
-            $validated = $request->validate([
-                'date' => 'required|date',
-                'account_type' => 'required|in:current,saving,other', // Match ENUM values
-                'bank_name' => 'required|string|max:255',
-                'person_name' => 'required|string|max:255',
-                'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
-                'previous_cash' => 'required|numeric|min:0',
-            ]);
-
+            // Validate request data using the shared validation function
+            $validated = $this->validateBankAccount($request);
 
             BankAccount::create($validated);
 
             return response()->json(['success' => true, 'message' => 'Account created successfully.']);
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage() . ' line' . $e->getLine());
+            Log::error($e->getMessage() . ' line ' . $e->getLine());
             return response()->json(['success' => false, 'message' => 'An error occurred while creating account.'], 500);
         }
     }
 
     public function update(Request $request)
     {
-        $account = BankAccount::findOrFail($request->id);
+        $account = BankAccount::find($request->id);
         if (!$account) {
             return response()->json([
                 'success' => false,
-                'message' => 'Customer not found.',
+                'message' => 'BankAccount not found.',
             ], 404);
         }
 
-        $validated = $request->validate([
+        // Validate request data using the shared validation function
+        $validated = $this->validateBankAccount($request, $account->id);
+
+        $account->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'Bank Account updated successfully.']);
+    }
+
+    /**
+     * Validate bank account request data.
+     *
+     * @param Request $request
+     * @param int|null $accountId
+     * @return array
+     */
+    private function validateBankAccount(Request $request, $accountId = null): array
+    {
+        $rules = [
             'date' => 'required|date',
             'account_type' => 'required|in:current,saving,other', // Match ENUM values
             'bank_name' => 'required|string|max:255',
             'person_name' => 'required|string|max:255',
-            'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
+            'account_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('bank_accounts', 'account_number')->ignore($accountId), // Ignore if updating
+            ],
             'previous_cash' => 'required|numeric|min:0',
-        ]);
+        ];
 
-        $bank = null;
-        if ($request->id) {
-            $bank = BankAccount::findOrFail($request->id);
-        }
-        if ($bank)
-            $bank->update($validated);
-
-        return response()->json(['success' => true, 'message' => 'Bank Account updated successfully.']);
+        return $request->validate($rules);
     }
 
     public function delete($account_id)
