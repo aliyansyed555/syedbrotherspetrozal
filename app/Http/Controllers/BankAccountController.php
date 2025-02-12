@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\BankAccount;
+use Illuminate\Support\Facades\Log;
 
 // Ensure that you have created the Account model
 
@@ -43,27 +44,32 @@ class BankAccountController extends Controller
 
     public function create(Request $request)
     {
+        try {
 
-        // Validate request data
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'account_type' => 'required|in:current,saving,other', // Match ENUM values
-            'bank_name' => 'required|string|max:255',
-            'person_name' => 'required|string|max:255',
-            'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
-            'previous_cash' => 'required|numeric|min:0',
-        ]);
+            // Validate request data
+            $validated = $request->validate([
+                'date' => 'required|date',
+                'account_type' => 'required|in:current,saving,other', // Match ENUM values
+                'bank_name' => 'required|string|max:255',
+                'person_name' => 'required|string|max:255',
+                'account_number' => 'required|string|max:50|unique:bank_accounts,account_number',
+                'previous_cash' => 'required|numeric|min:0',
+            ]);
 
-        $bank = null;
-        if($request->id){
-            $bank = BankAccount::findOrFail($request->id);
+            $bank = null;
+            if ($request->id) {
+                $bank = BankAccount::findOrFail($request->id);
+            }
+            if ($bank)
+                $bank->update($validated);
+            else
+                BankAccount::create($validated);
+
+            return response()->json(['success' => true, 'message' => 'Account created successfully.']);
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage() . ' line' . $e->getLine());
+            return response()->json(['success' => false, 'message' => 'An error occurred while creating account.'], 500);
         }
-
-        if ($bank)
-            $bank->update($validated);
-        else
-            BankAccount::create($validated);
-
-        return redirect()->back()->with('success', 'Bank Account Created/Updated successfully.');
     }
 }

@@ -11,7 +11,7 @@
 
                 <div class="card-toolbar">
                     <a href="#" class="btn btn-sm btn-primary btn-active-primary new_modal" data-bs-toggle="modal"
-                       data-bs-target="#customer_modal">
+                       data-bs-target="#bank_accounts_modal">
                         <span class="svg-icon svg-icon-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none">
@@ -53,8 +53,8 @@
         </div>
     </div>
 
-    <form action="{{route('bank.accounts.create')}}" method="POST" id="accounts_form" class="validate-form">
-        <div class="modal fade" tabindex="-1" id="customer_modal">
+    <form action="" method="POST" id="bank_accounts_form" class="validate-form">
+        <div class="modal fade" tabindex="-1" id="bank_accounts_modal">
             <div class="modal-dialog modal-dialog-centered mw-650px">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -119,7 +119,7 @@
 
                     <div class="modal-footer flex-center">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Discard</button>
-                        <button type="submit" class="btn btn-primary submit_btn" id="account_submit">Save</button>
+                        <button type="submit" class="btn btn-primary submit_btn" id="bank_accounts_submit">Save</button>
                     </div>
                 </div>
             </div>
@@ -158,7 +158,7 @@
                             className: 'row-selected'
                         },
                         ajax: {
-                            url: `/bank-accounts/getAll`,
+                            url: `/bank_accounts/getAll`,
                         },
                         columns: [
                             {data: 'id'},
@@ -256,9 +256,8 @@
                 $('#previous_cash').val(dataObj.previous_cash);
             });
 
-
-            deleteFn('bank_accounts', '')
-
+            handlingForms('bank_accounts');
+            deleteFn('bank_accounts')
         });
 
     </script>

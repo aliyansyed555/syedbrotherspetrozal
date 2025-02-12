@@ -261,7 +261,7 @@ Route::middleware(['auth'])->group(function () {
 //});
 
 
-Route::prefix('bank-accounts')
+Route::prefix('bank_accounts')
     ->middleware('auth')
     ->controller(BankAccountController::class)
     ->name('bank.accounts.')

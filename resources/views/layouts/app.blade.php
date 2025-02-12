@@ -254,7 +254,6 @@
             submitBtn.on('click', function(e) {
                 e.preventDefault();
 
-
                 let formData = dataObj(form);
                 let url;
                 if (prefix !== null) {
