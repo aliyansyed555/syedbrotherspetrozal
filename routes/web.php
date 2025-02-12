@@ -257,3 +257,10 @@ Route::get('/test-email', function () {
 
     return 'Email sent!';
 });
+
+// Accounts
+
+use App\Http\Controllers\AccountController;
+
+Route::get('/accounts', [AccountController::class, 'store'])->name('accounts');
+Route::post('/accounts', [AccountController::class, 'create'])->name('accounts');
