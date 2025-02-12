@@ -5,12 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\BankAccount;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 // Ensure that you have created the Account model
 
 class BankAccountController extends Controller
 {
+    public function __construct()
+    {
+        // Initialize the user and company properties
+        $this->user = Auth::user();
+    }
     public function index()
     {
         return view('bank-accounts.index');
@@ -70,6 +76,21 @@ class BankAccountController extends Controller
         } catch (\Exception $e) {
             Log::error($e->getMessage() . ' line' . $e->getLine());
             return response()->json(['success' => false, 'message' => 'An error occurred while creating account.'], 500);
+        }
+    }
+
+    public function delete($account_id)
+    {
+        if (!$this->user->can('owner-access')) {
+            return response()->json(['success' => false, 'message' => 'You do not have permission to delete this.'], 403);
+        }
+        try {
+            $account = BankAccount::findOrFail($account_id);
+
+            $account->delete();
+            return response()->json(['success' => true, 'message' => 'Account deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while deleting the Account.'], 500);
         }
     }
 }
