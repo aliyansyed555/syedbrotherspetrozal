@@ -15,7 +15,6 @@
             @endif
 
             <div class="card-header align-items-center border-0 pt-5">
-
                 <!--begin::Card title-->
                 <div class="card-title">
                     <!--begin::Search-->
@@ -61,14 +60,15 @@
                 </div>
                 <!--begin::Card title-->
                 <!--begin::Card toolbar-->
-                <div class="">
-                    <!--begin::Toolbar-->
-                    <div class="d-flex justify-content-center align-items-center" data-kt-subscription-table-toolbar="base">
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#creditModal">
-                            Transaction Amount
-                        </button>
-                    </div>
-                    <!--end::Toolbar-->
+                <div class="d-flex justify-content-center align-items-center" data-kt-subscription-table-toolbar="base">
+                    <input class="form-control form-control-solid w-60"
+                        data-kt-docs-table-filter="search"
+                        placeholder="Pick date range"
+                        id="kt_daterangepicker" />
+
+                    <button type="button" class="btn btn-primary btn-sm m-lg-3" data-bs-toggle="modal" data-bs-target="#creditModal">
+                         Transaction Amount
+                    </button>
 
                 </div>
                 <!--end::Card toolbar-->
@@ -220,19 +220,62 @@
         text-decoration: underline; /* Optional: adds underline to indicate it's clickable */
         color: blue; /* Optional: makes it look like a link */
     }
+    #kt_daterangepicker {
+        width: 250px !important; /* Adjust width as needed */
+        height: 40px !important; /* Adjust height if needed */
+        font-size: 14px; /* Optional: Increase font size */
+        padding: 10px; /* Optional: Add padding */
+    }
+
 </style>
 @endsection
 
 
 @section('javascript')
+
     <script>
+
         $(document).ready(function() {
+
             $('#credits_table').DataTable({
                 responsive: true,
                 pageLength: 30,
                 ordering: true,
             });
+            // Function to get URL parameters
+            function getParameterByName(name) {
+                const url = window.location.href;
+                name = name.replace(/[\[\]]/g, '\\$&');
+                const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`);
+                const results = regex.exec(url);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }
+
+            // Extract dates from URL or use today's date
+            let startDate = getParameterByName('start_date') || moment().format('YYYY-MM-DD');
+            let endDate = getParameterByName('end_date') || moment().format('YYYY-MM-DD');
+
+            // Initialize date range picker
+            $("#kt_daterangepicker").daterangepicker({
+                startDate: startDate,
+                endDate: endDate,
+                locale: {
+                    format: 'YYYY-MM-DD'
+                }
+            }, function(start, end, label) {
+                startDate = start.format('YYYY-MM-DD');
+                endDate = end.format('YYYY-MM-DD');
+            });
+
+            // Submit separate start_date and end_date on change
+            $('#kt_daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+                const newUrl = `${window.location.origin}${window.location.pathname}?start_date=${picker.startDate.format('YYYY-MM-DD')}&end_date=${picker.endDate.format('YYYY-MM-DD')}`;
+                window.location.href = newUrl; // Reload the page with new parameters
+            });
         });
+
     </script>
 
     <script>

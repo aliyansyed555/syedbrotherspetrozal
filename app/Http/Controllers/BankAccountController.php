@@ -129,14 +129,16 @@ class BankAccountController extends Controller
 
     public function get_credit_detail($account_id)
     {
+        $startDate = request('start_date');
+        $endDate = request('end_date');
+
         $account = BankAccount::findOrFail($account_id);
-        $credits = BankAccountCredit::where('bank_account_id', $account_id)->get();
 
         $accounts = BankAccount::where('id', '<>', $account_id)
             ->select('id', 'person_name', 'account_number', 'bank_name')
             ->get();
 
-        $credits = \DB::table('bank_account_credits')
+        $creditsQuery = \DB::table('bank_account_credits')
             ->leftJoin('bank_accounts as revise_accounts', 'bank_account_credits.revise_account_id', '=', 'revise_accounts.id')
             ->where('bank_account_credits.bank_account_id', $account_id)
             ->select(
@@ -144,15 +146,20 @@ class BankAccountController extends Controller
                 'revise_accounts.person_name as revise_person_name',
                 'revise_accounts.account_number as revise_account_number',
                 'revise_accounts.bank_name as revise_bank_name'
-            )
-            ->get();
+            );
+
+        // **Apply date filter only if both start and end dates are provided**
+        if ($startDate && $endDate) {
+            $creditsQuery->whereBetween('bank_account_credits.date', [$startDate, $endDate]);
+        }
+
+        $credits = $creditsQuery->get();
 
         return view('bank-accounts.credits', compact('account', 'credits', 'accounts'));
     }
 
     public function addBankAccountCredit(Request $request)
     {
-
 
         $validated = $request->validate([
             'revise_account_id' => 'required|exists:bank_accounts,id', // Ensure account_id exists in the bank_accounts table
