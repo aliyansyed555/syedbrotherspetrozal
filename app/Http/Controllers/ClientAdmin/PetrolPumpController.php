@@ -1450,11 +1450,11 @@ class PetrolPumpController extends Controller
             nr.date,
             ft.id AS fuel_type_id,
             nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
                 digital_reading
             ) AS digital_sold_ltrs,
             nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date),
+                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
                 analog_reading
             ) AS analog_sold_ltrs,
             fr.selling_price,
