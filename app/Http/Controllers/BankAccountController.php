@@ -136,6 +136,17 @@ class BankAccountController extends Controller
             ->select('id', 'person_name', 'account_number', 'bank_name')
             ->get();
 
+        $credits = \DB::table('bank_account_credits')
+            ->leftJoin('bank_accounts as revise_accounts', 'bank_account_credits.revise_account_id', '=', 'revise_accounts.id')
+            ->where('bank_account_credits.bank_account_id', $account_id)
+            ->select(
+                'bank_account_credits.*',
+                'revise_accounts.person_name as revise_person_name',
+                'revise_accounts.account_number as revise_account_number',
+                'revise_accounts.bank_name as revise_bank_name'
+            )
+            ->get();
+
         return view('bank-accounts.credits', compact('account', 'credits', 'accounts'));
     }
 

@@ -91,11 +91,17 @@
                                 $balance = 0;
                             @endphp
                             @foreach ($credits as $credit)
-                                <tr>
+                                <tr class="{{$credit->type == 'received' ? 'grenish' :'' }}">
                                     <td>{{ $credit->date }}</td>
                                     <td>{{ $credit->amount }}</td>
-                                    <td>{{ $credit->type }}</td>
-                                    <td>{{ $credit->revise_account_id }} {+++}</td>
+                                    <td>{{ ucfirst($credit->type) }}</td>
+                                    <td class="revise-account"
+                                        data-fullname="{{ $credit->revise_person_name ?? 'N/A' }}
+                                        ({{ $credit->revise_account_number ?? '' }} - {{ $credit->revise_bank_name ?? '' }})"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#reviseAccountModal">
+                                        {{ $credit->revise_person_name ?? 'N/A' }}
+                                    </td>
                                     <td>{{ $credit->remarks }}</td>
                                 </tr>
                             @endforeach
@@ -106,7 +112,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- Modal -->
     <div class="modal fade" id="creditModal" tabindex="-1" aria-labelledby="creditModalLabel" aria-hidden="true">
@@ -189,66 +194,59 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="reviseAccountModal" tabindex="-1" aria-labelledby="reviseAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviseAccountModalLabel">Revise Account Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="reviseAccountDetails">
+                    <!-- Full details will be injected here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('styles')
+<style>
+    .grenish{
+        background-color: #90ee9061;
+    }
+    .revise-account {
+        cursor: pointer; /* Makes the cursor a hand pointer */
+        text-decoration: underline; /* Optional: adds underline to indicate it's clickable */
+        color: blue; /* Optional: makes it look like a link */
+    }
+</style>
 @endsection
 
 
 @section('javascript')
     <script>
         $(document).ready(function() {
-            let startDate = null;
-            let endDate = null;
-            const customerId = {{ $account->id }};
-
-            const datepicker = $("[name=daterange]");
-            $(datepicker).flatpickr({
-                altInput: true,
-                altFormat: "F j, Y",
-                dateFormat: "Y-m-d",
-                mode: "range"
-            });
-
-            // Custom filtering function for date range
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Column index of the date (adjust index based on your table)
-                const dateColumnIndex = 1;
-                const dateValue = data[dateColumnIndex]; // Get the date from the table row
-
-                // Only filter if startDate or endDate is set
-                if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
-                }
-                return true;
-            });
-
             $('#credits_table').DataTable({
                 responsive: true,
                 pageLength: 30,
                 ordering: true,
-                // footerCallback: function(row, data, start, end, display) {
-                //     // Get DataTable API instance
-                //     var api = this.api();
-
-                //     // Calculate total for the Balance column (index 4)
-                //     var totalBalance = api
-                //         .column(4, {
-                //             page: 'current'
-                //         }) // Use current page data
-                //         .data()
-                //         .reduce(function(a, b) {
-                //             // Convert string to number, handle comma separators, and NaN
-                //             return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
-                //         }, 0);
-
-                //     // Update the footer for Balance column
-                //     console.log("Total Balance:", totalBalance); // Log the total
-                //     $(api.column(4).footer()).html(totalBalance.toLocaleString(
-                //     'en-US')); // Format with commas
-                // }
             });
-
-
         });
     </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".revise-account").forEach(td => {
+                td.addEventListener("click", function() {
+                    let fullName = this.getAttribute("data-fullname");
+                    document.getElementById("reviseAccountDetails").innerHTML = `<strong>${fullName}</strong>`;
+                });
+            });
+        });
+    </script>
+
+
 @endsection
 
 
