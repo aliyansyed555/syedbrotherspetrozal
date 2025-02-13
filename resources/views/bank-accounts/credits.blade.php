@@ -4,6 +4,16 @@
     <div class="mx-5 mt-5">
         <div class="card mb-5 mb-xl-8">
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="card-header align-items-center border-0 pt-5">
 
                 <!--begin::Card title-->
@@ -12,7 +22,7 @@
                     <div class="">
                         <div class="d-flex align-items-center mb-2">
                             <a href="#" class="text-gray-900 text-hover-primary fs-2 fw-bolder me-1">
-                                {{ $account->person_name }} ({{ $account->bank_name }})
+                                {{ $account->person_name }} ({{ $account->bank_name }}) [{{$account->previous_cash}}]
                             </a>
                         </div>
                         <div class="d-flex flex-wrap fw-bold fs-6 pe-2">
@@ -55,7 +65,7 @@
                     <!--begin::Toolbar-->
                     <div class="d-flex justify-content-center align-items-center" data-kt-subscription-table-toolbar="base">
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#creditModal">
-                          Transfer Amount
+                            Transaction Amount
                         </button>
                     </div>
                     <!--end::Toolbar-->
@@ -103,49 +113,77 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="creditModalLabel">Transfer Amount</h5>
+                    <h5 class="modal-title" id="creditModalLabel">
+                        Transaction From
+                        [ {{ $account->person_name }} ({{ $account->account_number }} - {{ $account->bank_name }})]
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('add_customer_credit') }}" method="POST">
+                <form action="{{ route('add_bank_account_credit') }}" method="POST">
                     @csrf
-                <div class="modal-body">
-                    <div class="row position-relative">
-                        <input type="hidden" name="account_id" value=" {{$account->id}}">
-                        <div class="col-md-6 mb-5">
-                            <div class="fv-row">
-                                <label class="required form-label" for="remarks">Date</label>
-                                <input type="date" required class="form-control form-control-solid" placeholder="Date" id="date" name="date" />
+                    <div class="modal-body">
+                        <div class="row position-relative">
+                            <input type="hidden" name="bank_account_id" value=" {{$account->id}}">
+                            <div class="col-md-6 mb-5">
+                                <div class="fv-row">
+                                    <label class="required form-label" for="remarks">Date</label>
+                                    <input type="date" required class="form-control form-control-solid" placeholder="Date" id="date" name="date" />
+                                </div>
                             </div>
-                        </div>
 
 
-                        <div class="col-md-6 mb-5">
-                            <div class="fv-row">
-                                <label class="required form-label" for="bill_amount">Account Too</label>
-                                <input type="text" class="form-control form-control-solid" placeholder="00" id="bill_amount" name="bill_amount" />
+                            <div class="col-md-6 mb-5">
+                                <div class="fv-row">
+                                    <label class="required form-label" for="revise_account_id">Account Too</label>
+
+                                    <select class="form-control form-control-solid" id="revise_account_id" name="revise_account_id">
+                                        @foreach($accounts as $accountObj)
+                                            <option value="{{ $accountObj->id }}">
+                                                {{ $accountObj->person_name }} ({{ $accountObj->account_number }} - {{ $accountObj->bank_name }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-md-6 mb-5">
-                            <div class="fv-row">
-                                <label class="required form-label" for="amount_paid">Amount </label>
-                                <input type="text" class="form-control form-control-solid" placeholder="00" id="amount_paid" name="amount_paid" />
+                            <div class="col-md-6 mb-5">
+                                <div class="fv-row">
+                                    <label class="required form-label" for="amount">Amount </label>
+                                    <input type="number"  step="0.01" class="form-control form-control-solid" placeholder="00" id="amount" name="amount" />
+                                </div>
                             </div>
-                        </div>
 
 
-                        <div class="col-md-6 mb-5">
-                            <div class="fv-row">
-                                <label class="required form-label" for="remarks">Comment</label>
-                                <input type="text" class="form-control form-control-solid" placeholder="Detail About Credit" id="remarks" name="remarks" />
+                            <div class="col-md-6 mb-5">
+                                <div class="fv-row">
+                                    <label class="required form-label" for="remarks">Remarks</label>
+                                    <input type="text" class="form-control form-control-solid" placeholder="Detail About Credit" id="remarks" name="remarks" />
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="col-md-12 mt-5">
-                            <button type="submit" class="btn btn-primary" id="add_credit">Add Credit</button>
+                            <!-- Radio Buttons for Received/Transfer -->
+                            <div class="col-md-6 mb-5">
+                                <div class="fv-row">
+                                    <label class="required form-label">Transaction Type</label>
+                                    <div class="d-flex">
+                                        <div class="form-check me-3">
+                                            <input class="form-check-input" type="radio" id="received" name="type" value="received" checked>
+                                            <label class="form-check-label" for="received">Received</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" id="transfer" name="type" value="transfer">
+                                            <label class="form-check-label" for="transfer">Transfer</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mt-5">
+                                <button type="submit" class="btn btn-primary" id="add_bank_credit">Submit</button>
+                            </div>
                         </div>
                     </div>
-                </div>
                 </form>
             </div>
         </div>

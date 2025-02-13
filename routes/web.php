@@ -47,6 +47,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::view('/404', 'errors.404')->name('error.404');
 
 Route::post('/add-customer-credit', [CustomerController::class, 'addCustomerCredit'])->name('add_customer_credit');
+Route::post('/add-bank-account-credit', [BankAccountController::class, 'addBankAccountCredit'])->name('add_bank_account_credit');
 
 Route::controller(ClientController::class)->prefix('clients')->middleware('super_admin')->group(function(){
     Route::get('/', 'index')->name('clients.index');

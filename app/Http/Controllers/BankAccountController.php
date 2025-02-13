@@ -130,8 +130,35 @@ class BankAccountController extends Controller
     public function get_credit_detail($account_id)
     {
         $account = BankAccount::findOrFail($account_id);
-        $credits = BankAccountCredit::where('bank_account_id' , $account_id)->get();
+        $credits = BankAccountCredit::where('bank_account_id', $account_id)->get();
 
-        return view('bank-accounts.credits', compact( 'account', 'credits'));
+        $accounts = BankAccount::where('id', '<>', $account_id)
+            ->select('id', 'person_name', 'account_number', 'bank_name')
+            ->get();
+
+        return view('bank-accounts.credits', compact('account', 'credits', 'accounts'));
+    }
+
+    public function addBankAccountCredit(Request $request)
+    {
+
+
+        $validated = $request->validate([
+            'revise_account_id' => 'required|exists:bank_accounts,id', // Ensure account_id exists in the bank_accounts table
+            'date' => 'required|date', // Validate date format
+            'amount' => 'required|numeric|min:0', // Ensure amount is a valid number
+            'remarks' => 'nullable|string|max:255', // Remarks can be optional and a string
+            'type' => 'required|in:received,transfer', // Ensure it matches ENUM values
+            'bank_account_id' => 'required|exists:bank_accounts,id', // Ensure it matches ENUM values
+        ]);
+
+        BankAccountCredit::create($validated);
+
+        $account = BankAccount::findOrFail($validated['bank_account_id']);
+
+        $account->previous_cash += ($validated['type'] === 'received') ? $validated['amount'] : -$validated['amount'];
+        $account->save();
+
+        return redirect()->back()->with('success', 'Bank Account Credit created successfully.');
     }
 }
