@@ -119,6 +119,7 @@ class BankAccountController extends Controller
         }
         try {
             $account = BankAccount::findOrFail($account_id);
+            BankAccountCredit::where('bank_account_id' , $account_id)->delete();
 
             $account->delete();
             return response()->json(['success' => true, 'message' => 'Account deleted successfully.']);
