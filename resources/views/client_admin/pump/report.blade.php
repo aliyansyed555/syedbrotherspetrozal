@@ -332,19 +332,24 @@
 
 @section('javascript')
     <script>
-
         let reportDataArray = [];
-        function addData(tank_dip, tank_stock, previous_stock,final_dip,report_date,fuel_type_id) {
+
+        function addData(tank_dip, tank_stock, previous_stock, final_dip, report_date, fuel_type_id) {
             reportDataArray.push({
-                tank_dip, tank_stock, previous_stock,final_dip,report_date,fuel_type_id
+                tank_dip,
+                tank_stock,
+                previous_stock,
+                final_dip,
+                report_date,
+                fuel_type_id
             });
         }
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             const pumpId = @json($pump_id);
             const datepicker = $("[name=daterange]");
 
-            // Handle datepicker range -- For more info on flatpickr plugin, please visit: https://flatpickr.js.org/
+            // Initialize Datepicker
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
@@ -359,119 +364,82 @@
                 locale: {
                     format: 'DD/MM/YYYY'
                 }
-            }, function(start, end, label) {
-                console.log(start, end);
-
+            }, function (start, end) {
                 startDate = start.format('DD/MM/YYYY');
                 endDate = end.format('DD/MM/YYYY');
+                console.log("Filtering dates:", startDate, endDate);
                 $("#reports_table").DataTable().draw();
             });
 
-
-            $('#refresh-dip-button').on('click', function() {
-                const button = $(this);
-                if (reportDataArray.length === 0) {
-                    alert("No data to save!");
-                    return;
-                }
-
-                // Send an AJAX request to the Laravel controller
-                $.ajax({
-                    url: `/pump/${pumpId}/report-refresh-dip`,
-                    type: "POST",
-                    data: {
-                        rows: reportDataArray,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        toastr.success('Dips data saved successfully!');
-                        reportDataArray = [];
-                    },
-                    complete: function() {
-                        button.prop('disabled', false);
-                    }
-                });
-            });
-
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-
+            // Custom filter for DataTables to filter by selected date range
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
                 const dateColumnIndex = 0;
-                const dateValue = data[dateColumnIndex];
+                const dateValue = data[dateColumnIndex]; // Assuming date is in the first column
+                const rowDate = moment(dateValue, "DD/MM/YYYY", true);
+
+                if (!rowDate.isValid()) {
+                    return false;
+                }
 
                 if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
+                    const start = moment(startDate, "DD/MM/YYYY");
+                    const end = moment(endDate, "DD/MM/YYYY");
+
+                    return rowDate.isBetween(start, end, 'day', '[]'); // Includes start & end dates
                 }
-                return true;
+
+                return true; // Show all by default
             });
 
-            $('#reports_table').DataTable({
-                // responsive: true,
+            const table = $('#reports_table').DataTable({
                 pageLength: 30,
                 ordering: true,
                 columnDefs: [{
-                    // Apply the custom date format in the first column (Date)
                     targets: 0, // Assuming the date is in the first column
-                    render: function(data, type, row) {
+                    render: function (data, type, row) {
                         if (type === 'display' || type === 'filter') {
-                            // Convert the date to DD/MM/YYYY format
-                            return moment(data).format('DD/MM/YYYY');
+                            return moment(data, "YYYY-MM-DD").format('DD/MM/YYYY');
                         }
                         return data;
                     }
                 }],
-                footerCallback: function(row, data, start, end, display) {
-                    // Get DataTable API instance
+                footerCallback: function (row, data, start, end, display) {
                     var api = this.api();
 
-                    var sumColumn = function(index) {
+                    var sumColumn = function (index) {
                         return api
                             .column(index, {
                                 page: 'current'
                             })
                             .data()
-                            .reduce(function(a, b) {
+                            .reduce(function (a, b) {
                                 return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
                             }, 0);
                     };
 
-                    // Calculate totals for the last 5 columns
-                    var dieselDipCamp = sumColumn(-31);
-                    var petrolDipCamp = sumColumn(-24);
-                    var dipCamp = sumColumn(-17);
-                    var totalExpense = sumColumn(-8);
-                    var totalBankDeposit = sumColumn(-7);
-                    var totalMobilOilSale = sumColumn(-6);
-                    var totalMobilOilProfit = sumColumn(-5);
-                    var totalCustomerCredit = sumColumn(-4);
-                    var totalGrossProfit = sumColumn(-3);
-                    var totalProfit = sumColumn(-2);
-                    var totalProfitWithGain = sumColumn(-1);
-
-                    // Update the footer
-                    // $(api.column(-31).footer()).html(dieselDipCamp.toLocaleString('en-US'));
-                    $(api.column(-24).footer()).html(petrolDipCamp.toLocaleString('en-US'));
-                    $(api.column(-17).footer()).html(dipCamp.toLocaleString('en-US'));
-                    $(api.column(-8).footer()).html(totalExpense.toLocaleString('en-US'));
-                    $(api.column(-7).footer()).html(totalBankDeposit.toLocaleString('en-US'));
-                    $(api.column(-6).footer()).html(totalMobilOilSale.toLocaleString('en-US'));
-                    $(api.column(-5).footer()).html(totalMobilOilProfit.toLocaleString('en-US'));
-                    $(api.column(-4).footer()).html(totalCustomerCredit.toLocaleString('en-US'));
-                    $(api.column(-3).footer()).html(totalGrossProfit.toLocaleString('en-US'));
-                    $(api.column(-2).footer()).html(totalProfit.toLocaleString('en-US'));
-                    $(api.column(-1).footer()).html(totalProfitWithGain.toLocaleString('en-US'));
+                    $(api.column(-24).footer()).html(sumColumn(-24).toLocaleString('en-US'));
+                    $(api.column(-17).footer()).html(sumColumn(-17).toLocaleString('en-US'));
+                    $(api.column(-8).footer()).html(sumColumn(-8).toLocaleString('en-US'));
+                    $(api.column(-7).footer()).html(sumColumn(-7).toLocaleString('en-US'));
+                    $(api.column(-6).footer()).html(sumColumn(-6).toLocaleString('en-US'));
+                    $(api.column(-5).footer()).html(sumColumn(-5).toLocaleString('en-US'));
+                    $(api.column(-4).footer()).html(sumColumn(-4).toLocaleString('en-US'));
+                    $(api.column(-3).footer()).html(sumColumn(-3).toLocaleString('en-US'));
+                    $(api.column(-2).footer()).html(sumColumn(-2).toLocaleString('en-US'));
+                    $(api.column(-1).footer()).html(sumColumn(-1).toLocaleString('en-US'));
                 }
             });
 
-            $('#report_generation_form').submit(function(e) {
+            $('#report_generation_form').submit(function (e) {
                 e.preventDefault();
 
                 const formData = new FormData(this);
                 const daterangeValues = $(datepicker).val().split(' to ');
-                var start_date = daterangeValues[0].trim();
-                var end_date = daterangeValues[1].trim();
+                var start_date = daterangeValues[0] ? daterangeValues[0].trim() : "";
+                var end_date = daterangeValues[1] ? daterangeValues[1].trim() : "";
+
                 formData.append('start_date', start_date);
                 formData.append('end_date', end_date);
-
 
                 $.ajax({
                     url: `/pump/${pumpId}/reports/pdf`,
@@ -479,25 +447,20 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function(response) {
-                        console.log(response);
-
+                    success: function (response) {
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
-                            toastr.success(
-                                'PDF generated successfully. The download will start shortly.'
-                                );
+                            toastr.success('PDF generated successfully. The download will start shortly.');
 
                             const downloadLink = document.createElement('a');
                             downloadLink.href = response.file_url;
-                            downloadLink.download = response.file_url.split('/')
-                        .pop(); // Use the file name from URL
-                            downloadLink
-                        .click(); // This will prompt the user to download the file
+                            downloadLink.download = response.file_url.split('/').pop();
+                            downloadLink.click();
                         }
                     }
                 });
             });
         });
+
     </script>
 @endsection
