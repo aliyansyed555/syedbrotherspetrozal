@@ -477,6 +477,7 @@ $(document).ready(function () {
             const currentReading = parseFloat($(this).val() || '0');
             const fuelSold = currentReading - lastReading;
 
+            console.log(lastReading ,currentReading , fuelSold )
             // Initialize or update the total for the current fuel type
             if (!fuelTotals[fuelTypeId]) {
                 fuelTotals[fuelTypeId] = 0;
