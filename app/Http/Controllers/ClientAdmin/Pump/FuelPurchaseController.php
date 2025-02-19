@@ -157,17 +157,30 @@ class FuelPurchaseController extends Controller
         if (!$this->user->can('owner-access')) {
             return response()->json(['success' => false, 'message' => 'You do not have permission to delete this.'], 403);
         }
+
         try {
             $purchase = FuelPurchase::findOrFail($purchase_id);
+
+            // Check if the purchase belongs to the correct petrol pump
             if (!$this->company->petrolPumps->contains('id', $purchase->petrol_pump_id)) {
-                return response()->json(['success' => false, 'message' => 'Access denied to Nozzle.'], 403);
+                return response()->json(['success' => false, 'message' => 'Access denied to price.'], 403);
             }
+            
+            // Delete related tank stocks first
+            TankStock::where('date', $purchase->purchase_date)
+                ->where('tank_id', $purchase->fuel_type_id)
+                ->where('reading_in_ltr', $purchase->quantity_ltr)
+                ->delete();
+
+            // Delete the purchase record
             $purchase->delete();
-            return response()->json(['success' => true, 'message' => 'Purchase deleted successfully.']);
+
+            return response()->json(['success' => true, 'message' => 'Purchase and related stock deleted successfully.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while deleting the Purchase.'], 500);
         }
     }
+
 
 
 }
