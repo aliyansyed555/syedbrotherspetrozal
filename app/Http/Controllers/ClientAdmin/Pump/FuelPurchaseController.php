@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ClientAdmin\Pump;
 
 use App\Http\Controllers\Controller;
+use App\Models\Tank;
 use App\Models\TankStock;
 use App\Models\FuelPurchase;
 
