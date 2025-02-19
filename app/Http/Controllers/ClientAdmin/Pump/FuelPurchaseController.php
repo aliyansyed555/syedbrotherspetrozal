@@ -165,10 +165,9 @@ class FuelPurchaseController extends Controller
             if (!$this->company->petrolPumps->contains('id', $purchase->petrol_pump_id)) {
                 return response()->json(['success' => false, 'message' => 'Access denied to price.'], 403);
             }
-            
+
             // Delete related tank stocks first
             TankStock::where('date', $purchase->purchase_date)
-                ->where('tank_id', $purchase->fuel_type_id)
                 ->where('reading_in_ltr', $purchase->quantity_ltr)
                 ->delete();
 
