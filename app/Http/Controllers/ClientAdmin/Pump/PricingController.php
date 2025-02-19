@@ -114,8 +114,12 @@ class PricingController extends Controller
                 ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.fuel_type_id', 'tanks.name') // Add missing columns
                 ->first();
 
-            Log::alert($pump_id.' PUMP sumOfStock missing during loss gain value plz check '.$dateHere);
+
+            if(!$sumOfStock)
+                Log::alert($pump_id.' PUMP sumOfStock missing during loss gain value plz check '.$dateHere);
+
             $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
+
             $totalgain = $sumOfStock * $rateChange;
 
             // Calculate the date for 1 day before the given date
@@ -136,7 +140,7 @@ class PricingController extends Controller
                 ]);
             } else {
 
-                if ($totalgain)
+                if ($totalgain != 0)
                     // If no entry exists for the previous date, create it first
                     $newEntry = FuelPrice::create([
                         'selling_price' => $lastEntry->selling_price ?? $lastRate->selling_price, // Or adjust these values as needed
