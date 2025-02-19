@@ -182,12 +182,6 @@ class FuelPurchaseController extends Controller
                   ->where('reading_in_ltr', $purchase->quantity_ltr)
                     ->delete();
 
-            // Delete related tank stocks first
-            TankStock::where('date', $purchase->purchase_date)
-                ->where('tank_id', $purchase->fuel_type_id) #need relation here.
-                ->where('reading_in_ltr', $purchase->quantity_ltr)
-                ->delete();
-
             // Delete the purchase record
             $purchase->delete();
 
