@@ -636,5 +636,11 @@ $(document).ready(function () {
         });
     })
 
+    $("form").on("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Prevent form submission
+        }
+    });
+
 });
 

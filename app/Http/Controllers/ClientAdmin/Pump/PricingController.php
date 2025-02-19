@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PricingController extends Controller
 {
@@ -113,7 +114,7 @@ class PricingController extends Controller
                 ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.fuel_type_id', 'tanks.name') // Add missing columns
                 ->first();
 
-
+            Log::alert($pump_id.' PUMP sumOfStock missing during loss gain value plz check '.$dateHere);
             $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
             $totalgain = $sumOfStock * $rateChange;
 
