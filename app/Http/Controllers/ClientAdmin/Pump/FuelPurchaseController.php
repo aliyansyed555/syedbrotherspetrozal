@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\DB;
+
 class FuelPurchaseController extends Controller
 {
     private $user;
@@ -114,11 +115,11 @@ class FuelPurchaseController extends Controller
                 return response()->json(['error' => 'Each tank stock must have a valid tank_id and quantity.'], 422);
             }
 
-            $totalTankQuantity += (float) $tankStock['quantity'];
+            $totalTankQuantity += (float)$tankStock['quantity'];
         }
 
         // Check if total tank quantities match the fuel quantity
-        if ($totalTankQuantity !== (float) $validatedData['fuel_quantity']) {
+        if ($totalTankQuantity !== (float)$validatedData['fuel_quantity']) {
             return response()->json([
                 'success' => false,
                 'message' => 'The total quantity of stocks must equal the fuel quantity.',
@@ -166,8 +167,23 @@ class FuelPurchaseController extends Controller
                 return response()->json(['success' => false, 'message' => 'Access denied to price.'], 403);
             }
 
+            $tankIds = Tank::where('fuel_type_id', $purchase->fuel_type_id)
+                ->where('petrol_pump_id' , $purchase->petrol_pump_id)
+                ->pluck('id');
+
+            if ($tankIds)
+                TankStock::where('date', $purchase->purchase_date)
+                    ->whereIn('tank_id', $tankIds) // Ensure only matching tanks
+                    ->where('reading_in_ltr', $purchase->quantity_ltr)
+                    ->delete();
+            else
+                TankStock::where('date', $purchase->purchase_date)
+                  ->where('reading_in_ltr', $purchase->quantity_ltr)
+                    ->delete();
+
             // Delete related tank stocks first
             TankStock::where('date', $purchase->purchase_date)
+                ->where('tank_id', $purchase->fuel_type_id) #need relation here.
                 ->where('reading_in_ltr', $purchase->quantity_ltr)
                 ->delete();
 
@@ -179,7 +195,6 @@ class FuelPurchaseController extends Controller
             return response()->json(['success' => false, 'message' => 'An error occurred while deleting the Purchase.'], 500);
         }
     }
-
 
 
 }
