@@ -357,6 +357,31 @@
                 mode: "range"
             });
 
+            $('#refresh-dip-button').on('click', function() {
+                const button = $(this);
+                if (reportDataArray.length === 0) {
+                    alert("No data to save!");
+                    return;
+                }
+
+                // Send an AJAX request to the Laravel controller
+                $.ajax({
+                    url: `/pump/${pumpId}/report-refresh-dip`,
+                    type: "POST",
+                    data: {
+                        rows: reportDataArray,
+                        _token: "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        toastr.success('Dips data saved successfully!');
+                        reportDataArray = [];
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                    }
+                });
+            });
+
             let startDate = null;
             let endDate = null;
 
