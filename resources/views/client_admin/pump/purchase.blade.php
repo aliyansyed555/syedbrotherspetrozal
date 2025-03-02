@@ -141,149 +141,114 @@
             let startDate = null;
             let endDate = null;
 
+            const pumpId = @json($pump_id);
+
+            // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#purchase_table").DataTable().draw();
             });
 
-            $.fn.dataTable.ext.search.push(
-                function(settings, data, dataIndex) {
-                    if (settings.nTable.id !== 'purchase_table') {
-                        return true;
-                    }
-                    const rowDate = data[3]; // Date column index
-                    if (startDate && endDate) {
-                        return rowDate >= startDate && rowDate <= endDate;
-                    }
-                    return true;
-                }
-            );
-
-            var pumpId = @json($pump_id);
-            // Class definition
-            var KTDatatablesServerSide = function() {
-                // Shared variables
-
-                var table;
-                var dt;
-
-                // Private functions
-                var initDatatable = function() {
-                    dt = $("#purchase_table").DataTable({
-                        responsive: true,
-                        pageLength: 10,
-                        searchDelay: 500,
-                        processing: true,
-                        // serverSide: true,
-                        order: [
-                            [1, 'asc']
-                        ],
-                        stateSave: false,
-                        select: {
-                            style: 'os',
-                            selector: 'td:first-child',
-                            className: 'row-selected'
-                        },
-                        ajax: {
-                            url: `/pump/${pumpId}/purchase/get_all`,
-                            error: function(xhr, status, error) {
-                                if (xhr.status === 404 && xhr.responseJSON && xhr.responseJSON.redirect_url) {
-                                    // Redirect to the 404 page
-                                    window.location.href = xhr.responseJSON.redirect_url;
-                                } else {
-                                    // Show a general error message if needed
-                                    alert('An unexpected error occurred.');
-                                }
-                            }
-                        },
-                        columns: [{
-                                data: 'id'
-                            },
-                            {
-                                data: 'fuel_type_name'
-                            },
-                            {
-                                data: 'quantity_ltr'
-                            },
-                            {
-                                data: 'buying_price_per_ltr'
-                            },
-                            {
-                                data: 'purchase_date'
-                            },
-                            {
-                                data: null
-                            },
-                        ],
-                        columnDefs: [{
-                                targets: 0,
-                                orderable: false,
-                                render: function(data) {
-                                    return `<div class="form-check form-check-sm form-check-custom form-check-solid">
-                                        <input class="form-check-input" type="checkbox" value="${data}" />
-                                    </div>`;
-                                }
-                            },
-                            {
-                                targets: -1,
-                                data: null,
-                                orderable: false,
-                                className: 'text-end',
-                                render: function(data, type, row) {
-                                    return `
-                                        <button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm delete_btn" data-id='${row.id}'>
-                                            <span class="svg-icon svg-icon-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                    height="24" viewBox="0 0 24 24" fill="none">
-                                                    <path
-                                                        d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
-                                                        fill="black"></path>
-                                                    <path opacity="0.5"
-                                                        d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
-                                                        fill="black"></path>
-                                                    <path opacity="0.5"
-                                                        d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
-                                                        fill="black"></path>
-                                                </svg>
-                                            </span>
-                                        </button>
-                                    `;
-                                },
-                            },
-                        ],
-                        // Add data-filter attribute
-                        createdRow: function(row, data, dataIndex) {
-                            $(row).find('td:eq(1)').attr('data-filter', data.id);
-                        }
-                    });
-
-                    table = dt.$;
-
-                    // Re-init functions on every table re-draw -- more info: https://datatables.net/reference/event/draw
-                    dt.on('draw', function() {
-                        KTMenu.createInstances();
-                    });
+            // Fix date filtering for DataTable using Moment.js
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                if (settings.nTable.id !== 'purchase_table') {
+                    return true; // Only apply filter on the correct table
                 }
 
-                return {
-                    init: function() {
-                        initDatatable();
-                    }
-                }
-            }();
+                const dateColumnIndex = 4; // Ensure this is the correct column index
+                const dateValue = data[dateColumnIndex]; // Get date from the table row
 
-            // On document ready
-            KTUtil.onDOMContentLoaded(function() {
-                KTDatatablesServerSide.init();
+                if (!dateValue) {
+                    return false; // Exclude empty dates
+                }
+
+                // Convert to Moment.js object
+                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                if (!rowDate.isValid()) {
+                    return false; // Ignore invalid dates
+                }
+
+                if (startDate && endDate) {
+                    const startMoment = moment(startDate, "YYYY-MM-DD");
+                    const endMoment = moment(endDate, "YYYY-MM-DD");
+
+                    return rowDate.isBetween(startMoment, endMoment, null, '[]'); // Inclusive filtering
+                }
+
+                return true; // Show all if no date range is selected
             });
 
-            let fv; // Define fv in a broader scope
+            // Initialize DataTable
+            var dt = $("#purchase_table").DataTable({
+                responsive: true,
+                pageLength: 10,
+                searchDelay: 500,
+                processing: true,
+                order: [[1, 'asc']],
+                stateSave: false,
+                select: {
+                    style: 'os',
+                    selector: 'td:first-child',
+                    className: 'row-selected'
+                },
+                ajax: {
+                    url: `/pump/${pumpId}/purchase/get_all`,
+                    error: function(xhr) {
+                        if (xhr.status === 404 && xhr.responseJSON && xhr.responseJSON.redirect_url) {
+                            window.location.href = xhr.responseJSON.redirect_url;
+                        } else {
+                            alert('An unexpected error occurred.');
+                        }
+                    }
+                },
+                columns: [
+                    { data: 'id' },
+                    { data: 'fuel_type_name' },
+                    { data: 'quantity_ltr' },
+                    { data: 'buying_price_per_ltr' },
+                    { data: 'purchase_date' },
+                    { data: null }
+                ],
+                columnDefs: [
+                    {
+                        targets: 0,
+                        orderable: false,
+                        render: function(data) {
+                            return `<div class="form-check form-check-sm form-check-custom form-check-solid">
+                        <input class="form-check-input" type="checkbox" value="${data}" />
+                    </div>`;
+                        }
+                    },
+                    {
+                        targets: -1,
+                        data: null,
+                        orderable: false,
+                        className: 'text-end',
+                        render: function(data, type, row) {
+                            return `<button class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm delete_btn" data-id='${row.id}'>
+                        <span class="svg-icon svg-icon-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z" fill="black"></path>
+                                <path opacity="0.5" d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z" fill="black"></path>
+                                <path opacity="0.5" d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z" fill="black"></path>
+                            </svg>
+                        </span>
+                    </button>`;
+                        },
+                    }
+                ],
+                createdRow: function(row, data) {
+                    $(row).find('td:eq(1)').attr('data-filter', data.id);
+                }
+            });
 
+            // Form validation and submission
+            let fv;
             $('input[name="fuel_type_id"]').on('change', function () {
                 let fuelTypeId = $(this).val();
                 $.ajax({
@@ -295,115 +260,56 @@
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function (response) {
-                        $('#tank-container').html(''); // Clear previous tank fields
+                        $('#tank-container').html(''); // Clear previous fields
                         response.tanks.forEach(function (tank) {
                             $('#tank-container').append(`
-                                <div class="tank-item">
-                                    <div class="input-group mb-5">
-                                        <span class="input-group-text" id="basic-addon3">${tank.name}</span>
-                                        <input type="text" class="form-control tank-stock-input" value="0" data-tank-id="${tank.id}" aria-describedby="basic-addon3" name="tank_stocks[]" />
-                                    </div>
-                                </div>
-                            `);
+                        <div class="tank-item">
+                            <div class="input-group mb-5">
+                                <span class="input-group-text">${tank.name}</span>
+                                <input type="text" class="form-control tank-stock-input" value="0" data-tank-id="${tank.id}" name="tank_stocks[]" />
+                            </div>
+                        </div>
+                    `);
                         });
 
-                        // Reinitialize FormValidation with new fields
+                        // Reinitialize FormValidation
                         fv = FormValidation.formValidation(
                             document.getElementById('purchase_form'),
                             {
                                 fields: {
                                     'fuel_quantity': {
                                         validators: {
-                                            notEmpty: {
-                                                message: 'Quantity cannot be empty'
-                                            },
-                                            regexp: {
-                                                regexp: /^[0-9]+(\.[0-9]{1,2})?$/,
-                                                message: 'Please enter a valid number (no letters allowed)'
-                                            }
+                                            notEmpty: { message: 'Quantity cannot be empty' },
+                                            regexp: { regexp: /^[0-9]+(\.[0-9]{1,2})?$/, message: 'Invalid number' }
                                         }
-                                    },
-                                    'purchase_date':{
-                                        validators: {
-                                            notEmpty: {
-                                                message: 'The date cannot be empty'
-                                            },
-                                        }
-                                    },
-                                    'buying_price_per_ltr':{
-                                        validators: {
-                                            notEmpty: {
-                                                message: 'The Buying Price cannot be empty'
-                                            },
-                                        }
-                                    },
-                                    'fuel_type_id':{
-                                        validators: {
-                                            notEmpty: {
-                                                message: 'The Fuel type cannot be empty'
-                                            },
-                                        }
-                                    },
-                                    'tank_stocks[]': {
-                                        validators: {
-                                            notEmpty: {
-                                                message: 'Quantity cannot be empty'
-                                            },
-                                            callback: {
-                                                message: 'The total quantity of fuel must match the sum of all tank inputs',
-                                                callback: function (input) {
-                                                    const totalQuantity = parseFloat(document.querySelector('[name="fuel_quantity"]').value) || 0;
-                                                    const tankInputs = document.querySelectorAll('.tank-stock-input');
-
-                                                    let sumOfTanks = 0;
-                                                    tankInputs.forEach(function (tankInput) {
-                                                        sumOfTanks += parseFloat(tankInput.value) || 0;
-                                                    });
-
-                                                    return sumOfTanks === totalQuantity;
-                                                },
-                                            },
-                                        },
-                                    },
+                                    }
                                 },
                                 plugins: {
                                     trigger: new FormValidation.plugins.Trigger(),
-                                    bootstrap: new FormValidation.plugins.Bootstrap5({
-                                        rowSelector: '.fv-row',
-                                        eleInvalidClass: '',
-                                        eleValidClass: ''
-                                    })
+                                    bootstrap: new FormValidation.plugins.Bootstrap5({ rowSelector: '.fv-row' })
                                 }
                             }
                         );
-                        $(document).on('input', '.tank-stock-input', function () {
-                            fv.revalidateField('tank_stocks[]');  // Revalidate the field when the user inputs a value
-                        });
                     },
-                    error: function (xhr, status, error) {
-                        console.error("Error fetching tanks: ", error);
+                    error: function () {
                         alert("Failed to fetch tanks. Please try again.");
                     }
                 });
             });
 
-            // Form submission handling
+            // Handle form submission
             $('#purchase_form').on('submit', function (e) {
-                e.preventDefault(); // Prevent form submission to validate first
+                e.preventDefault();
                 var formData = new FormData(this);
 
                 var tankStocks = [];
                 $('.tank-stock-input').each(function() {
-                    var tankId = $(this).data('tank-id');
-                    var stockQuantity = $(this).val();
-                    tankStocks.push({ tank_id: tankId, quantity: stockQuantity });
+                    tankStocks.push({ tank_id: $(this).data('tank-id'), quantity: $(this).val() });
                 });
 
-                // Append the tank data manually to formData
                 formData.append('tank_stocks', JSON.stringify(tankStocks));
-
-                // Optionally, you can add any other extra data, like pumpId
                 formData.append('pump_id', pumpId);
+
                 fv.validate().then(function (status) {
                     if (status === 'Valid') {
                         $.ajax({
@@ -417,46 +323,22 @@
                                     toastr.success("Data Successfully Saved!");
                                     $('#purchase_modal').modal('hide');
                                     $('#purchase_form').trigger('reset');
-                                    $('#purchase_table').DataTable().ajax.reload();
-
+                                    dt.ajax.reload();
                                 } else {
-                                    toastr.err('There was an error saving the data.');
+                                    toastr.error('Error saving data.');
                                 }
                             },
-                            error: function(xhr, status, error) {
-                                toastr.error('Failed to save the data. Please try again.');
+                            error: function() {
+                                toastr.error('Failed to save data. Please try again.');
                             }
                         });
-                    } else {
-                        console.log('Form is invalid!');
                     }
                 });
             });
 
-
-            // $('#purchase_table').on('click', '.edit_btn', function (e) {
-            //     e.preventDefault();
-
-            //     const dataObj = JSON.parse($(this).attr('data-obj'));
-            //     console.log(dataObj);
-
-            //     $('#id').val(dataObj.id);
-            //     $('#selling_price').val(dataObj.selling_price);
-            //     $('#date').val(dataObj.date);
-
-            //     $(`input[name="fuel_type_id"][value="${dataObj.fuel_type_id}"]`).prop('checked', "checked");
-            //     $(`input[name="fuel_type_id"][value="${dataObj.fuel_type_id}"]`).closest('label').addClass('active');
-            //     // Show the modal
-            //     $('#purchase_modal').modal('show');
-            // });
-
-
-
-            let prefix = `pump/${pumpId}`
-            // handlingForms('purchase', prefix);
-            deleteFn('purchase', prefix)
+            // Delete function
+            deleteFn('purchase', `pump/${pumpId}`);
         });
-
 
     </script>
 @endsection
