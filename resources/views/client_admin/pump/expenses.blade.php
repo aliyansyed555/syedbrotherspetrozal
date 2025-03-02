@@ -211,76 +211,99 @@
 
 @section('javascript')
     <script>
-        var pumpId = @json($pump_id);
         $(document).ready(function() {
+            var pumpId = @json($pump_id);
             let startDate = null;
             let endDate = null;
 
             const datepicker = $("[name=daterange]");
+
+            // Initialize Flatpickr for Date Range Selection
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
-                mode: "range"
+                mode: "range",
+                onClose: function(selectedDates) {
+                    if (selectedDates.length === 2) {
+                        startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
+                        endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
+                        $("#daily_report_table").DataTable().draw();
+                    }
+                }
             });
 
+            // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#daily_report_table").DataTable().draw();
             });
 
-            // Custom filtering function for date range
+            // Custom DataTables Filtering Function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Column index of the date (adjust index based on your table)
+                if (settings.nTable.id !== 'daily_report_table') {
+                    return true; // Only apply filtering on the correct table
+                }
+
                 const dateColumnIndex = 1;
                 const dateValue = data[dateColumnIndex]; // Get the date from the table row
 
-                // Only filter if startDate or endDate is set
-                if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
+                if (!dateValue) {
+                    return false; // Exclude empty dates
                 }
-                return true;
+
+                // Parse date using Moment.js
+                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                if (!rowDate.isValid()) {
+                    return false;
+                }
+
+                if (startDate && endDate) {
+                    const start = moment(startDate, "YYYY-MM-DD");
+                    const end = moment(endDate, "YYYY-MM-DD");
+
+                    return rowDate.isBetween(start, end, null, '[]'); // Inclusive filtering
+                }
+
+                return true; // Show all if no date range is selected
             });
 
+            // Initialize DataTable
             $('#daily_report_table').DataTable({
                 responsive: false,
                 pageLength: 50,
                 ordering: true,
-                order: [[ 0, "asc" ]],
+                order: [[0, "asc"]],
                 footerCallback: function(row, data, start, end, display) {
-                    // Get DataTable API instance
                     var api = this.api();
 
                     var totalExpense = api
-                        .column(1, {
-                            page: 'current'
-                        })
+                        .column(1, { page: 'current' })
                         .data()
                         .reduce(function(a, b) {
-                            return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
+                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
+                            return a + value;
                         }, 0);
 
                     var totalRent = api
-                        .column(3, {
-                            page: 'current'
-                        })
+                        .column(3, { page: 'current' })
                         .data()
                         .reduce(function(a, b) {
-                            return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
+                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
+                            return a + value;
                         }, 0);
 
                     var totalDeposit = api
-                        .column(4, {
-                            page: 'current'
-                        })
+                        .column(4, { page: 'current' })
                         .data()
                         .reduce(function(a, b) {
-                            return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
+                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
+                            return a + value;
                         }, 0);
 
                     // Update the footer
@@ -290,81 +313,84 @@
                 }
             });
 
+            // Daily Report Form Submission
             $('#daily_report_form').submit(function(e) {
                 e.preventDefault();
-
                 var formData = new FormData(this);
 
                 $.ajax({
                     url: `/pump/${pumpId}/daily-reports/create`,
                     type: 'POST',
                     data: formData,
-                    cache:false,
+                    cache: false,
                     contentType: false,
                     processData: false,
                     success: function(data) {
                         if (data.success) {
-
                             $('#card_transactions_modal').modal('hide');
                             toastr.success('Amount Transferred successfully.');
 
                             setTimeout(function() {
                                 location.reload();
                             }, 1000);
-
                         }
-
                     },
                     error: function(data) {
                         var errors = data.responseJSON.errors;
                         if (errors) {
                             $.each(errors, function(key, value) {
-                                // console.log(key + ': ' + value);
-                                toastr.error(key + ': ' + value);
+                                toastr.error(`${key}: ${value}`);
                             });
                         }
                     }
                 });
             });
 
+            // Report Generation Form Submission
             $('#report_generation_form').submit(function(e) {
                 e.preventDefault();
-
                 const formData = new FormData(this);
-                const daterangeValues = $(datepicker).val().split(' to ');
-                var start_date = daterangeValues[0].trim();
-                var end_date = daterangeValues[1].trim();
-                formData.append('start_date', start_date);
-                formData.append('end_date', end_date);
 
+                // Ensure the selected date range is valid
+                const daterangeValues = $(datepicker).val().split(' to ');
+                if (daterangeValues.length === 2) {
+                    var start_date = daterangeValues[0].trim();
+                    var end_date = daterangeValues[1].trim();
+
+                    if (moment(start_date, 'YYYY-MM-DD', true).isValid() && moment(end_date, 'YYYY-MM-DD', true).isValid()) {
+                        formData.append('start_date', start_date);
+                        formData.append('end_date', end_date);
+                    } else {
+                        toastr.error("Invalid date range selected.");
+                        return;
+                    }
+                } else {
+                    toastr.error("Please select a valid date range.");
+                    return;
+                }
 
                 $.ajax({
-                    url: `/pump/${pumpId}/get_expenses_pdf` ,
+                    url: `/pump/${pumpId}/get_expenses_pdf`,
                     method: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        console.log(response);
-
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
 
                             const downloadLink = document.createElement('a');
                             downloadLink.href = response.file_url;
-                            downloadLink.download = response.file_url.split('/').pop(); // Use the file name from URL
-                            downloadLink.click();// This will prompt the user to download the file
+                            downloadLink.download = response.file_url.split('/').pop();
+                            downloadLink.click(); // Prompt user to download the file
                         }
                     }
                 });
             });
-
-
         });
     </script>
 @endsection
-
 
 @section('styles')
 @endsection
