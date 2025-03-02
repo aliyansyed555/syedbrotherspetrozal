@@ -790,7 +790,8 @@ class PetrolPumpController extends Controller
 
     public function getPumpReport($petrolPumpId)
     {
-        $pumpId = $petrolPumpId;
+        $pumpId = 49;
+
 
         // Get the fuel types associated with the petrol pump
         $fuelTypesWithTanks = DB::table('fuel_types')
@@ -1044,6 +1045,7 @@ class PetrolPumpController extends Controller
 
     public function generatePdf(Request $request, $pump_id)
     {
+
         // Extract start and end dates from the request
         $start_date = $request->start_date;
         $end_date = $request->end_date;
@@ -1274,13 +1276,22 @@ class PetrolPumpController extends Controller
         // Format the report data
         $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
+//        return view('pdfs.report-pdf', [
+//            'reportData' => $formattedReport,
+//            'fuelTypes' => $fuelTypesWithTanks,
+//            'pump_id' => $pump_id,
+//            'pump' => $pump
+//        ]);
+
         // Generate and download the PDF #todo: do changes here.
         $pdf = Pdf::loadView('pdfs.report-pdf', [
             'reportData' => $formattedReport,
             'fuelTypes' => $fuelTypesWithTanks,
             'pump_id' => $pump_id,
-            'pump' => $pump
+            'pump' => $pump,
+            'is_pdf' => 1,
         ])->setPaper('a4', 'landscape')->setOption('dpi', 180);
+
 
         $filename = "{$pump->name}-" . now()->format('d-m-Y') . ".pdf";
 

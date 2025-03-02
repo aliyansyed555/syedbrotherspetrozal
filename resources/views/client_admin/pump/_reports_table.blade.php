@@ -3,6 +3,9 @@
     <tr>
         <th class="fw-bold">Date</th>
         @foreach ($fuelTypes as $fuelType)
+            @php
+                $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
+            @endphp
             <th class="fw-bold">{{ $fuelType->name }} Sold</th>
             <th class="fw-bold">{{ $fuelType->name }} Price</th>
             <th class="fw-bold">{{ $fuelType->name }} Profit</th>
@@ -12,7 +15,6 @@
             <th class="fw-bold">{{ $fuelType->name }} Dip Comparison</th>
         @endforeach
 
-        {{-- <th class="fw-bold">Salaries</th> --}}
         <th class="fw-bold">Tuck Shop Rent</th>
         <th class="fw-bold">Tuck Shop Earning</th>
         <th class="fw-bold">Service Station Earning</th>
@@ -21,9 +23,7 @@
         <th class="fw-bold">Tyre Shop Rent</th>
         <th class="fw-bold">Lube Shop Earning</th>
         <th class="fw-bold">Lube Shop Rent</th>
-
         <th class="fw-bold">Expense</th>
-        {{-- <th class="fw-bold">Pump Rent</th> --}}
         <th class="fw-bold">Bank Deposit</th>
         <th class="fw-bold">MobilOil Sale</th>
         <th class="fw-bold">MobilOil Profit</th>
@@ -34,144 +34,131 @@
     </tr>
     </thead>
     <tbody>
-    @for ($i = 0; $i < count($reportData); $i++)
+    @foreach ($reportData as $index => $data)
         <tr>
-            <td>{{ $reportData[$i]['reading_date'] }}</td>
+            <td>{{ $data['reading_date'] }}</td>
             @php
                 $fuelsProfit = 0;
                 $totalProfitWithGain = 0;
-                // $firstDipComparison = 0;
-                $firstDipComparisons = [];
-                foreach ($fuelTypes as $fuelType) {
-                    $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
-                    $firstDipComparisons[$columnBase] =
-                        $i > 0
-                            ? $reportData[$i - 1]["{$columnBase}_dip_quantity"] -
-                                $reportData[$i - 1]["{$columnBase}_stock_quantity"]
-                            : 0;
-
-                }
-
+                 $readingDate = $data['reading_date'];
             @endphp
-            {{--                            //if any change do it also in Analytics code--}}
-            @foreach ($fuelTypes as $fuelType)
-                    <?php
-                    // Define variables for repeated expressions
-                    $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
-                    $digitalSold = $reportData[$i]["{$columnBase}_digital_sold"];
-                    $price = $reportData[$i]["{$columnBase}_price"];
-                    $buyingPrice = $reportData[$i]["{$columnBase}_buying_price"];
-                    $dipQuantity = $reportData[$i]["{$columnBase}_dip_quantity"];
-                    $stockQuantity = $reportData[$i]["{$columnBase}_stock_quantity"];
-                    $readingDate = $reportData[$i]['reading_date'];
-                    $tank_transfer_tt = $reportData[$i]["{$columnBase}_transfer_quantity"];
 
-                    // Calculate profit
-                    $profit = $digitalSold * $price - $digitalSold * $buyingPrice;
+            @foreach ($fuelTypes as $fuelType)
+                @php
+                    $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelType->name));
+                    $digitalSold = $data["{$columnBase}_digital_sold"] ?? 0;
+                    $price = $data["{$columnBase}_price"] ?? 0;
+                    $buyingPrice = $data["{$columnBase}_buying_price"] ?? 0;
+                    $dipQuantity = $data["{$columnBase}_dip_quantity"] ?? 0;
+                    $stockQuantity = $data["{$columnBase}_stock_quantity"] ?? 0;
+                    $tankTransferTT = $data["{$columnBase}_transfer_quantity"] ?? 0;
+
+                    // Profit Calculation
+                    $profit = ($digitalSold * $price) - ($digitalSold * $buyingPrice);
                     $fuelsProfit += $profit;
 
-                    // Calculate dip comparison
-                    $lastDipQty = $i == 0 ? 0 : $reportData[$i - 1]["{$columnBase}_dip_quantity"];
-                    $dipComparisonFinal = $i == 0
-                        ? $dipQuantity - $stockQuantity
+                    // Dip Comparison Calculation
+                    $lastDipQty = $index > 0 ? $reportData[$index - 1]["{$columnBase}_dip_quantity"] : 0;
+                    $dipComparisonFinal = $index == 0
+                        ? ($dipQuantity - $stockQuantity)
                         : ($lastDipQty - $digitalSold - $dipQuantity) * -1;
 
-                    if(isset($fulePurchases[$reportData[$i]['reading_date']][$fuelType->id]) && $i > 0)
-                        $dipComparisonFinal = $dipComparisonFinal - $fulePurchases[$reportData[$i]['reading_date']][$fuelType->id];
+                    if (isset($fuelPurchases[$data['reading_date']][$fuelType->id]) && $index > 0) {
+                        $dipComparisonFinal -= $fuelPurchases[$data['reading_date']][$fuelType->id];
+                    }
 
-                    $dipComparisonFinal = round2Digit($dipComparisonFinal) - $tank_transfer_tt; //New logic as shahnshah said.
+                    $dipComparisonFinal = round($dipComparisonFinal, 2) - $tankTransferTT;
 
-                    // Calculate profit with gain
+                    // Profit with Gain
                     $profitWithGain = $dipComparisonFinal * $price;
                     $totalProfitWithGain += $profitWithGain;
-                    ?>
+                @endphp
 
-                <script>
-                    // Call the addData function with Blade variables
-                    document.addEventListener('DOMContentLoaded', function () {
-                        addData(
-                            '{{ $dipQuantity }}',
-                            '{{ $stockQuantity }}',
-                            '{{ $lastDipQty }}',
-                            '{{ $dipComparisonFinal }}',
-                            '{{ $readingDate }}',
-                            '{{ $fuelType->id }}'
-                        );
-                    });
-                </script>
+{{--                <script>--}}
+{{--                    // Call the addData function with Blade variables--}}
+{{--                    document.addEventListener('DOMContentLoaded', function () {--}}
+{{--                        addData(--}}
+{{--                            '{{ $dipQuantity }}',--}}
+{{--                            '{{ $stockQuantity }}',--}}
+{{--                            '{{ $lastDipQty }}',--}}
+{{--                            '{{ $dipComparisonFinal }}',--}}
+{{--                            '{{ $readingDate }}',--}}
+{{--                            '{{ $fuelType->id }}'--}}
+{{--                        );--}}
+{{--                    });--}}
+{{--                </script>--}}
 
-                <td>
-                    {{ $reportData[$i]["{$columnBase}_digital_sold"] - $tank_transfer_tt }}
-                </td>
-                <td>{{ $reportData[$i]["{$columnBase}_price"] }}</td>
-                <td>{{ round2Digit($reportData[$i]["{$columnBase}_profit"]) }}</td>
-                <td>{{ $reportData[$i]["{$columnBase}_stock_quantity"] }}</td>
-                <td>{{ $tank_transfer_tt }}</td>
-                <td>{{ $reportData[$i]["{$columnBase}_dip_quantity"] }}</td>
+                <td>{{ $digitalSold - $tankTransferTT }}</td>
+                <td>{{ number_format($price, 2) }}</td>
+                <td>{{ number_format($profit, 2) }}</td>
+                <td>{{ number_format($stockQuantity, 2) }}</td>
+                <td>{{ number_format($tankTransferTT, 2) }}</td>
+                <td>{{ number_format($dipQuantity, 2) }}</td>
                 <td class="py-2 px-3 {{ $dipComparisonFinal >= 0 ? 'bg-success' : 'bg-danger' }}">
-                    {{$dipComparisonFinal}}
+                    {{ number_format($dipComparisonFinal, 2) }}
                 </td>
             @endforeach
-            <td>{{ $reportData[$i]['tuck_shop_rent'] }}</td>
-            <td>{{ $reportData[$i]['tuck_shop_earning'] }}</td>
 
-            <td>{{ $reportData[$i]['service_station_earning'] }}</td>
-            <td>{{ $reportData[$i]['service_station_rent'] }}</td>
+            <td>{{ number_format($data['tuck_shop_rent'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['tuck_shop_earning'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['service_station_earning'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['service_station_rent'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['tyre_shop_earning'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['tyre_shop_rent'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['lube_shop_earning'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['lube_shop_rent'] ?? 0, 2) }}</td>
 
-            <td>{{ $reportData[$i]['tyre_shop_earning'] }}</td>
-            <td>{{ $reportData[$i]['tyre_shop_rent'] }}</td>
+            @php
+                $expense = ($data['pump_rent'] ?? 0) + ($data['daily_expense'] ?? 0) + ($data['total_wage'] ?? 0);
+                $totalProfit = $fuelsProfit + ($data['products_profit'] ?? 0) - $expense;
+                $totalProfitWithGain += $totalProfit;
+            @endphp
 
-            <td>{{ $reportData[$i]['lube_shop_earning'] }}</td>
-            <td>{{ $reportData[$i]['lube_shop_rent'] }}</td>
-
-            {{-- <td>{{ $reportData[$i]['total_wage'] }}</td> --}}
-            <td>{{ $reportData[$i]['pump_rent'] + $reportData[$i]['daily_expense'] + $reportData[$i]['total_wage'] }}</td>
-            {{-- <td>{{ $reportData[$i]['pump_rent']  }}</td> --}}
-            <td>{{ @$bankDeposits[$reportData[$i]['reading_date']] }}</td>
-            <td>{{ $reportData[$i]['products_amount'] ?? '0.00' }}</td>
-            <td>{{ $reportData[$i]['products_profit'] ?? '0.00' }}</td>
-            <td>{{ $reportData[$i]['total_credit'] ?? '0.00' }}</td>
-            <td class="py-2 px-3 {{ $fuelsProfit + $reportData[$i]['products_profit'] > 0 ? 'bg-success' : 'bg-danger' }}">
-                {{ round(($fuelsProfit + $reportData[$i]['products_profit'] ?? '0.00') ,2) }}
+            <td>{{ number_format($expense, 2) }}</td>
+            <td>{{ number_format($bankDeposits[$data['reading_date']] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['products_amount'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['products_profit'] ?? 0, 2) }}</td>
+            <td>{{ number_format($data['total_credit'] ?? 0, 2) }}</td>
+            <td class="py-2 px-3 {{ $fuelsProfit + ($data['products_profit'] ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">
+                {{ number_format($fuelsProfit + ($data['products_profit'] ?? 0), 2) }}
             </td>
-                <?php
-                $totalProfit = $fuelsProfit + $reportData[$i]['products_profit'] - $reportData[$i]['pump_rent'] - $reportData[$i]['daily_expense'] - $reportData[$i]['total_wage'];
-                ?>
             <td class="py-2 px-3 {{ $totalProfit > 0 ? 'bg-success' : 'bg-danger' }}">
-                {{ round($totalProfit , 2) }}
+                {{ number_format($totalProfit, 2) }}
             </td>
-            <td class="py-2 px-3 {{ $totalProfitWithGain + $totalProfit > 0 ? 'bg-success' : 'bg-danger' }}">
-                {{round(($totalProfitWithGain + $totalProfit) , 2)}}
+            <td class="py-2 px-3 {{ $totalProfitWithGain > 0 ? 'bg-success' : 'bg-danger' }}">
+                {{ number_format($totalProfitWithGain, 2) }}
             </td>
         </tr>
-    @endfor
-
+    @endforeach
     </tbody>
-    <tfoot>
-        <tr class="fs-5 fw-bolder fst-italic">
-        <th class="fw-bold">Total:</th>
-        @foreach ($fuelTypes as $fuelType)
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-            <th class="fw-bold"></th>
-        @endforeach
 
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-        <th class="fw-bold"></th>
-    </tr>
-    </tfoot>
+    @if(!isset($is_pdf))
+        <tfoot>
+            <tr class="fs-5 fw-bolder fst-italic">
+            <th class="fw-bold">Total:</th>
+            @foreach ($fuelTypes as $fuelType)
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+                <th class="fw-bold"></th>
+            @endforeach
+
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+            <th class="fw-bold"></th>
+        </tr>
+        </tfoot>
+     @endif
 </table>
