@@ -234,51 +234,57 @@
 @section('javascript')
 
     <script>
-
         $(document).ready(function() {
-
+            // Initialize DataTable
             $('#credits_table').DataTable({
                 responsive: true,
                 pageLength: 30,
                 ordering: true,
             });
-            // Function to get URL parameters
+
+            // Function to get URL parameters safely
             function getParameterByName(name) {
-                const url = window.location.href;
-                name = name.replace(/[\[\]]/g, '\\$&');
-                const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`);
-                const results = regex.exec(url);
-                if (!results) return null;
-                if (!results[2]) return '';
-                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name) ? decodeURIComponent(urlParams.get(name)) : null;
             }
 
             // Extract dates from URL or use today's date
             let startDate = getParameterByName('start_date') || moment().format('YYYY-MM-DD');
             let endDate = getParameterByName('end_date') || moment().format('YYYY-MM-DD');
 
-            // Initialize date range picker
+            // Ensure dates are valid
+            if (!moment(startDate, 'YYYY-MM-DD', true).isValid()) {
+                startDate = moment().format('YYYY-MM-DD');
+            }
+            if (!moment(endDate, 'YYYY-MM-DD', true).isValid()) {
+                endDate = moment().format('YYYY-MM-DD');
+            }
+
+            // Initialize Date Range Picker
             $("#kt_daterangepicker").daterangepicker({
                 startDate: startDate,
                 endDate: endDate,
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
             });
 
-            // Submit separate start_date and end_date on change
+            // Update URL without reloading page
             $('#kt_daterangepicker').on('apply.daterangepicker', function(ev, picker) {
                 const newUrl = `${window.location.origin}${window.location.pathname}?start_date=${picker.startDate.format('YYYY-MM-DD')}&end_date=${picker.endDate.format('YYYY-MM-DD')}`;
-                window.location.href = newUrl; // Reload the page with new parameters
+
+                // Change URL without reloading
+                window.history.pushState({ path: newUrl }, '', newUrl);
+
+                // Manually trigger DataTable reload if needed
+                $('#credits_table').DataTable().draw();
             });
         });
 
-    </script>
-
-    <script>
+        // Event listener for "Revise Account" modal
         document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll(".revise-account").forEach(td => {
                 td.addEventListener("click", function() {
@@ -287,8 +293,8 @@
                 });
             });
         });
-    </script>
 
+    </script>
 
 @endsection
 
