@@ -74,19 +74,20 @@
                     $totalProfitWithGain += $profitWithGain;
                 @endphp
 
-{{--                <script>--}}
-{{--                    // Call the addData function with Blade variables--}}
-{{--                    document.addEventListener('DOMContentLoaded', function () {--}}
-{{--                        addData(--}}
-{{--                            '{{ $dipQuantity }}',--}}
-{{--                            '{{ $stockQuantity }}',--}}
-{{--                            '{{ $lastDipQty }}',--}}
-{{--                            '{{ $dipComparisonFinal }}',--}}
-{{--                            '{{ $readingDate }}',--}}
-{{--                            '{{ $fuelType->id }}'--}}
-{{--                        );--}}
-{{--                    });--}}
-{{--                </script>--}}
+                @if(!isset($is_pdf))
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            addData(
+                                '{{ $dipQuantity }}',
+                                '{{ $stockQuantity }}',
+                                '{{ $lastDipQty }}',
+                                '{{ $dipComparisonFinal }}',
+                                '{{ $readingDate }}',
+                                '{{ $fuelType->id }}'
+                            );
+                        });
+                    </script>
+                @endif
 
                 <td>{{ $digitalSold - $tankTransferTT }}</td>
                 <td>{{ number_format($price, 2) }}</td>
