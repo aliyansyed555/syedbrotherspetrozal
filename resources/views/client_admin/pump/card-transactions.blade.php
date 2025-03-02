@@ -148,58 +148,79 @@
 
 @section('javascript')
     <script>
-        var pumpId = @json($pump_id);
         $(document).ready(function() {
             let startDate = null;
             let endDate = null;
+            var pumpId = @json($pump_id);
 
+            // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#card_transaction_table").DataTable().draw();
             });
 
-            // Custom filtering function for date range
+            // Custom DataTables Filtering Function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Column index of the date (adjust index based on your table)
+                if (settings.nTable.id !== 'card_transaction_table') {
+                    return true; // Apply filter only to the correct table
+                }
+
                 const dateColumnIndex = 1;
                 const dateValue = data[dateColumnIndex]; // Get the date from the table row
 
-                // Only filter if startDate or endDate is set
-                if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
+                if (!dateValue) {
+                    return false; // Exclude empty dates
                 }
-                return true;
+
+                // Convert to Moment.js object
+                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                if (!rowDate.isValid()) {
+                    return false; // Ignore invalid dates
+                }
+
+                if (startDate && endDate) {
+                    const startMoment = moment(startDate, "YYYY-MM-DD");
+                    const endMoment = moment(endDate, "YYYY-MM-DD");
+
+                    return rowDate.isBetween(startMoment, endMoment, null, '[]'); // Inclusive filtering
+                }
+
+                return true; // Show all if no date range is selected
             });
 
+            // Initialize DataTable
             $('#card_transaction_table').DataTable({
                 responsive: false,
                 pageLength: 30,
                 ordering: true,
-                order: [[ 0, "asc" ]],
+                order: [[0, "asc"]],
                 footerCallback: function(row, data, start, end, display) {
-                    // Get DataTable API instance
                     var api = this.api();
 
+                    // Function to safely parse numeric values
+                    function parseNumber(value) {
+                        return parseFloat((value || "0").replace(/,/g, '')) || 0;
+                    }
+
+                    // Calculate total amount in column 4
                     var totalAmount = api
-                        .column(4, {
-                            page: 'current'
-                        })
+                        .column(4, { page: 'current' })
                         .data()
                         .reduce(function(a, b) {
-                            return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
+                            return a + parseNumber(b);
                         }, 0);
 
-                    // Update the footer
+                    // Update the footer with formatted total
                     $(api.column(4).footer()).html(totalAmount.toLocaleString('en-US'));
                 }
             });
 
-
+            // Card Transaction Form Submission
             $('#card_transaction_form').submit(function(e) {
                 e.preventDefault();
 
@@ -209,7 +230,7 @@
                     url: `/pump/${pumpId}/card-payments/create`,
                     type: 'POST',
                     data: formData,
-                    cache:false,
+                    cache: false,
                     contentType: false,
                     processData: false,
                     success: function(data) {
@@ -217,30 +238,21 @@
                             $('#card_transactions_modal').modal('hide');
                             toastr.success('Card Transaction saved successfully.');
 
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-
+                            // Reload DataTable instead of full page reload
+                            $("#card_transaction_table").DataTable().ajax.reload(null, false);
                         }
-
                     },
                     error: function(data) {
                         var errors = data.responseJSON.errors;
                         if (errors) {
                             $.each(errors, function(key, value) {
-                                // console.log(key + ': ' + value);
-                                toastr.error(key + ': ' + value);
+                                toastr.error(`${key}: ${value}`);
                             });
                         }
                     }
                 });
             });
-
-
-
-
         });
-
 
     </script>
 @endsection
