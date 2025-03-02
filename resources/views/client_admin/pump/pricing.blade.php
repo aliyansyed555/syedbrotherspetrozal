@@ -140,24 +140,38 @@
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#pricing_table").DataTable().draw();
             });
 
-            $.fn.dataTable.ext.search.push(
-                function(settings, data, dataIndex) {
-                    if (settings.nTable.id !== 'pricing_table') {
-                        return true;
-                    }
-                    const rowDate = data[3]; // Date column index
-                    if (startDate && endDate) {
-                        return rowDate >= startDate && rowDate <= endDate;
-                    }
-                    return true;
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                if (settings.nTable.id !== 'pricing_table') {
+                    return true; // Only apply filtering on the specified table
                 }
-            );
+
+                const rowDate = data[3]; // Date column index (ensure it's correct)
+
+                if (!rowDate) {
+                    return false; // Exclude empty or invalid dates
+                }
+
+                // Convert to Moment.js date object
+                const rowMoment = moment(rowDate, "YYYY-MM-DD", true);
+                if (!rowMoment.isValid()) {
+                    return false; // Ignore invalid dates
+                }
+
+                if (startDate && endDate) {
+                    const startMoment = moment(startDate, "YYYY-MM-DD");
+                    const endMoment = moment(endDate, "YYYY-MM-DD");
+
+                    return rowMoment.isBetween(startMoment, endMoment, null, '[]'); // Inclusive range
+                }
+
+                return true; // Show all if no date range is selected
+            });
 
             var pumpId = @json($pump_id);
             // Class definition
