@@ -297,95 +297,134 @@
             const customerId = {{ $customer->id }};
 
             const datepicker = $("[name=daterange]");
+
+            // Initialize Flatpickr for Date Range Selection
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
-                mode: "range"
+                mode: "range",
+                onClose: function(selectedDates) {
+                    if (selectedDates.length === 2) {
+                        startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
+                        endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
+                        $("#credits_table").DataTable().draw();
+                    }
+                }
             });
 
+            // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#credits_table").DataTable().draw();
             });
 
-            // Custom filtering function for date range
+            // Custom DataTables Filtering Function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Column index of the date (adjust index based on your table)
+                if (settings.nTable.id !== 'credits_table') {
+                    return true; // Apply filter only to the correct table
+                }
+
                 const dateColumnIndex = 1;
                 const dateValue = data[dateColumnIndex]; // Get the date from the table row
 
-                // Only filter if startDate or endDate is set
-                if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
+                if (!dateValue) {
+                    return false; // Exclude empty dates
                 }
-                return true;
+
+                // Convert to Moment.js object
+                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                if (!rowDate.isValid()) {
+                    return false; // Ignore invalid dates
+                }
+
+                if (startDate && endDate) {
+                    const startMoment = moment(startDate, "YYYY-MM-DD");
+                    const endMoment = moment(endDate, "YYYY-MM-DD");
+
+                    return rowDate.isBetween(startMoment, endMoment, null, '[]'); // Inclusive filtering
+                }
+
+                return true; // Show all if no date range is selected
             });
 
+            // Initialize DataTable
             $('#credits_table').DataTable({
                 responsive: true,
                 pageLength: 30,
                 ordering: true,
-                // footerCallback: function(row, data, start, end, display) {
-                //     // Get DataTable API instance
-                //     var api = this.api();
+                footerCallback: function(row, data, start, end, display) {
+                    var api = this.api();
 
-                //     // Calculate total for the Balance column (index 4)
-                //     var totalBalance = api
-                //         .column(4, {
-                //             page: 'current'
-                //         }) // Use current page data
-                //         .data()
-                //         .reduce(function(a, b) {
-                //             // Convert string to number, handle comma separators, and NaN
-                //             return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
-                //         }, 0);
+                    // Function to safely parse numeric values
+                    function parseNumber(value) {
+                        return parseFloat((value || "0").replace(/,/g, '')) || 0;
+                    }
 
-                //     // Update the footer for Balance column
-                //     console.log("Total Balance:", totalBalance); // Log the total
-                //     $(api.column(4).footer()).html(totalBalance.toLocaleString(
-                //     'en-US')); // Format with commas
-                // }
+                    // Calculate total Balance in column 4
+                    var totalBalance = api
+                        .column(4, { page: 'current' })
+                        .data()
+                        .reduce(function(a, b) {
+                            return a + parseNumber(b);
+                        }, 0);
+
+                    // Update the footer with formatted total
+                    $(api.column(4).footer()).html(totalBalance.toLocaleString('en-US'));
+                }
             });
 
+            // Report Generation Form Submission
             $('#report_generation_form').submit(function(e) {
                 e.preventDefault();
 
                 const formData = new FormData(this);
-                const daterangeValues = $(datepicker).val().split(' to ');
-                var start_date = daterangeValues[0].trim();
-                var end_date = daterangeValues[1].trim();
-                formData.append('start_date', start_date);
-                formData.append('end_date', end_date);
 
+                // Validate Date Range Selection
+                const daterangeValues = $(datepicker).val().split(' to ');
+                if (daterangeValues.length === 2) {
+                    var start_date = daterangeValues[0].trim();
+                    var end_date = daterangeValues[1].trim();
+
+                    if (moment(start_date, 'YYYY-MM-DD', true).isValid() && moment(end_date, 'YYYY-MM-DD', true).isValid()) {
+                        formData.append('start_date', start_date);
+                        formData.append('end_date', end_date);
+                    } else {
+                        toastr.error("Invalid date range selected.");
+                        return;
+                    }
+                } else {
+                    toastr.error("Please select a valid date range.");
+                    return;
+                }
 
                 $.ajax({
-                    url: `/pump/${pumpId}/customer/credits/generate_pdf/${customerId}` ,
+                    url: `/pump/${pumpId}/customer/credits/generate_pdf/${customerId}`,
                     method: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        console.log(response);
-
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
 
+                            // Create and trigger download link
                             const downloadLink = document.createElement('a');
                             downloadLink.href = response.file_url;
-                            downloadLink.download = response.file_url.split('/').pop(); // Use the file name from URL
-                            downloadLink.click();// This will prompt the user to download the file
+                            downloadLink.download = response.file_url.split('/').pop();
+                            downloadLink.click();
                         }
                     }
                 });
             });
         });
+
     </script>
 @endsection
 
