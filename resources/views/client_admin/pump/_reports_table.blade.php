@@ -38,7 +38,6 @@
         <tr>
             <td>{{ $reportData[$i]['reading_date'] }}</td>
             @php
-
                 $fuelsProfit = 0;
                 $totalProfitWithGain = 0;
                 // $firstDipComparison = 0;
@@ -149,7 +148,7 @@
 
     </tbody>
     <tfoot>
-    <tr class="fs-5 fw-bolder fst-italic">
+        <tr class="fs-5 fw-bolder fst-italic">
         <th class="fw-bold">Total:</th>
         @foreach ($fuelTypes as $fuelType)
             <th class="fw-bold"></th>

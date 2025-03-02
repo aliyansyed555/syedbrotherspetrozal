@@ -1195,13 +1195,21 @@ class PetrolPumpController extends Controller
     )
 
     SELECT
-        cr.date AS reading_date,
+         cr.date AS reading_date,
         " . implode(', ', $selectClauses) . ",
         dr.daily_expense,
+        dr.tuck_shop_rent,
+        dr.tuck_shop_earning,
+        dr.service_station_earning,
+        dr.service_station_rent,
+        dr.tyre_shop_earning,
+        dr.tyre_shop_rent,
+        dr.lube_shop_earning,
+        dr.lube_shop_rent,
         dr.pump_rent,
         COALESCE(ps.amount, 0) AS products_amount,
         COALESCE(ps.profit, 0) AS products_profit,
-		COALESCE(ee.total_wage,0) AS total_wage,
+        COALESCE(ee.total_wage,0) AS total_wage,
         COALESCE(cc.total_credit,0) AS total_credit
     FROM
         calculated_readings cr
@@ -1222,7 +1230,13 @@ class PetrolPumpController extends Controller
     WHERE
         cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
     GROUP BY
-        cr.date, dr.daily_expense, dr.pump_rent, ps.amount, ps.profit,ee.total_wage,
+        cr.date, dr.daily_expense,
+        dr.tuck_shop_rent, dr.tuck_shop_earning,
+        dr.service_station_earning, dr.service_station_rent,
+        dr.tyre_shop_earning, dr.tyre_shop_rent,
+        dr.lube_shop_earning, dr.lube_shop_rent,
+        dr.pump_rent, ps.amount, ps.profit,
+        ee.total_wage,
         cc.total_credit
     ORDER BY
         cr.date;
