@@ -238,66 +238,87 @@
         $(document).ready(function() {
             let startDate = null;
             let endDate = null;
+
             const url = new URL(window.location.href);
             const pumpId = url.pathname.split('/')[2];
             const datepicker = $("[name=daterange]");
+
+            // Initialize Flatpickr for Date Range Selection
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
-                mode: "range"
+                mode: "range",
+                onClose: function(selectedDates) {
+                    if (selectedDates.length === 2) {
+                        startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
+                        endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
+                        $("#sales_history_table").DataTable().draw();
+                    }
+                }
             });
 
+            // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#sales_history_table").DataTable().draw();
             });
 
-            // Custom filtering function for date range
+            // Custom DataTables Filtering Function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Column index of the date (adjust index based on your table)
                 const dateColumnIndex = 1;
-                const dateValue = data[dateColumnIndex]; // Get the date from the table row
+                const dateValue = data[dateColumnIndex]; // Get date from the table row
 
-                // Only filter if startDate or endDate is set
-                if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
+                if (!dateValue) {
+                    return false; // Exclude empty dates
                 }
-                return true;
+
+                // Parse date using Moment.js
+                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                if (!rowDate.isValid()) {
+                    return false;
+                }
+
+                if (startDate && endDate) {
+                    const start = moment(startDate, "YYYY-MM-DD");
+                    const end = moment(endDate, "YYYY-MM-DD");
+
+                    return rowDate.isBetween(start, end, null, '[]'); // Inclusive filtering
+                }
+
+                return true; // Show all if no date range is selected
             });
 
+            // Initialize DataTable
             $('#sales_history_table').DataTable({
                 responsive: false,
                 pageLength: 30,
                 ordering: true,
                 footerCallback: function(row, data, start, end, display) {
-                    // Get DataTable API instance
                     var api = this.api();
 
-
                     var totalAmount = api
-                        .column(3, {
-                            page: 'current'
-                        })
+                        .column(3, { page: 'current' })
                         .data()
                         .reduce(function(a, b) {
-                            return parseFloat(a) + parseFloat(b.replace(/,/g, '') || 0);
+                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
+                            return a + value;
                         }, 0);
 
-                    // Update the footer
                     $(api.column(3).footer()).html(totalAmount.toLocaleString('en-US'));
                 }
             });
 
+            // Open Order Details Modal
             $(document).on('click', '.open_order_detail', function(e) {
                 e.preventDefault();
                 let orderData = $(this).data('obj');
-                console.log(orderData);
+
                 $('#invoice-id').text(orderData.id);
                 $('#invoice-date').text(orderData.date);
 
@@ -309,56 +330,57 @@
                 products.forEach(product => {
                     const productTotal = product.product_qty * product.product_price;
                     totalAmount += productTotal;
+
                     const productRow = `
-                        <tr class="fw-bolder text-gray-700 fs-5 text-end">
-                            <td class="d-flex align-items-center pt-6">${product.product_name}</td>
-                            <td class="pt-6">${product.product_qty}</td>
-                            <td class="pt-6">${product.product_price}</td>
-                            <td class="fs-6 text-dark fw-boldest pt-6">${product.total}</td>
-                        </tr>
-                    `;
+                <tr class="fw-bolder text-gray-700 fs-5 text-end">
+                    <td class="d-flex align-items-center pt-6">${product.product_name}</td>
+                    <td class="pt-6">${product.product_qty}</td>
+                    <td class="pt-6">${product.product_price}</td>
+                    <td class="fs-6 text-dark fw-boldest pt-6">${productTotal.toFixed(2)}</td>
+                </tr>
+            `;
                     $('#product-details').append(productRow);
                 });
 
                 $('#total-amount').text(totalAmount.toFixed(2));
-                // Show the modal
                 $('#order_modal').modal('show');
             });
 
+            // Report Generation Form Submission
             $('#report_generation_form').submit(function(e) {
                 e.preventDefault();
 
                 const formData = new FormData(this);
                 const daterangeValues = $(datepicker).val().split(' to ');
-                var start_date = daterangeValues[0].trim();
-                var end_date = daterangeValues[1].trim();
-                formData.append('start_date', start_date);
-                formData.append('end_date', end_date);
 
+                if (daterangeValues.length === 2) {
+                    var start_date = daterangeValues[0].trim();
+                    var end_date = daterangeValues[1].trim();
+                    formData.append('start_date', start_date);
+                    formData.append('end_date', end_date);
+                }
 
                 $.ajax({
-                    url: `/pump/${pumpId}/sales-history-pdf` ,
+                    url: `/pump/${pumpId}/sales-history-pdf`,
                     method: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        console.log(response);
-
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
 
                             const downloadLink = document.createElement('a');
                             downloadLink.href = response.file_url;
-                            downloadLink.download = response.file_url.split('/').pop(); // Use the file name from URL
-                            downloadLink.click();// This will prompt the user to download the file
+                            downloadLink.download = response.file_url.split('/').pop();
+                            downloadLink.click();
                         }
                     }
                 });
             });
-
         });
+
     </script>
 @endsection
 
