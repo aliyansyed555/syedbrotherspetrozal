@@ -151,7 +151,6 @@ class PetrolPumpController extends Controller
 
         list($profits, $fuelGain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
-
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
 
@@ -1045,9 +1044,6 @@ class PetrolPumpController extends Controller
 
     public function generatePdf(Request $request, $pump_id)
     {
-        // Debugging the request inputs
-        dd($request->all());
-
         // Extract start and end dates from the request
         $start_date = $request->start_date;
         $end_date = $request->end_date;
@@ -1271,6 +1267,7 @@ class PetrolPumpController extends Controller
             'pump_id' => $pump_id,
             'pump' => $pump
         ])->setPaper('a4', 'landscape')->setOption('dpi', 180);
+
         $filename = "{$pump->name}-" . now()->format('d-m-Y') . ".pdf";
 
         $directory = public_path('storage/random_pdfs');
