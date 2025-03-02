@@ -57,7 +57,7 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-center align-items-center" data-kt-subscription-table-toolbar="base">
-                    <div class="me-5"> 
+                    <div class="me-5">
                         <input class="form-control form-control-solid" data-kt-docs-table-filter="search" placeholder="Pick date rage" id="kt_daterangepicker" />
                     </div>
 
@@ -183,7 +183,7 @@
                             <!--end::Input-->
                         </div>
                         <!--end::Input group-->
-                        
+
                         <!--begin::Actions-->
                         {{-- <div class="text-center">
                             <button type="reset" id="report_generation_form_cancel" class="btn btn-light me-3" data-bs-dismiss="modal">Discard</button>
@@ -201,7 +201,7 @@
                                 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                             </button>
                         </div>
-                        
+
                         <!--end::Actions-->
                         <!--end::Actions-->
                     </form>
@@ -214,7 +214,7 @@
         <!--end::Modal dialog-->
     </div>
     <!--end::Modal - New Card-->
-    
+
 @endsection
 
 
@@ -228,93 +228,134 @@
             const employeeId = {{ $employee->id }};
 
             const datepicker = $("[name=daterange]");
+
+            // Initialize Flatpickr for Date Range Selection
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
-                mode: "range"
-            }); 
+                mode: "range",
+                onClose: function(selectedDates) {
+                    if (selectedDates.length === 2) {
+                        startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
+                        endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
+                        $("#wages_table").DataTable().draw();
+                    }
+                }
+            });
 
+            // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
-            }, function(start, end, label) {
+            }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
                 $("#wages_table").DataTable().draw();
             });
 
-            // Custom filtering function for date range
+            // Custom DataTables Filtering Function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Column index of the date (adjust index based on your table)
+                if (settings.nTable.id !== 'wages_table') {
+                    return true; // Apply filter only on the correct table
+                }
+
                 const dateColumnIndex = 1;
                 const dateValue = data[dateColumnIndex]; // Get the date from the table row
 
-                // Only filter if startDate or endDate is set
-                if (startDate && endDate) {
-                    return dateValue >= startDate && dateValue <= endDate;
+                if (!dateValue) {
+                    return false; // Ignore empty dates
                 }
-                return true; // No filtering if no range is selected
+
+                // Convert to Moment.js object
+                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                if (!rowDate.isValid()) {
+                    return false; // Ignore invalid dates
+                }
+
+                if (startDate && endDate) {
+                    const startMoment = moment(startDate, "YYYY-MM-DD");
+                    const endMoment = moment(endDate, "YYYY-MM-DD");
+
+                    return rowDate.isBetween(startMoment, endMoment, null, '[]'); // Inclusive filtering
+                }
+
+                return true; // Show all if no date range is selected
             });
 
+            // Initialize DataTable
             $('#wages_table').DataTable({
                 responsive: true,
                 pageLength: 30,
                 ordering: true,
                 footerCallback: function(row, data, start, end, display) {
-                    // Get API instance
                     var api = this.api();
 
-                    // Calculate total of column 2 (amount_received)
+                    // Function to safely parse numeric values
+                    function parseNumber(value) {
+                        return parseFloat((value || "0").replace(/,/g, '')) || 0;
+                    }
+
+                    // Calculate total for column 2 (Amount Received)
                     var total = api
-                        .column(2, {
-                            page: 'current'
-                        }) // Index 2 is the Amount Received column
+                        .column(2, { page: 'current' }) // Adjust column index as needed
                         .data()
                         .reduce(function(a, b) {
-                            return parseFloat(a) + parseFloat(b.replace(/,/g, '') ||
-                                0); // Handle comma separators and NaN
+                            return a + parseNumber(b);
                         }, 0);
 
-                    // Update the footer
-                    $(api.column(2).footer()).html(total.toLocaleString('en-US')); // Format as number
+                    // Update footer with formatted total
+                    $(api.column(2).footer()).html(total.toLocaleString('en-US'));
                 }
             });
 
+            // Report Generation Form Submission
             $('#report_generation_form').submit(function(e) {
                 e.preventDefault();
 
                 const formData = new FormData(this);
-                const daterangeValues = $(datepicker).val().split(' to ');
-                var start_date = daterangeValues[0].trim();
-                var end_date = daterangeValues[1].trim();
-                formData.append('start_date', start_date);
-                formData.append('end_date', end_date);
 
-                
+                // Validate Date Range Selection
+                const daterangeValues = $(datepicker).val().split(' to ');
+                if (daterangeValues.length === 2) {
+                    var start_date = daterangeValues[0].trim();
+                    var end_date = daterangeValues[1].trim();
+
+                    if (moment(start_date, 'YYYY-MM-DD', true).isValid() && moment(end_date, 'YYYY-MM-DD', true).isValid()) {
+                        formData.append('start_date', start_date);
+                        formData.append('end_date', end_date);
+                    } else {
+                        toastr.error("Invalid date range selected.");
+                        return;
+                    }
+                } else {
+                    toastr.error("Please select a valid date range.");
+                    return;
+                }
+
                 $.ajax({
-                    url: `/pump/${pumpId}/employee/wages/generate_pdf/${employeeId}/` ,
+                    url: `/pump/${pumpId}/employee/wages/generate_pdf/${employeeId}/`,
                     method: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        console.log(response);
-                        
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
 
+                            // Create and trigger download link
                             const downloadLink = document.createElement('a');
                             downloadLink.href = response.file_url;
-                            downloadLink.download = response.file_url.split('/').pop(); // Use the file name from URL
-                            downloadLink.click();// This will prompt the user to download the file
+                            downloadLink.download = response.file_url.split('/').pop();
+                            downloadLink.click();
                         }
                     }
                 });
             });
         });
+
     </script>
 @endsection
 
