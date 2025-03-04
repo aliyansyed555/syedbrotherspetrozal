@@ -790,8 +790,7 @@ class PetrolPumpController extends Controller
 
     public function getPumpReport($petrolPumpId)
     {
-        $pumpId = 49;
-
+        $pumpId = $petrolPumpId;
 
         // Get the fuel types associated with the petrol pump
         $fuelTypesWithTanks = DB::table('fuel_types')
