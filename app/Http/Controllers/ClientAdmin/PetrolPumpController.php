@@ -991,10 +991,10 @@ class PetrolPumpController extends Controller
             ->toArray();
 
         // Convert the result into a structured indexed array
-        $fulePurchases = [];
+        $fuelPurchases = [];
 
         foreach ($fuelPurchasesSummary as $data) {
-            $fulePurchases[$data->purchase_date][$data->fuel_type_id] = $data->total_purchased_quantity;
+            $fuelPurchases[$data->purchase_date][$data->fuel_type_id] = $data->total_purchased_quantity;
         }
 
         $reportData = DB::select($query, [
@@ -1010,7 +1010,7 @@ class PetrolPumpController extends Controller
             'fuelTypes' => $fuelTypesWithTanks,
             'pump_id' => $pumpId,
             'bankDeposits' => $bankDeposits,
-            'fulePurchases' => $fulePurchases,
+            'fuelPurchases' => $fuelPurchases,
         ]);
     }
 
@@ -1272,6 +1272,20 @@ class PetrolPumpController extends Controller
             $end_date, // End date for employee wages
         ]);
 
+        $fuelPurchasesSummary = DB::table('fuel_purchases')
+            ->select('fuel_type_id', 'purchase_date', DB::raw('SUM(quantity_ltr) AS total_purchased_quantity'))
+            ->where('petrol_pump_id', $pump_id)
+            ->groupBy('fuel_type_id', 'purchase_date')
+            ->get()
+            ->toArray();
+
+        // Convert the result into a structured indexed array
+        $fuelPurchases = [];
+
+        foreach ($fuelPurchasesSummary as $data) {
+            $fuelPurchases[$data->purchase_date][$data->fuel_type_id] = $data->total_purchased_quantity;
+        }
+
         // Format the report data
         $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
@@ -1288,6 +1302,7 @@ class PetrolPumpController extends Controller
             'fuelTypes' => $fuelTypesWithTanks,
             'pump_id' => $pump_id,
             'pump' => $pump,
+            'fuelPurchases' => $fuelPurchases,
             'is_pdf' => 1,
         ])->setPaper('a4', 'landscape')->setOption('dpi', 180);
 

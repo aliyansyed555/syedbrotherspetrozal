@@ -84,6 +84,7 @@
                                 '{{ $dipComparisonFinal }}',
                                 '{{ $readingDate }}',
                                 '{{ $fuelType->id }}'
+
                             );
                         });
                     </script>
