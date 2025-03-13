@@ -243,91 +243,76 @@
             const pumpId = url.pathname.split('/')[2];
             const datepicker = $("[name=daterange]");
 
-            // Initialize Flatpickr for Date Range Selection
+            // Initialize Flatpickr for Report Generation Form
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range",
-                defaultDate: null, // Prevent default date selection
                 onClose: function(selectedDates) {
                     if (selectedDates.length === 2) {
                         startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
                         endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
-                        $("#sales_history_table").DataTable().draw();
+                    } else {
+                        startDate = null;
+                        endDate = null;
                     }
+                    salesTable.draw();
                 }
             });
 
-            // Initialize Daterangepicker
+            // Initialize Daterangepicker for Table Filtering
             $("#kt_daterangepicker").daterangepicker({
-                autoUpdateInput: false, // Prevent auto-filling the input field
-                locale: {
-                    format: 'YYYY-MM-DD'
-                }
+                autoUpdateInput: false,
+                locale: { format: 'YYYY-MM-DD' }
             }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
-                $("#sales_history_table").DataTable().draw();
+                $("#kt_daterangepicker").val(startDate + ' to ' + endDate);
+                salesTable.draw();
             });
 
-            // Ensure the input remains empty until the user selects a range
+            // Handle Date Range Picker Events
             $("#kt_daterangepicker").on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
-            });
-
-            $("#kt_daterangepicker").on('cancel.daterangepicker', function(ev, picker) {
+                salesTable.draw();
+            }).on('cancel.daterangepicker', function() {
                 $(this).val('');
                 startDate = null;
                 endDate = null;
-                $("#sales_history_table").DataTable().draw();
+                salesTable.draw();
             });
 
-            // Custom DataTables Filtering Function
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                const dateColumnIndex = 1; // Get the column index of the date column
-                const dateValue = data[dateColumnIndex]; // Get date from the table row
+            // DataTables Custom Filter for Date Range
+            $.fn.dataTable.ext.search.push(function(settings, data) {
+                const dateValue = data[2]; // Date is in the third column (index 2)
+                if (!dateValue) return true;
 
-                if (!dateValue) {
-                    return false; // Exclude empty dates
-                }
-
-                // Parse date using Moment.js
                 const rowDate = moment(dateValue, "YYYY-MM-DD", true);
-                if (!rowDate.isValid()) {
-                    return false;
-                }
+                if (!rowDate.isValid()) return false;
 
-                // Filter based on the selected date range
                 if (startDate && endDate) {
-                    const start = moment(startDate, "YYYY-MM-DD");
-                    const end = moment(endDate, "YYYY-MM-DD");
-
-                    return rowDate.isBetween(start, end, null, '[]'); // Inclusive filtering
+                    const start = moment(startDate);
+                    const end = moment(endDate);
+                    return rowDate.isBetween(start, end, null, '[]');
                 }
-
-                return true; // Show all if no date range is selected
+                return true;
             });
 
             // Initialize DataTable
-            $('#sales_history_table').DataTable({
+            var salesTable = $('#sales_history_table').DataTable({
                 responsive: false,
                 pageLength: 30,
                 ordering: true,
                 footerCallback: function(row, data, start, end, display) {
                     var api = this.api();
-
-                    var totalAmount = api
-                        .column(3, { page: 'current' })
-                        .data()
-                        .reduce(function(a, b) {
-                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
-                            return a + value;
-                        }, 0);
-
-                    $(api.column(3).footer()).html(totalAmount.toLocaleString('en-US'));
+                    var total = api.column(3, { page: 'current' }).data().reduce((a, b) => {
+                        return a + parseFloat(b.replace(/,/g, '') || 0);
+                    }, 0);
+                    $(api.column(3).footer()).html(total.toFixed(2));
                 }
             });
+
 
             // Open Order Details Modal
             $(document).on('click', '.open_order_detail', function(e) {
@@ -397,7 +382,6 @@
         });
     </script>
 @endsection
-
 
 
 @section('styles')
