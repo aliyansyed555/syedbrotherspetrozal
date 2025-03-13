@@ -249,6 +249,7 @@
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range",
+                defaultDate: null, // Prevent default date selection
                 onClose: function(selectedDates) {
                     if (selectedDates.length === 2) {
                         startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
@@ -260,6 +261,7 @@
 
             // Initialize Daterangepicker
             $("#kt_daterangepicker").daterangepicker({
+                autoUpdateInput: false, // Prevent auto-filling the input field
                 locale: {
                     format: 'YYYY-MM-DD'
                 }
@@ -269,9 +271,21 @@
                 $("#sales_history_table").DataTable().draw();
             });
 
+            // Ensure the input remains empty until the user selects a range
+            $("#kt_daterangepicker").on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $("#kt_daterangepicker").on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                startDate = null;
+                endDate = null;
+                $("#sales_history_table").DataTable().draw();
+            });
+
             // Custom DataTables Filtering Function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                const dateColumnIndex = 1;
+                const dateColumnIndex = 1; // Get the column index of the date column
                 const dateValue = data[dateColumnIndex]; // Get date from the table row
 
                 if (!dateValue) {
@@ -284,6 +298,7 @@
                     return false;
                 }
 
+                // Filter based on the selected date range
                 if (startDate && endDate) {
                     const start = moment(startDate, "YYYY-MM-DD");
                     const end = moment(endDate, "YYYY-MM-DD");
@@ -332,13 +347,13 @@
                     totalAmount += productTotal;
 
                     const productRow = `
-                <tr class="fw-bolder text-gray-700 fs-5 text-end">
-                    <td class="d-flex align-items-center pt-6">${product.product_name}</td>
-                    <td class="pt-6">${product.product_qty}</td>
-                    <td class="pt-6">${product.product_price}</td>
-                    <td class="fs-6 text-dark fw-boldest pt-6">${productTotal.toFixed(2)}</td>
-                </tr>
-            `;
+                    <tr class="fw-bolder text-gray-700 fs-5 text-end">
+                        <td class="d-flex align-items-center pt-6">${product.product_name}</td>
+                        <td class="pt-6">${product.product_qty}</td>
+                        <td class="pt-6">${product.product_price}</td>
+                        <td class="fs-6 text-dark fw-boldest pt-6">${productTotal.toFixed(2)}</td>
+                    </tr>
+                    `;
                     $('#product-details').append(productRow);
                 });
 
@@ -380,9 +395,9 @@
                 });
             });
         });
-
     </script>
 @endsection
+
 
 
 @section('styles')
