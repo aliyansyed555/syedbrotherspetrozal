@@ -213,17 +213,21 @@
     <script>
         $(document).ready(function() {
             var pumpId = @json($pump_id);
-            let startDate = null;
-            let endDate = null;
+            let startDate = moment().subtract(7, 'days').format('YYYY-MM-DD'); // Default: Last 7 days
+            let endDate = moment().format('YYYY-MM-DD');
 
             const datepicker = $("[name=daterange]");
 
-            // Initialize Flatpickr for Date Range Selection
+            // Set initial daterange value on input
+            $('#kt_daterangepicker').val(startDate + ' to ' + endDate);
+
+            // Flatpickr for export modal (if used)
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range",
+                defaultDate: [startDate, endDate],
                 onClose: function(selectedDates) {
                     if (selectedDates.length === 2) {
                         startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
@@ -233,48 +237,39 @@
                 }
             });
 
-            // Initialize Daterangepicker
+            // Daterangepicker for live filter
             $("#kt_daterangepicker").daterangepicker({
                 locale: {
                     format: 'YYYY-MM-DD'
-                }
+                },
+                startDate: startDate,
+                endDate: endDate
             }, function(start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
+                $("#kt_daterangepicker").val(startDate + ' to ' + endDate);
                 $("#daily_report_table").DataTable().draw();
             });
 
-            // Custom DataTables Filtering Function
+            // DataTable Date Filter
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                if (settings.nTable.id !== 'daily_report_table') {
-                    return true; // Only apply filtering on the correct table
-                }
+                if (settings.nTable.id !== 'daily_report_table') return true;
 
-                const dateColumnIndex = 1;
-                const dateValue = data[dateColumnIndex]; // Get the date from the table row
+                const dateValue = data[0]; // FIXED: Date is in the first column (index 0)
+                if (!dateValue) return false;
 
-                if (!dateValue) {
-                    return false; // Exclude empty dates
-                }
-
-                // Parse date using Moment.js
                 const rowDate = moment(dateValue, "YYYY-MM-DD", true);
-                if (!rowDate.isValid()) {
-                    return false;
-                }
+                if (!rowDate.isValid()) return false;
 
                 if (startDate && endDate) {
-                    const start = moment(startDate, "YYYY-MM-DD");
-                    const end = moment(endDate, "YYYY-MM-DD");
-
-                    return rowDate.isBetween(start, end, null, '[]'); // Inclusive filtering
+                    return rowDate.isBetween(moment(startDate), moment(endDate), null, '[]');
                 }
 
-                return true; // Show all if no date range is selected
+                return true;
             });
 
             // Initialize DataTable
-            $('#daily_report_table').DataTable({
+            const table = $('#daily_report_table').DataTable({
                 responsive: false,
                 pageLength: 50,
                 ordering: true,
@@ -285,28 +280,18 @@
                     var totalExpense = api
                         .column(1, { page: 'current' })
                         .data()
-                        .reduce(function(a, b) {
-                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
-                            return a + value;
-                        }, 0);
+                        .reduce((a, b) => a + parseFloat((b || "0").replace(/,/g, '')) || 0, 0);
 
                     var totalRent = api
                         .column(3, { page: 'current' })
                         .data()
-                        .reduce(function(a, b) {
-                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
-                            return a + value;
-                        }, 0);
+                        .reduce((a, b) => a + parseFloat((b || "0").replace(/,/g, '')) || 0, 0);
 
                     var totalDeposit = api
                         .column(4, { page: 'current' })
                         .data()
-                        .reduce(function(a, b) {
-                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
-                            return a + value;
-                        }, 0);
+                        .reduce((a, b) => a + parseFloat((b || "0").replace(/,/g, '')) || 0, 0);
 
-                    // Update the footer
                     $(api.column(1).footer()).html(totalExpense.toLocaleString('en-US'));
                     $(api.column(3).footer()).html(totalRent.toLocaleString('en-US'));
                     $(api.column(4).footer()).html(totalDeposit.toLocaleString('en-US'));
@@ -345,6 +330,9 @@
                     }
                 });
             });
+
+            // Force draw on first load to apply default filter
+            table.draw();
 
             // Report Generation Form Submission
             $('#report_generation_form').submit(function(e) {

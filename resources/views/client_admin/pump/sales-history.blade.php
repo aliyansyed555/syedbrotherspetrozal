@@ -232,7 +232,6 @@
     <!--end::Modal - New Card-->
 @endsection
 
-
 @section('javascript')
     <script>
         $(document).ready(function() {
@@ -382,7 +381,6 @@
         });
     </script>
 @endsection
-
 
 @section('styles')
 @endsection
