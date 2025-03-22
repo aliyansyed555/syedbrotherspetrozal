@@ -211,24 +211,30 @@
 
 @section('javascript')
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             var pumpId = @json($pump_id);
-            let startDate = moment().subtract(7, 'days').format('YYYY-MM-DD'); // Default: Last 7 days
-            let endDate = moment().format('YYYY-MM-DD');
+
+            // These are just for display purposes on load
+            let displayStart = moment().subtract(7, 'days').format('YYYY-MM-DD');
+            let displayEnd = moment().format('YYYY-MM-DD');
+
+            // Actual filtering variables
+            let startDate = null;
+            let endDate = null;
 
             const datepicker = $("[name=daterange]");
 
-            // Set initial daterange value on input
-            $('#kt_daterangepicker').val(startDate + ' to ' + endDate);
+            // Set visible text in the input, but do NOT apply as filter
+            $('#kt_daterangepicker').val(displayStart + ' to ' + displayEnd);
 
-            // Flatpickr for export modal (if used)
+            // Initialize flatpickr for export modal
             $(datepicker).flatpickr({
                 altInput: true,
                 altFormat: "F j, Y",
                 dateFormat: "Y-m-d",
                 mode: "range",
-                defaultDate: [startDate, endDate],
-                onClose: function(selectedDates) {
+                defaultDate: [displayStart, displayEnd],
+                onClose: function (selectedDates) {
                     if (selectedDates.length === 2) {
                         startDate = moment(selectedDates[0]).format('YYYY-MM-DD');
                         endDate = moment(selectedDates[1]).format('YYYY-MM-DD');
@@ -237,35 +243,42 @@
                 }
             });
 
-            // Daterangepicker for live filter
+            // Initialize daterangepicker for filtering (input on top-right)
             $("#kt_daterangepicker").daterangepicker({
+                autoUpdateInput: false,
                 locale: {
                     format: 'YYYY-MM-DD'
                 },
-                startDate: startDate,
-                endDate: endDate
-            }, function(start, end) {
+                startDate: displayStart,
+                endDate: displayEnd
+            }, function (start, end) {
                 startDate = start.format('YYYY-MM-DD');
                 endDate = end.format('YYYY-MM-DD');
-                $("#kt_daterangepicker").val(startDate + ' to ' + endDate);
+                $('#kt_daterangepicker').val(startDate + ' to ' + endDate);
                 $("#daily_report_table").DataTable().draw();
             });
 
-            // DataTable Date Filter
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            // On cancel - reset filter
+            $("#kt_daterangepicker").on('cancel.daterangepicker', function (ev, picker) {
+                $(this).val(displayStart + ' to ' + displayEnd); // Show default
+                startDate = null;
+                endDate = null;
+                $("#daily_report_table").DataTable().draw();
+            });
+
+            // Custom filtering logic based on date column
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
                 if (settings.nTable.id !== 'daily_report_table') return true;
 
-                const dateValue = data[0]; // FIXED: Date is in the first column (index 0)
-                if (!dateValue) return false;
-
-                const rowDate = moment(dateValue, "YYYY-MM-DD", true);
+                const dateValue = data[0]; // Assuming date is in first column
+                const rowDate = moment(dateValue, 'YYYY-MM-DD', true);
                 if (!rowDate.isValid()) return false;
 
                 if (startDate && endDate) {
                     return rowDate.isBetween(moment(startDate), moment(endDate), null, '[]');
                 }
 
-                return true;
+                return true; // Show all if no filter selected
             });
 
             // Initialize DataTable
@@ -274,32 +287,27 @@
                 pageLength: 50,
                 ordering: true,
                 order: [[0, "asc"]],
-                footerCallback: function(row, data, start, end, display) {
-                    var api = this.api();
+                footerCallback: function (row, data, start, end, display) {
+                    const api = this.api();
 
-                    var totalExpense = api
-                        .column(1, { page: 'current' })
-                        .data()
-                        .reduce((a, b) => a + parseFloat((b || "0").replace(/,/g, '')) || 0, 0);
+                    const total = (colIndex) => {
+                        return api.column(colIndex, { page: 'current' }).data().reduce(function (a, b) {
+                            let value = parseFloat((b || "0").replace(/,/g, '')) || 0;
+                            return a + value;
+                        }, 0).toLocaleString('en-US');
+                    }
 
-                    var totalRent = api
-                        .column(3, { page: 'current' })
-                        .data()
-                        .reduce((a, b) => a + parseFloat((b || "0").replace(/,/g, '')) || 0, 0);
-
-                    var totalDeposit = api
-                        .column(4, { page: 'current' })
-                        .data()
-                        .reduce((a, b) => a + parseFloat((b || "0").replace(/,/g, '')) || 0, 0);
-
-                    $(api.column(1).footer()).html(totalExpense.toLocaleString('en-US'));
-                    $(api.column(3).footer()).html(totalRent.toLocaleString('en-US'));
-                    $(api.column(4).footer()).html(totalDeposit.toLocaleString('en-US'));
+                    $(api.column(1).footer()).html(total(1)); // Daily Expense
+                    $(api.column(3).footer()).html(total(3)); // Pump Rent
+                    $(api.column(4).footer()).html(total(4)); // Bank Deposit
                 }
             });
 
+            // Draw initially without filtering
+            table.draw();
+
             // Daily Report Form Submission
-            $('#daily_report_form').submit(function(e) {
+            $('#daily_report_form').submit(function (e) {
                 e.preventDefault();
                 var formData = new FormData(this);
 
@@ -310,20 +318,17 @@
                     cache: false,
                     contentType: false,
                     processData: false,
-                    success: function(data) {
+                    success: function (data) {
                         if (data.success) {
                             $('#card_transactions_modal').modal('hide');
                             toastr.success('Amount Transferred successfully.');
-
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
+                            setTimeout(() => location.reload(), 1000);
                         }
                     },
-                    error: function(data) {
+                    error: function (data) {
                         var errors = data.responseJSON.errors;
                         if (errors) {
-                            $.each(errors, function(key, value) {
+                            $.each(errors, function (key, value) {
                                 toastr.error(`${key}: ${value}`);
                             });
                         }
@@ -331,21 +336,20 @@
                 });
             });
 
-            // Force draw on first load to apply default filter
-            table.draw();
-
             // Report Generation Form Submission
-            $('#report_generation_form').submit(function(e) {
+            $('#report_generation_form').submit(function (e) {
                 e.preventDefault();
                 const formData = new FormData(this);
-
-                // Ensure the selected date range is valid
                 const daterangeValues = $(datepicker).val().split(' to ');
-                if (daterangeValues.length === 2) {
-                    var start_date = daterangeValues[0].trim();
-                    var end_date = daterangeValues[1].trim();
 
-                    if (moment(start_date, 'YYYY-MM-DD', true).isValid() && moment(end_date, 'YYYY-MM-DD', true).isValid()) {
+                if (daterangeValues.length === 2) {
+                    const start_date = daterangeValues[0].trim();
+                    const end_date = daterangeValues[1].trim();
+
+                    if (
+                        moment(start_date, 'YYYY-MM-DD', true).isValid() &&
+                        moment(end_date, 'YYYY-MM-DD', true).isValid()
+                    ) {
                         formData.append('start_date', start_date);
                         formData.append('end_date', end_date);
                     } else {
@@ -363,7 +367,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function(response) {
+                    success: function (response) {
                         if (response.status === 'success') {
                             $('#report_generation_form_modal').modal('hide');
                             toastr.success('PDF generated successfully. The download will start shortly.');
@@ -371,13 +375,14 @@
                             const downloadLink = document.createElement('a');
                             downloadLink.href = response.file_url;
                             downloadLink.download = response.file_url.split('/').pop();
-                            downloadLink.click(); // Prompt user to download the file
+                            downloadLink.click();
                         }
                     }
                 });
             });
         });
     </script>
+
 @endsection
 
 @section('styles')
