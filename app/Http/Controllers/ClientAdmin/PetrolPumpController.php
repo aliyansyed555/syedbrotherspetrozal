@@ -748,7 +748,7 @@ class PetrolPumpController extends Controller
                     // Values to update or insert
                     'daily_expense' => $request->input('daily_expense'),
 //                    'bank_deposit' => $request->input('bank_deposit'),
-//                    'expense_detail' => $request->input('expense_detail'),
+                    'expense_detail' => $request->input('expense_detail'),
 //                    'account_number' => $request->input('account_number'),
                     'pump_rent' => $request->input('pump_rent'),
                     'cash_in_hand' => $request->input('cashInHand') ?? 0,
