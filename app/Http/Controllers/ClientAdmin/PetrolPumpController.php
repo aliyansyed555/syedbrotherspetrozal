@@ -748,7 +748,7 @@ class PetrolPumpController extends Controller
                     // Values to update or insert
                     'daily_expense' => $request->input('daily_expense'),
 //                    'bank_deposit' => $request->input('bank_deposit'),
-                    'expense_detail' => $request->input('expense_detail'),
+//                    'expense_detail' => $request->input('expense_detail'), NOT using this one, we are doing it in the bank deposits that expense
 //                    'account_number' => $request->input('account_number'),
                     'pump_rent' => $request->input('pump_rent'),
                     'cash_in_hand' => $request->input('cashInHand') ?? 0,
@@ -765,16 +765,16 @@ class PetrolPumpController extends Controller
                 ]
             );
 
-            if ($request->input('bank_deposit') && $request->input('account_number'))
+            if (($request->input('bank_deposit') && $request->input('account_number')) || $request->input('expense_detail'))
                 BankDeposit::updateOrCreate(
                     [
                         'date' => $date,
                         'pump_id' => $petrolPumpId,
                     ],
                     [
-                        'bank_deposit' => $request->input('bank_deposit'),
-                        'account_number' => $request->input('account_number'),
-                        'expense_detail' => $request->input('expense_detail'),
+                        'bank_deposit' => $request->input('bank_deposit') ?? 0,
+                        'account_number' => $request->input('account_number') ?? 0,
+                        'expense_detail' => $request->input('expense_detail') ?? '',
                     ]
                 );
 
