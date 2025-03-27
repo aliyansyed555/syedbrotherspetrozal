@@ -207,7 +207,8 @@ class PetrolPumpController extends Controller
             ->sum('loss_gain_value');
 
         $final_profit = $totalProfit;
-        $final_profit_with_gain = $totalProfit + $totalGain;
+        
+        $final_profit_with_gain = $totalProfit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
 
         $total_arrivals = $pump->fuelPurchases()
             ->whereBetween('fuel_purchases.purchase_date', [$startDate, $endDate])
