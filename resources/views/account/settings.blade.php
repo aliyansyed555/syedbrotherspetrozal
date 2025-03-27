@@ -86,7 +86,7 @@
                     </svg>
                 </span>
             <!--end::Icon-->
-        
+
             <!--begin::Wrapper-->
             <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
                 <div class="mb-3 mb-md-0 fw-bold">
@@ -106,7 +106,7 @@
                         <span class="fw-bold">Resend Verification Link</span>
                     </a>
                     @endif
-                    
+
                 </div>
             </div>
             <!--end::Wrapper-->
@@ -552,8 +552,6 @@
             }
             formData.append('address', $('input[name="address"]').val());
             formData.append('phone_number', $('input[name="phone_number"]').val());
-
-
 
             let url = `/account/settings/update`;
             let method = 'POST';

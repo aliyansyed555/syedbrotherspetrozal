@@ -246,6 +246,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/settings/resend-verification-email', [AccountSettingsController::class, 'resend_verification_email'])->name('account.settings.resend_verificatione_email');
 });
 
+#need to remove it then pass will work fine.
 Route::middleware(['auth'])->group(function () {
     Route::get('/account/settings', [AccountSettingsController::class, 'index'])->name('account.settings');
     Route::post('/account/settings/update', [AccountSettingsController::class, 'update'])->name('account.settings.update');

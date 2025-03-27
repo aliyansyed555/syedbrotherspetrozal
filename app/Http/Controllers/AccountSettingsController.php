@@ -31,8 +31,8 @@ class AccountSettingsController extends Controller
             'email_verified_at' => $this->user->email_verified_at,
             'address' => $this->user->address,
             'phone_number' => $this->user->phone_number,
-            'image' => $this->user->image,  
-            'company' => $this->user->company, 
+            'image' => $this->user->image,
+            'company' => $this->user->company,
         ];
 
         $completedFields = 0;
@@ -84,6 +84,7 @@ class AccountSettingsController extends Controller
             'password' => 'nullable|string|min:8',
         ]);
 
+
         // Update user fields
         $user->name = $validatedData['name'];
         $user->email = $validatedData['email'];
@@ -133,9 +134,9 @@ class AccountSettingsController extends Controller
         }
 
         // Mark the email as verified
-        $user->email_verified_at = now();   
-        $user->verification_token = null; 
-        $userSaved = $user->save(); 
+        $user->email_verified_at = now();
+        $user->verification_token = null;
+        $userSaved = $user->save();
 
         if ($userSaved) {
             $status = true;
