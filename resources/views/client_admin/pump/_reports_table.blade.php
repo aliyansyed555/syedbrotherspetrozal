@@ -67,7 +67,11 @@
                         $dipComparisonFinal -= $fuelPurchases[$data['reading_date']][$fuelType->id];
                     }
 
-                    $dipComparisonFinal = round($dipComparisonFinal, 2);
+
+                   $dipComparisonFinal = round($dipComparisonFinal, 2);
+
+                    if($index > 0)
+                        $dipComparisonFinal = round($dipComparisonFinal, 2) - $tankTransferTT;
 
                     // Profit with Gain
                     $profitWithGain = $dipComparisonFinal * $price;
@@ -84,7 +88,6 @@
                                 '{{ $dipComparisonFinal }}',
                                 '{{ $readingDate }}',
                                 '{{ $fuelType->id }}'
-
                             );
                         });
                     </script>
@@ -136,7 +139,7 @@
 
     @if(!isset($is_pdf))
         <tfoot>
-            <tr class="fs-5 fw-bolder fst-italic">
+        <tr class="fs-5 fw-bolder fst-italic">
             <th class="fw-bold">Total:</th>
             @foreach ($fuelTypes as $fuelType)
                 <th class="fw-bold"></th>
@@ -162,5 +165,5 @@
             <th class="fw-bold"></th>
         </tr>
         </tfoot>
-     @endif
+    @endif
 </table>
