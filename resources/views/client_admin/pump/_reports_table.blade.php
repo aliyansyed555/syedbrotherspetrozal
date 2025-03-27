@@ -67,7 +67,7 @@
                         $dipComparisonFinal -= $fuelPurchases[$data['reading_date']][$fuelType->id];
                     }
 
-                    $dipComparisonFinal = round($dipComparisonFinal, 2) - $tankTransferTT;
+                    $dipComparisonFinal = round($dipComparisonFinal, 2);
 
                     // Profit with Gain
                     $profitWithGain = $dipComparisonFinal * $price;
