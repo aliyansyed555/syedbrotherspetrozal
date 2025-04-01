@@ -67,7 +67,6 @@
                         $dipComparisonFinal -= $fuelPurchases[$data['reading_date']][$fuelType->id];
                     }
 
-
                    $dipComparisonFinal = round($dipComparisonFinal, 2);
 
                     if($index > 0)

@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class PetrolPumpController extends Controller
@@ -207,7 +208,7 @@ class PetrolPumpController extends Controller
             ->sum('loss_gain_value');
 
         $final_profit = $totalProfit;
-        
+
         $final_profit_with_gain = $totalProfit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
 
         $total_arrivals = $pump->fuelPurchases()
@@ -784,6 +785,7 @@ class PetrolPumpController extends Controller
             return response()->json(['message' => 'Data saved successfully!'], 200);
 
         } catch (\Exception $e) {
+            Log::error($e->getMessage() . ' line ' . $e->getLine());
             DB::rollBack(); // Rollback the transaction on error
             return response()->json(['error' => $e->getMessage()], 500);
         }
