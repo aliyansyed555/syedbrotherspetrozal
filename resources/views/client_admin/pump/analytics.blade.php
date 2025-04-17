@@ -93,6 +93,23 @@
                 <div class="col-sm-3">
                     <div class="card border">
                         <div class="card-body">
+                            <h2 class="card-title mb-4">Total Sold Without gain</h2>
+                            <ul class="card-text list-unstyled">
+                                @foreach( $totalSold as $name => $sold )
+                                    @php
+                                        if(isset($fuelGain[$name.'_gain']))
+                                            $sold = $sold - $fuelGain[$name.'_gain'];
+                                    @endphp
+                                    <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($sold) }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-3">
+                    <div class="card border">
+                        <div class="card-body">
                             <h2 class="card-title mb-4">Fuel Profit</h2>
                             <ul class="card-text list-unstyled">
                                 @foreach( $profits as $name => $profit )
