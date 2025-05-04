@@ -112,15 +112,15 @@ class PricingController extends Controller
                         ->whereBetween('dip_records.date', [$dateHere, $dateHere]); // Add date range here too
                 })
                 ->groupBy('dip_records.date', 'dip_records.tank_id', 'tanks.fuel_type_id', 'tanks.name') // Add missing columns
-                ->first();
+                ->get();
 
 
-            if(!$sumOfStock)
-                Log::alert($pump_id.' PUMP sumOfStock missing during loss gain value plz check '.$dateHere);
-
-            $sumOfStock = $sumOfStock->total_reading_in_ltr ?? 0;
-
-            $totalgain = $sumOfStock * $rateChange;
+            if ($sumOfStock->isEmpty()) {
+                Log::alert($pump_id . ' PUMP sumOfStock missing during loss gain value plz check ' . $dateHere);
+            } else {
+                $sumOfStock = $sumOfStock->sum('total_reading_in_ltr');
+                $totalgain = $sumOfStock * $rateChange;
+            }
 
             // Calculate the date for 1 day before the given date
             $currentDate = $validatedData['date'];
