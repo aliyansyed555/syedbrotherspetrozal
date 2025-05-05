@@ -248,7 +248,7 @@ class PetrolPumpController extends Controller
         $totalDiff = array_sum($diffs);
 
         $final_profit = $totalProfit - $totalDiff;
-        $final_profit_with_gain = $totalProfit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
+        $final_profit_with_gain = $final_profit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
