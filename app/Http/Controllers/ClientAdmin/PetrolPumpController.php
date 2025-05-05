@@ -150,6 +150,7 @@ class PetrolPumpController extends Controller
         $totalCredit = $creditsAndDebits['credit'];
         $totalDebit = $creditsAndDebits['debit'];
 
+        #$totalProfit, $totalProfitWithGain, $totalSold
         list($profits, $fuelGain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
         $mobilOilProfit = @$profits['products_profit'];
@@ -207,10 +208,6 @@ class PetrolPumpController extends Controller
             ->whereBetween('date', [$startDate, $endDate])
             ->sum('loss_gain_value');
 
-        $final_profit = $totalProfit;
-
-        $final_profit_with_gain = $totalProfit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
-
         $total_arrivals = $pump->fuelPurchases()
             ->whereBetween('fuel_purchases.purchase_date', [$startDate, $endDate])
             ->join('fuel_types', 'fuel_types.id', '=', 'fuel_purchases.fuel_type_id')
@@ -227,6 +224,31 @@ class PetrolPumpController extends Controller
             ->latest()
             ->value('cash_in_hand'); // This directly fetches the 'cash_in_hand' column value
 
+        $diffs = [];
+
+        #just to find values without gain and use later if needed.
+        $diffs = [];
+        foreach ($totalSold as $name => $sold) {
+            $gainKey = $name . '_gain';
+            $profitKey = $name . '_profit';
+
+            if (isset($fuelGain[$gainKey], $profits[$profitKey]) && $sold > 0) {
+                $profit = $profits[$profitKey];
+                $gain = abs($fuelGain[$gainKey]);
+
+                if ($sold != 0) {
+                    $per_litre = $profit / $sold;
+                    $adjustedSold = $sold - $gain;
+                    $diffs[$name] = round2Digit($profit - ($adjustedSold * $per_litre));
+                }
+            }
+        }
+
+
+        $totalDiff = array_sum($diffs);
+
+        $final_profit = $totalProfit - $totalDiff;
+        $final_profit_with_gain = $totalProfit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -248,6 +270,7 @@ class PetrolPumpController extends Controller
             'totalSold',
             'fuelPurchasesPrices',
             'cashInhand',
+            'diffs',
         ));
     }
 
@@ -1727,6 +1750,7 @@ class PetrolPumpController extends Controller
                 $lastvalue[$tank] = $entry["{$tank}_dip_quantity"];
 
                 $profit = $entry["{$tank}_digital_sold"] * $entry["{$tank}_price"] - $entry["{$tank}_digital_sold"] * $entry["{$tank}_buying_price"];
+
                 $fuelsProfit += $profit;
 
                 $profitWithGain = $dipComparisonFinal * $entry["{$tank}_price"];

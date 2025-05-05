@@ -113,6 +113,14 @@
                             <h2 class="card-title mb-4">Fuel Profit</h2>
                             <ul class="card-text list-unstyled">
                                 @foreach( $profits as $name => $profit )
+
+                                    @php
+                                        $nameWithoutProfit = str_replace('_profit', '', $name);
+                                        if (isset($diffs[$nameWithoutProfit])) {
+                                            $profit -= $diffs[$nameWithoutProfit];
+                                        }
+                                    @endphp
+
                                     <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($profit) }}</li>
                                 @endforeach
                             </ul>
@@ -357,6 +365,7 @@
                     }, $productsArray));
 
                     $customValuesSum = ($totalStockAmount + $totalMobiloilAmount + $totalCredit) - $totalDebit;
+
                     $finalProfitCustom = $final_profit_with_gain > 0 ? $customValuesSum - $final_profit_with_gain : $customValuesSum + $final_profit_with_gain;
                     $fullyFinalProfitLoss = ($finalProfitCustom - $pump->total_investment) + $cashInHand;
                 @endphp
