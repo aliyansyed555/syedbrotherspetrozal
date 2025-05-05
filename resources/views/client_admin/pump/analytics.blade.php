@@ -98,7 +98,7 @@
                                 @foreach( $totalSold as $name => $sold )
                                     @php
                                         if(isset($fuelGain[$name.'_gain']))
-                                            $sold = $sold - $fuelGain[$name.'_gain'];
+                                            $sold = $sold - abs($fuelGain[$name.'_gain']);
                                     @endphp
                                     <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($sold) }}</li>
                                 @endforeach
