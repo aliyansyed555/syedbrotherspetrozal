@@ -151,7 +151,7 @@ class PetrolPumpController extends Controller
         $totalDebit = $creditsAndDebits['debit'];
 
         #$totalProfit, $totalProfitWithGain, $totalSold
-        list($profits, $fuelGain, $gainProfit, $totalProfit, $totalGain, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
+        list($profits, $fuelGain, $gainProfit, $totalProfit, $totalGainProfit, $totalSold) = $this->getAnalyticsProfitsData($pump, $startDate, $endDate);
 
         $mobilOilProfit = @$profits['products_profit'];
         unset($profits['products_profit']);
@@ -252,7 +252,11 @@ class PetrolPumpController extends Controller
             ->sum();
 
         $final_profit = $totalProfit - $totalDiff;
-        $final_profit_with_gain = $final_profit + $totalGain + $shopEarnings->total_sum + $sumLossGain - $totalDailyExpenses;
+
+        #$final_profit = Fuel Profit we will sum up on front end.
+        $final_profit_limited = $totalGainProfit + $shopEarnings->total_sum + $sumLossGain - $totalDailyExpenses + $mobilOilProfit;
+
+
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -269,7 +273,7 @@ class PetrolPumpController extends Controller
             'total_loss_gain',
             'sumLossGain',
             'final_profit',
-            'final_profit_with_gain',
+            'final_profit_limited',
             'total_arrivals',
             'totalSold',
             'fuelPurchasesPrices',

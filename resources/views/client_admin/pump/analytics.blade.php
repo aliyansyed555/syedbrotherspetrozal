@@ -107,6 +107,10 @@
                     </div>
                 </div>
 
+                @php
+                    $FuelProfitSum = 0;
+                @endphp
+
                 <div class="col-sm-3">
                     <div class="card border">
                         <div class="card-body">
@@ -119,6 +123,8 @@
                                         if (isset($diffs[$nameWithoutProfit])) {
                                             $profit -= $diffs[$nameWithoutProfit];
                                         }
+
+                                        $FuelProfitSum = $FuelProfitSum + $profit;
                                     @endphp
 
                                     <li><strong>{{ ucwords(str_replace('_', ' ', $name)) }}:</strong> {{ round2Digit($profit) }}</li>
@@ -312,6 +318,9 @@
                     </div>
                 </div>
 
+                @php
+                    $final_profit_with_gain = $FuelProfitSum  + $final_profit_limited;
+                @endphp
                 <div class="col-sm-3">
                     <div class="card border">
                         <div class="card-body">
