@@ -247,8 +247,12 @@ class PetrolPumpController extends Controller
 
         $totalDiff = array_sum($diffs);
 
+        $totalDailyExpenses = collect((array) $dailyExpenses)
+            ->map(fn($value) => (float) $value)
+            ->sum();
+
         $final_profit = $totalProfit - $totalDiff;
-        $final_profit_with_gain = $final_profit + $totalGain + $shopEarnings->total_sum + $sumLossGain;
+        $final_profit_with_gain = $final_profit + $totalGain + $shopEarnings->total_sum + $sumLossGain - $totalDailyExpenses;
         return view('client_admin.pump.analytics', compact(
             'pump',
             'stocks',
@@ -1759,7 +1763,7 @@ class PetrolPumpController extends Controller
             }
 
             #this one ok here.
-            $totalProfit += $fuelsProfit + $entry['products_profit'] - $entry['pump_rent'] - $entry['daily_expense'] - $entry['total_wage'];
+            $totalProfit += $fuelsProfit + $entry['products_profit']; #- $entry['pump_rent'] - $entry['daily_expense'] - $entry['total_wage'] as here this one wrong value
         }
 
         return [$profitSums, $fuelGain, $gainProfit, $totalProfit, $totalProfitWithGain, $totalSold];
