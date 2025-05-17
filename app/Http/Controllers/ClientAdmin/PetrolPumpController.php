@@ -854,7 +854,8 @@ class PetrolPumpController extends Controller
         }
 
         $query = "
-        WITH calculated_readings AS (
+    WITH calculated_readings AS (
+        SELECT
             nr.nozzle_id,
             nr.date,
             ft.id AS fuel_type_id,
