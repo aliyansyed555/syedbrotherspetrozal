@@ -824,26 +824,29 @@ class PetrolPumpController extends Controller
 
     public function getPumpReport($petrolPumpId)
     {
+        // Assign the petrol pump ID
         $pumpId = $petrolPumpId;
 
-        $firstDate = \DB::table('daily_reports')
+        // Fetch the earliest report date for the given petrol pump
+        $firstDate = DB::table('daily_reports')
             ->where('petrol_pump_id', $pumpId)
             ->oldest('date')
             ->value('date');
 
+        // Set a default date if no reports are found
         if (!$firstDate) {
             $firstDate = '1900-01-01';
         }
 
-        // Get the fuel types associated with the petrol pump
+        // Retrieve distinct fuel types associated with tanks at this company's petrol pumps
         $fuelTypesWithTanks = DB::table('fuel_types')
             ->select('fuel_types.name', 'fuel_types.id')
             ->join('tanks', 'fuel_types.id', '=', 'tanks.fuel_type_id')
             ->join('petrol_pumps', 'tanks.petrol_pump_id', '=', 'petrol_pumps.id')
             ->where('petrol_pumps.company_id', $this->company->id)
-            #->limit(1)
             ->distinct()
             ->get();
+
 
         $selectClauses = [];
         foreach ($fuelTypesWithTanks as $fuelType) {
