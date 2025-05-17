@@ -826,6 +826,11 @@ class PetrolPumpController extends Controller
     {
         $pumpId = $petrolPumpId;
 
+        $firstDate = \DB::table('daily_reports')
+            ->where('petrol_pump_id', $petrolPumpId)
+            ->oldest('date')
+            ->value('date');
+
         // Get the fuel types associated with the petrol pump
         $fuelTypesWithTanks = DB::table('fuel_types')
             ->select('fuel_types.name', 'fuel_types.id')
@@ -856,17 +861,27 @@ class PetrolPumpController extends Controller
         $query = "
     WITH calculated_readings AS (
         SELECT
-            nr.nozzle_id,
-            nr.date,
-            ft.id AS fuel_type_id,
-            nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                digital_reading
-            ) AS digital_sold_ltrs,
-            nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                analog_reading
-            ) AS analog_sold_ltrs,
+        nr.nozzle_id,
+        nr.date,
+        ft.id AS fuel_type_id,
+        CASE
+            WHEN (nr.date != '$firstDate')
+              AND (
+                  LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date, nr.id) IS NULL
+                  OR LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date, nr.id) = 0
+              )
+            THEN nr.digital_reading
+            ELSE nr.digital_reading - LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date, nr.id)
+        END AS digital_sold_ltrs,
+        CASE
+            WHEN (nr.date != '$firstDate')
+                  AND (
+                      LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date, nr.id) IS NULL
+                      OR LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date, nr.id) = 0
+                  )
+            THEN nr.analog_reading
+            ELSE nr.analog_reading - LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date, nr.id)
+        END AS analog_sold_ltrs,
             fr.selling_price,
             (
                 SELECT fp.buying_price_per_ltr
@@ -1039,6 +1054,7 @@ class PetrolPumpController extends Controller
         // Format the report data
         $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
 
+        #dd($formattedReport[35]);
         return view('client_admin.pump.report', [
             'reportData' => $formattedReport,
             'fuelTypes' => $fuelTypesWithTanks,
