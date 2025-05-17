@@ -827,9 +827,13 @@ class PetrolPumpController extends Controller
         $pumpId = $petrolPumpId;
 
         $firstDate = \DB::table('daily_reports')
-            ->where('petrol_pump_id', $petrolPumpId)
+            ->where('petrol_pump_id', $pumpId)
             ->oldest('date')
             ->value('date');
+
+        if (!$firstDate) {
+            $firstDate = '1900-01-01';
+        }
 
         // Get the fuel types associated with the petrol pump
         $fuelTypesWithTanks = DB::table('fuel_types')
