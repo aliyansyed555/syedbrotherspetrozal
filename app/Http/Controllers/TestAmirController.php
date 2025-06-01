@@ -14,8 +14,13 @@ class TestAmirController extends Controller
         ini_set('memory_limit', '4096M');
 
        $nozzleIds = DB::table('nozzle_readings')->distinct()->pluck('nozzle_id');
-       $pump = 83;
-       $nozzleIds = DB::table('nozzles')->where('petrol_pump_id' , $pump)->distinct()->pluck('id');
+
+       #if only for 1 pump check some stuff.
+       $pump = 83; #fuel_type_id = 1 for diesel
+       $nozzleIds = DB::table('nozzles')
+           ->where('petrol_pump_id' , $pump)
+           ->where('fuel_type_id' , 1)
+           ->distinct()->pluck('id');
 
         foreach ($nozzleIds as $nozzleId) {
             $readings = DB::table('nozzle_readings')
@@ -23,6 +28,8 @@ class TestAmirController extends Controller
                 ->orderBy('date')
                 ->orderBy('id')
                 ->get(['id', 'date', 'digital_reading']);
+
+            dd($readings);
 
             $dailySales = [];
             $previousReading = null;
