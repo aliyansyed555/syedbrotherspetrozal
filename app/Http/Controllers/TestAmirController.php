@@ -13,8 +13,9 @@ class TestAmirController extends Controller
         ini_set('max_memory_limit', -1); //300 seconds = 5 minutes
         ini_set('memory_limit', '4096M');
 
-        dd('ok now');
-        $nozzleIds = DB::table('nozzle_readings')->distinct()->pluck('nozzle_id');
+       $nozzleIds = DB::table('nozzle_readings')->distinct()->pluck('nozzle_id');
+       $pump = 83;
+       $nozzleIds = DB::table('nozzles')->where('petrol_pump_id' , $pump)->distinct()->pluck('id');
 
         foreach ($nozzleIds as $nozzleId) {
             $readings = DB::table('nozzle_readings')
@@ -33,7 +34,7 @@ class TestAmirController extends Controller
 
                 if ($previousReading === null) {
                     // First reading: assume this is the full sale for the day
-                    $sale = $currentReading;
+                    $sale = 0;
                 } else {
                     $sale = $currentReading - $previousReading;
 
@@ -71,5 +72,7 @@ class TestAmirController extends Controller
                 );
             }
         }
+
+        dd('done new logics');
     }
 }

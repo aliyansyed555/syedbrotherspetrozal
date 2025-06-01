@@ -30,7 +30,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/abc/test', [\App\Http\Controllers\TestAmirController::class, 'index2'])->name('test.abc.amir');
+Route::get('/abc/test', [\App\Http\Controllers\TestAmirController::class, 'index2'])->name('test.abc.amir');
 
 Route::put('/pump/updateInvestment/{id}', [PetrolPumpController::class, 'updateInvestment'])->name('pump.updateInvestment');
 
