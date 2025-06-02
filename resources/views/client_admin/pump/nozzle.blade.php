@@ -136,20 +136,6 @@
                                     step="0.01"
                                 />
                             </div>
-
-                            <div class="col-md-12 mb-5">
-                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox" id="first_sale_checkbox" name="is_first_sale">
-                                    <label class="form-check-label ms-2" for="first_sale_checkbox">
-                                        Click if it's the nozzle's first sale
-                                    </label>
-                                </div>
-                                <hr>
-                                <small class="text-danger ms-4">New nozzle? Check box to considure this reading as today's sale.</small>
-                            </div>
-
-
-
                         </div>
 
                     </div>

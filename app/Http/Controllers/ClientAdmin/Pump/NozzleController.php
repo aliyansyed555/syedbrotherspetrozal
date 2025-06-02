@@ -125,41 +125,17 @@ class NozzleController extends Controller
                 'digital_reading' => $digital,
                 'date' => $readingDate,
             ]);
-
-            if ($request->is_first_sale) {
-                $this->updateNozzleReadingSales($newReading, true);
-            }
         }
 
         return response()->json(['success' => true, 'message' => 'Nozzle created successfully.']);
     }
 
-    public function updateNozzleReadingSales($newReading, $reading_as_sale = 0)
+    public function updateNozzleReadingSales($newReading, $digitalSale)
     {
         // Calculate sale
-        $digitalSale = $newReading->digital_reading;
         $readingDate = $newReading->date;
+        $digitalSale = max(0, $digitalSale);
 
-        if (!$reading_as_sale) {
-            // Get the last reading before this one
-            $previousReading = DB::table('nozzle_readings')
-                ->where('nozzle_id', $newReading->nozzle_id)
-                ->where('date', '<=', $readingDate)
-                ->where('id', '<', $newReading->id)
-                ->orderByDesc('date')
-                ->orderByDesc('id')
-                ->first();
-
-            if ($previousReading) {
-                $digitalSale = $digitalSale - $previousReading->digital_reading;
-
-                if ($digitalSale < 0) {
-                    $digitalSale = 0;
-                }
-            }
-        }
-
-        // Add to summary (daily)
         DB::table('nozzle_reading_sales')->updateOrInsert(
             [
                 'nozzle_id' => $newReading->nozzle_id,

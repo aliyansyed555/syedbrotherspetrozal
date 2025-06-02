@@ -640,7 +640,8 @@ class PetrolPumpController extends Controller
                         ->orderBy('id', 'desc')
                         ->first();
 
-                    $amountSoldToday = 0;
+                    $calculateSale = false;
+
                     if ($previousReading) {
                         $amountSoldToday = $reading['digital_reading'] - $previousReading->digital_reading;
                     } else {
@@ -660,7 +661,8 @@ class PetrolPumpController extends Controller
                         'date' => $date,
                     ]);
 
-                    (new NozzleController())->updateNozzleReadingSales($newReading, true);
+                    if ($amountSoldToday > 0)
+                        (new NozzleController())->updateNozzleReadingSales($newReading, $amountSoldToday);
                 }
                 foreach ($tankSales as $tankId => $totalSold) {
                     // Check if there are tank transfers for this tank
