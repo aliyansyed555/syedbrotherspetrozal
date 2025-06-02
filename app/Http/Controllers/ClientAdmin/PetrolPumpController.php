@@ -133,7 +133,7 @@ class PetrolPumpController extends Controller
 
         $creditsAndDebits = $customers->map(function ($customer) use ($startDate, $endDate) {
             $lastCredit = $customer->credits()
-                ->whereBetween('date', [$startDate, $endDate]) // Apply date filter
+                ->whereDate('date', '<=',$endDate) // Apply date filter
                 ->orderBy('id', 'desc')
                 ->first();
             $customer->total_credit = $lastCredit ? $lastCredit->balance : 0;
