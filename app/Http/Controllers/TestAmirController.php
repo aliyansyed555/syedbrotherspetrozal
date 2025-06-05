@@ -16,11 +16,10 @@ class TestAmirController extends Controller
        $nozzleIds = DB::table('nozzle_readings')->distinct()->pluck('nozzle_id');
 
        #if only for 1 pump check some stuff.
-       $pump = 83; #fuel_type_id = 1 for diesel
-       $nozzleIds = DB::table('nozzles')
-           ->where('petrol_pump_id' , $pump)
-           ->where('fuel_type_id' , 1)
-           ->distinct()->pluck('id');
+//       $pump = 71; #fuel_type_id = 1 for diesel
+//       $nozzleIds = DB::table('nozzles')
+//           ->where('petrol_pump_id' , $pump)
+//           ->distinct()->pluck('id');
 
         foreach ($nozzleIds as $nozzleId) {
             $readings = DB::table('nozzle_readings')
@@ -29,42 +28,36 @@ class TestAmirController extends Controller
                 ->orderBy('id')
                 ->get(['id', 'date', 'digital_reading']);
 
-            dd($readings);
-
             $dailySales = [];
             $previousReading = null;
-            $previousDate = null;
 
             foreach ($readings as $reading) {
                 $currentDate = $reading->date;
                 $currentReading = $reading->digital_reading;
 
                 if ($previousReading === null) {
-                    // First reading: assume this is the full sale for the day
-                    $sale = 0;
-                } else {
-                    $sale = $currentReading - $previousReading;
-
-                    // If nozzle was reset or reading dropped, consider this as full-day sale
-                    if ($sale < 0) {
-                        $sale = $currentReading < 1000 ? $currentReading : 0;
+                    // New condition: if first reading is less than 100, treat as sale
+                    if ($currentReading < 100) {
+                        $dailySales[$currentDate] = $currentReading;
                     }
+                    $previousReading = $currentReading;
+                    continue;
                 }
 
-                if($sale > 10000)
-                    $sale = 0;
+                $sale = $currentReading - $previousReading;
+
+                if ($sale < 0) {
+                    $sale = abs($sale); // reset detected, treat as valid
+                }
 
                 if (!isset($dailySales[$currentDate])) {
                     $dailySales[$currentDate] = 0;
                 }
 
                 $dailySales[$currentDate] += $sale;
-
                 $previousReading = $currentReading;
-                $previousDate = $currentDate;
             }
 
-            // Now insert all daily sales for this nozzle
             foreach ($dailySales as $date => $totalLitres) {
                 DB::table('nozzle_reading_sales')->updateOrInsert(
                     [
@@ -80,6 +73,6 @@ class TestAmirController extends Controller
             }
         }
 
-        dd('done new logics');
+        dd('done with final logic');
     }
 }
