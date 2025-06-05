@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ClientAdmin;
 
+use App\Http\Controllers\ClientAdmin\Pump\NozzleController;
 use App\Http\Controllers\Controller;
 use App\Models\BankDeposit;
 use App\Models\DailyReport;
@@ -247,8 +248,8 @@ class PetrolPumpController extends Controller
 
         $totalDiff = array_sum($diffs);
 
-        $totalDailyExpenses = collect((array) $dailyExpenses)
-            ->map(fn($value) => (float) $value)
+        $totalDailyExpenses = collect((array)$dailyExpenses)
+            ->map(fn($value) => (float)$value)
             ->sum();
 
         $final_profit = $totalProfit - $totalDiff;
@@ -639,7 +640,8 @@ class PetrolPumpController extends Controller
                         ->orderBy('id', 'desc')
                         ->first();
 
-                    $amountSoldToday = 0;
+                    $calculateSale = false;
+
                     if ($previousReading) {
                         $amountSoldToday = $reading['digital_reading'] - $previousReading->digital_reading;
                     } else {
@@ -652,13 +654,15 @@ class PetrolPumpController extends Controller
                         $tankSales[$tankId] = $amountSoldToday;
                     }
 
-                    NozzleReading::create([
+                    $newReading = NozzleReading::create([
                         'nozzle_id' => $nozzleId,
                         'analog_reading' => $reading['analog_reading'],
                         'digital_reading' => $reading['digital_reading'],
                         'date' => $date,
                     ]);
 
+                    if ($amountSoldToday > 0)
+                        (new NozzleController())->updateNozzleReadingSales($newReading, $amountSoldToday);
                 }
                 foreach ($tankSales as $tankId => $totalSold) {
                     // Check if there are tank transfers for this tank
@@ -854,47 +858,52 @@ class PetrolPumpController extends Controller
         }
 
         $query = "
-    WITH calculated_readings AS (
-        SELECT
-            nr.nozzle_id,
-            nr.date,
-            ft.id AS fuel_type_id,
-            nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                digital_reading
-            ) AS digital_sold_ltrs,
-            nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                analog_reading
-            ) AS analog_sold_ltrs,
-            fr.selling_price,
-            (
-                SELECT fp.buying_price_per_ltr
-                FROM fuel_purchases fp
-                WHERE fp.fuel_type_id = ft.id
-                  AND fp.petrol_pump_id = ?
-                  AND fp.purchase_date <= nr.date
-                ORDER BY fp.purchase_date DESC
-                LIMIT 1
-            ) AS buying_price_per_ltr
-        FROM
-            nozzle_readings nr
-        JOIN
-            nozzles n ON nr.nozzle_id = n.id
-        JOIN
-            fuel_types ft ON n.fuel_type_id = ft.id
-        LEFT JOIN
-            fuel_prices fr ON fr.fuel_type_id = n.fuel_type_id
-            AND fr.petrol_pump_id = n.petrol_pump_id
-            AND fr.date = (
-                SELECT MAX(fp.date)
-                FROM fuel_prices fp
-                WHERE fp.fuel_type_id = fr.fuel_type_id
-                AND fp.petrol_pump_id = fr.petrol_pump_id
-                AND fp.date <= nr.date
-            )
-        WHERE
-            fr.petrol_pump_id = ?
+        WITH latest_prices AS (
+            SELECT fp.*
+            FROM fuel_prices fp
+            INNER JOIN (
+                SELECT fuel_type_id, petrol_pump_id, MAX(date) AS max_date
+                FROM fuel_prices
+                GROUP BY fuel_type_id, petrol_pump_id
+            ) latest ON fp.fuel_type_id = latest.fuel_type_id
+                    AND fp.petrol_pump_id = latest.petrol_pump_id
+                    AND fp.date = latest.max_date
+        ),
+        calculated_readings AS (
+            SELECT
+                nrs.nozzle_id,
+                nrs.sale_date AS date,
+                ft.id AS fuel_type_id,
+                MAX(nrs.total_litres) AS digital_sold_ltrs,
+                NULL AS analog_sold_ltrs,
+                (
+                    SELECT fp2.selling_price
+                    FROM fuel_prices fp2
+                    WHERE fp2.fuel_type_id = ft.id
+                      AND fp2.petrol_pump_id = n.petrol_pump_id
+                      AND fp2.date <= nrs.sale_date
+                    ORDER BY fp2.date DESC
+                    LIMIT 1
+                ) AS selling_price,
+                (
+                    SELECT fp.buying_price_per_ltr
+                    FROM fuel_purchases fp
+                    WHERE fp.fuel_type_id = ft.id
+                      AND fp.petrol_pump_id = ?
+                      AND fp.purchase_date <= nrs.sale_date
+                    ORDER BY fp.purchase_date DESC
+                    LIMIT 1
+                ) AS buying_price_per_ltr
+            FROM
+                nozzle_reading_sales nrs
+            JOIN
+                nozzles n ON nrs.nozzle_id = n.id
+            JOIN
+                fuel_types ft ON n.fuel_type_id = ft.id
+            WHERE
+                n.petrol_pump_id = ?
+            GROUP BY
+                nrs.nozzle_id, nrs.sale_date, ft.id
     ),
     tank_stocks AS (
         SELECT
@@ -1116,31 +1125,25 @@ class PetrolPumpController extends Controller
         $query = "
     WITH calculated_readings AS (
         SELECT
-            nr.nozzle_id,
-            nr.date,
+            nrs.nozzle_id,
+            nrs.sale_date AS date,
             ft.id AS fuel_type_id,
-            nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                digital_reading
-            ) AS digital_sold_ltrs,
-            nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                analog_reading
-            ) AS analog_sold_ltrs,
+            nrs.total_litres AS digital_sold_ltrs,
+            NULL AS analog_sold_ltrs, -- or remove if not needed
             fr.selling_price,
             (
                 SELECT fp.buying_price_per_ltr
                 FROM fuel_purchases fp
                 WHERE fp.fuel_type_id = ft.id
                   AND fp.petrol_pump_id = ?
-                  AND fp.purchase_date <= nr.date
+                  AND fp.purchase_date <= nrs.sale_date
                 ORDER BY fp.purchase_date DESC
                 LIMIT 1
             ) AS buying_price_per_ltr
         FROM
-            nozzle_readings nr
+            nozzle_reading_sales nrs
         JOIN
-            nozzles n ON nr.nozzle_id = n.id
+            nozzles n ON nrs.nozzle_id = n.id
         JOIN
             fuel_types ft ON n.fuel_type_id = ft.id
         LEFT JOIN
@@ -1151,11 +1154,11 @@ class PetrolPumpController extends Controller
                 FROM fuel_prices fp
                 WHERE fp.fuel_type_id = fr.fuel_type_id
                 AND fp.petrol_pump_id = fr.petrol_pump_id
-                AND fp.date <= nr.date
+                AND fp.date <= nrs.sale_date
             )
         WHERE
             fr.petrol_pump_id = ?
-            AND nr.date BETWEEN ? AND ?  -- Filtering by start and end dates
+            AND nrs.sale_date BETWEEN ? AND ?  -- Filtering by start and end dates
     ),
     tank_stocks AS (
         SELECT
@@ -1522,31 +1525,25 @@ class PetrolPumpController extends Controller
         $query = "
     WITH calculated_readings AS (
         SELECT
-            nr.nozzle_id,
-            nr.date,
+            nrs.nozzle_id,
+            nrs.sale_date AS date,
             ft.id AS fuel_type_id,
-            nr.digital_reading - COALESCE(
-                LAG(nr.digital_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                digital_reading
-            ) AS digital_sold_ltrs,
-            nr.analog_reading - COALESCE(
-                LAG(nr.analog_reading) OVER (PARTITION BY nr.nozzle_id ORDER BY nr.date , nr.id),
-                analog_reading
-            ) AS analog_sold_ltrs,
+            nrs.total_litres AS digital_sold_ltrs,
+            NULL AS analog_sold_ltrs, -- or remove if not needed
             fr.selling_price,
             (
                 SELECT fp.buying_price_per_ltr
                 FROM fuel_purchases fp
                 WHERE fp.fuel_type_id = ft.id
                   AND fp.petrol_pump_id = ?
-                  AND fp.purchase_date <= nr.date
+                  AND fp.purchase_date <= nrs.sale_date
                 ORDER BY fp.purchase_date DESC
                 LIMIT 1
             ) AS buying_price_per_ltr
         FROM
-            nozzle_readings nr
+            nozzle_reading_sales nrs
         JOIN
-            nozzles n ON nr.nozzle_id = n.id
+            nozzles n ON nrs.nozzle_id = n.id
         JOIN
             fuel_types ft ON n.fuel_type_id = ft.id
         LEFT JOIN
@@ -1557,11 +1554,11 @@ class PetrolPumpController extends Controller
                 FROM fuel_prices fp
                 WHERE fp.fuel_type_id = fr.fuel_type_id
                 AND fp.petrol_pump_id = fr.petrol_pump_id
-                AND fp.date <= nr.date
+                AND fp.date <= nrs.sale_date
             )
         WHERE
             fr.petrol_pump_id = ?
-            AND nr.date BETWEEN ? AND ?  -- Filtering by start and end dates
+            AND nrs.sale_date BETWEEN ? AND ?  -- Filtering by start and end dates
     ),
     tank_stocks AS (
         SELECT

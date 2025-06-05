@@ -112,20 +112,47 @@ class NozzleController extends Controller
             'fuel_type_id' => $validatedData['fuel_type_id'],
         ]);
 
-        if ($request->analog_reading || $request->digital_reading)
-            DB::table('nozzle_readings')->insert([
+        // Save reading first
+        $readingDate = $request->nozzles_date ?? now()->toDateString();
+
+        $digital = round2Digit($request->digital_reading);
+        $analog = round2Digit($request->analog_reading);
+
+        if ($digital || $analog) {
+            $newReading = NozzleReading::create([
                 'nozzle_id' => $nozzle->id,
-                'analog_reading' => round2Digit($request->analog_reading),
-                'digital_reading' => round2Digit($request->digital_reading),
-                'date' => $request->nozzles_date ?? now()->toDateString(),
+                'analog_reading' => $analog,
+                'digital_reading' => $digital,
+                'date' => $readingDate,
             ]);
+        }
 
         return response()->json(['success' => true, 'message' => 'Nozzle created successfully.']);
     }
 
+    public function updateNozzleReadingSales($newReading, $digitalSale)
+    {
+        // Calculate sale
+        $readingDate = $newReading->date;
+        $digitalSale = max(0, $digitalSale);
+
+        DB::table('nozzle_reading_sales')->updateOrInsert(
+            [
+                'nozzle_id' => $newReading->nozzle_id,
+                'sale_date' => $readingDate,
+            ],
+            [
+                'total_litres' => DB::raw("total_litres + {$digitalSale}"),
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+
+    }
+
     public function update(Request $request)
     {
-
         $pump = $request->pump;
 
         $nozzle = Nozzle::findOrFail($request->id);
