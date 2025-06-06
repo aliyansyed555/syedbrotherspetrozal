@@ -1088,291 +1088,293 @@ class PetrolPumpController extends Controller
         return response()->json(['success' => true, 'tanks' => $tanks]);
     }
 
-    public function generatePdf(Request $request, $pump_id)
-    {
-
-        // Extract start and end dates from the request
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-
-        // Find the petrol pump by its ID
-        $pump = PetrolPump::find($pump_id);
-
-        // Get the fuel types with their associated tanks
-        $fuelTypesWithTanks = DB::table('fuel_types')
-            ->select('fuel_types.name', 'fuel_types.id')
-            ->join('tanks', 'fuel_types.id', '=', 'tanks.fuel_type_id')
-            ->join('petrol_pumps', 'tanks.petrol_pump_id', '=', 'petrol_pumps.id')
-            ->where('petrol_pumps.company_id', $this->company->id)
-            ->distinct()
-            ->get();
-
-        $selectClauses = [];
-        foreach ($fuelTypesWithTanks as $fuelType) {
-            $fuelTypeName = $fuelType->name;
-            $fuelTypeId = $fuelType->id;
-            $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
-
-            $selectClauses[] = "
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.digital_sold_ltrs) ELSE 0 END) AS `{$columnBase}_digital_sold`,
-            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.analog_sold_ltrs) ELSE 0 END) AS `{$columnBase}_analog_sold`,
-            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
-            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
-            MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
-            MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
-            MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
-        ";
-        }
-
-        $query = "
-    WITH calculated_readings AS (
-        SELECT
-            nrs.nozzle_id,
-            nrs.sale_date AS date,
-            ft.id AS fuel_type_id,
-            nrs.total_litres AS digital_sold_ltrs,
-            NULL AS analog_sold_ltrs, -- or remove if not needed
-            fr.selling_price,
-            (
-                SELECT fp.buying_price_per_ltr
-                FROM fuel_purchases fp
-                WHERE fp.fuel_type_id = ft.id
-                  AND fp.petrol_pump_id = ?
-                  AND fp.purchase_date <= nrs.sale_date
-                ORDER BY fp.purchase_date DESC
-                LIMIT 1
-            ) AS buying_price_per_ltr
-        FROM
-            nozzle_reading_sales nrs
-        JOIN
-            nozzles n ON nrs.nozzle_id = n.id
-        JOIN
-            fuel_types ft ON n.fuel_type_id = ft.id
-        LEFT JOIN
-            fuel_prices fr ON fr.fuel_type_id = n.fuel_type_id
-            AND fr.petrol_pump_id = n.petrol_pump_id
-            AND fr.date = (
-                SELECT MAX(fp.date)
-                FROM fuel_prices fp
-                WHERE fp.fuel_type_id = fr.fuel_type_id
-                AND fp.petrol_pump_id = fr.petrol_pump_id
-                AND fp.date <= nrs.sale_date
-            )
-        WHERE
-            fr.petrol_pump_id = ?
-            AND nrs.sale_date BETWEEN ? AND ?  -- Filtering by start and end dates
-    ),
-    tank_stocks AS (
-        SELECT
-            tanks.fuel_type_id,
-            DATE(tank_stocks.date) AS stock_date,
-            SUM(tank_stocks.reading_in_ltr) AS daily_quantity,
-            SUM(SUM(tank_stocks.reading_in_ltr)) OVER (PARTITION BY tanks.fuel_type_id ORDER BY DATE(tank_stocks.date)) AS cumulative_quantity
-        FROM
-            tank_stocks
-        JOIN
-            tanks ON tank_stocks.tank_id = tanks.id
-        WHERE
-            tanks.petrol_pump_id = ?
-            AND tank_stocks.date BETWEEN ? AND ?  -- Filtering by start and end dates
-        GROUP BY
-            tanks.fuel_type_id, stock_date
-    ),
-    dip_records AS (
-        SELECT
-            tanks.fuel_type_id,
-            DATE(dip_records.date) AS dip_record_date,
-            SUM(dip_records.reading_in_ltr) AS dip_quantity
-        FROM
-            dip_records
-        JOIN
-            tanks ON dip_records.tank_id = tanks.id
-        WHERE
-            tanks.petrol_pump_id = ?
-            AND dip_records.date BETWEEN ? AND ?  -- Filtering by start and end dates
-        GROUP BY
-            tanks.fuel_type_id, dip_record_date
-    ),
-    tank_transfers AS (
-        SELECT
-            t.fuel_type_id,
-            DATE(tt.date) AS transfer_date,
-            SUM(tt.quantity_ltr) AS quantity_ltr
-        FROM
-            tank_transfers tt
-        JOIN
-            tanks t ON tt.tank_id = t.id
-        WHERE
-            t.petrol_pump_id = ?
-            AND tt.date BETWEEN ? AND ?  -- Filtering by start and end dates
-        GROUP BY
-            t.fuel_type_id, transfer_date
-    ),
-	    credit_balance AS (
-        SELECT
-            cc.date,
-            SUM(DISTINCT cc.balance) AS total_credit
-        FROM
-            customers c
-        LEFT JOIN
-            customer_credits cc ON cc.customer_id = c.id AND cc.is_special = 0
-        WHERE
-            c.petrol_pump_id = ?
-        GROUP BY
-            cc.date
-    ),
-    wages AS (
-        SELECT
-            ee.date,
-            COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage
-        FROM
-            employees e
-        LEFT JOIN
-            employee_wages ee ON ee.employee_id = e.id
-        WHERE
-            e.petrol_pump_id = ?
-        GROUP BY
-            ee.date
-    )
-
-    SELECT
-         cr.date AS reading_date,
-        " . implode(', ', $selectClauses) . ",
-        dr.daily_expense,
-        dr.tuck_shop_rent,
-        dr.tuck_shop_earning,
-        dr.service_station_earning,
-        dr.service_station_rent,
-        dr.tyre_shop_earning,
-        dr.tyre_shop_rent,
-        dr.lube_shop_earning,
-        dr.lube_shop_rent,
-        dr.pump_rent,
-        COALESCE(ps.amount, 0) AS products_amount,
-        COALESCE(ps.profit, 0) AS products_profit,
-        COALESCE(ee.total_wage,0) AS total_wage,
-        COALESCE(cc.total_credit,0) AS total_credit
-    FROM
-        calculated_readings cr
-    LEFT JOIN
-        daily_reports dr ON cr.date = dr.date AND dr.petrol_pump_id = ?
-    LEFT JOIN
-        product_sales ps ON ps.petrol_pump_id = ? AND ps.date = cr.date
-    LEFT JOIN
-        tank_stocks ts ON cr.date = ts.stock_date AND cr.fuel_type_id = ts.fuel_type_id
-    LEFT JOIN
-        dip_records ds ON cr.date = ds.dip_record_date AND cr.fuel_type_id = ds.fuel_type_id
-    LEFT JOIN
-        tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
-    LEFT JOIN
-        credit_balance cc ON cc.date = cr.date
-    LEFT JOIN
-        wages ee ON ee.date = cr.date
-    WHERE
-        cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
-    GROUP BY
-        cr.date, dr.daily_expense,
-        dr.tuck_shop_rent, dr.tuck_shop_earning,
-        dr.service_station_earning, dr.service_station_rent,
-        dr.tyre_shop_earning, dr.tyre_shop_rent,
-        dr.lube_shop_earning, dr.lube_shop_rent,
-        dr.pump_rent, ps.amount, ps.profit,
-        ee.total_wage,
-        cc.total_credit
-    ORDER BY
-        cr.date;
-    "; #analytics query
-
-        $pump_id = $pump->id;
-
-        #because sql query not wqorking fine here as it add one day in date something like this.
-        $start_date_org_carbon = Carbon::parse($start_date);
-        $start_date = Carbon::parse($start_date)->subDay()->toDateString();
-
-        // Execute the query with the necessary parameters
-        $reportData = DB::select($query, [
-            $pump_id, // Fuel pump ID for multiple places
-            $pump_id, // Petrol pump ID for the calculated readings
-            $start_date, // Start date for filtering
-            $end_date, // End date for filtering
-            $pump_id, // Petrol pump ID for the tank stocks
-            $start_date, // Start date for tank stocks
-            $end_date, // End date for tank stocks
-            $pump_id, // Petrol pump ID for dip records
-            $start_date, // Start date for dip records
-            $end_date, // End date for dip records
-            $pump_id, // Petrol pump ID for tank transfers
-            $start_date, // Start date for tank transfers
-            $end_date, // End date for tank transfers
-            $pump_id, // Petrol pump ID for daily reports
-            $pump_id, // Petrol pump ID for product sales
-            $pump_id, // Petrol pump ID for customer credits
-            $pump_id, // Petrol pump ID for employee wages
-            $start_date, // Start date for employee wages
-            $end_date, // End date for employee wages
-        ]);
-
-        $fuelPurchasesSummary = DB::table('fuel_purchases')
-            ->select('fuel_type_id', 'purchase_date', DB::raw('SUM(quantity_ltr) AS total_purchased_quantity'))
-            ->where('petrol_pump_id', $pump_id)
-            ->groupBy('fuel_type_id', 'purchase_date')
-            ->get()
-            ->toArray();
-
-        // Convert the result into a structured indexed array
-        $fuelPurchases = [];
-
-        foreach ($fuelPurchasesSummary as $data) {
-            $fuelPurchases[$data->purchase_date][$data->fuel_type_id] = $data->total_purchased_quantity;
-        }
-
-        // Format the report data
-        $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
-
-//        return view('pdfs.report-pdf', [
+//    public function generatePdf(Request $request, $pump_id)
+//    {
+//
+//        // Extract start and end dates from the request
+//        $start_date = $request->start_date;
+//        $end_date = $request->end_date;
+//
+//        // Find the petrol pump by its ID
+//        $pump = PetrolPump::find($pump_id);
+//
+//        // Get the fuel types with their associated tanks
+//        $fuelTypesWithTanks = DB::table('fuel_types')
+//            ->select('fuel_types.name', 'fuel_types.id')
+//            ->join('tanks', 'fuel_types.id', '=', 'tanks.fuel_type_id')
+//            ->join('petrol_pumps', 'tanks.petrol_pump_id', '=', 'petrol_pumps.id')
+//            ->where('petrol_pumps.company_id', $this->company->id)
+//            ->distinct()
+//            ->get();
+//
+//        $selectClauses = [];
+//        foreach ($fuelTypesWithTanks as $fuelType) {
+//            $fuelTypeName = $fuelType->name;
+//            $fuelTypeId = $fuelType->id;
+//            $columnBase = strtolower(str_replace([' ', '-'], '_', $fuelTypeName));
+//
+//            $selectClauses[] = "
+//            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.digital_sold_ltrs) ELSE 0 END) AS `{$columnBase}_digital_sold`,
+//            SUM(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN ABS(cr.analog_sold_ltrs) ELSE 0 END) AS `{$columnBase}_analog_sold`,
+//            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.selling_price ELSE 0 END) AS `{$columnBase}_price`,
+//            MAX(CASE WHEN cr.fuel_type_id = $fuelTypeId THEN cr.buying_price_per_ltr ELSE NULL END) AS `{$columnBase}_buying_price`,
+//            MAX(CASE WHEN ts.fuel_type_id = $fuelTypeId THEN ts.cumulative_quantity ELSE 0 END) AS `{$columnBase}_stock_quantity`,
+//            MAX(CASE WHEN ds.fuel_type_id = $fuelTypeId THEN ds.dip_quantity ELSE 0 END) AS `{$columnBase}_dip_quantity`,
+//            MAX(CASE WHEN tt.fuel_type_id = $fuelTypeId THEN tt.quantity_ltr ELSE 0 END) AS `{$columnBase}_transfer_quantity`
+//        ";
+//        }
+//
+//        $query = "
+//    WITH latest_prices AS (
+//            SELECT fp.*
+//            FROM fuel_prices fp
+//            INNER JOIN (
+//                SELECT fuel_type_id, petrol_pump_id, MAX(date) AS max_date
+//                FROM fuel_prices
+//                GROUP BY fuel_type_id, petrol_pump_id
+//            ) latest ON fp.fuel_type_id = latest.fuel_type_id
+//                    AND fp.petrol_pump_id = latest.petrol_pump_id
+//                    AND fp.date = latest.max_date
+//        ),
+//    calculated_readings AS (
+//        SELECT
+//            nrs.nozzle_id,
+//            nrs.sale_date AS date,
+//            ft.id AS fuel_type_id,
+//            nrs.total_litres AS digital_sold_ltrs,
+//            NULL AS analog_sold_ltrs, -- or remove if not needed
+//            fr.selling_price,
+//            (
+//                SELECT fp.buying_price_per_ltr
+//                FROM fuel_purchases fp
+//                WHERE fp.fuel_type_id = ft.id
+//                  AND fp.petrol_pump_id = ?
+//                  AND fp.purchase_date <= nrs.sale_date
+//                ORDER BY fp.purchase_date DESC
+//                LIMIT 1
+//            ) AS buying_price_per_ltr
+//        FROM
+//            nozzle_reading_sales nrs
+//        JOIN
+//            nozzles n ON nrs.nozzle_id = n.id
+//        JOIN
+//            fuel_types ft ON n.fuel_type_id = ft.id
+//        WHERE
+//            n.petrol_pump_id = ?
+//            AND nrs.sale_date BETWEEN ? AND ?  -- Filtering by start and end dates
+//            GROUP BY
+//                nrs.nozzle_id, nrs.sale_date, ft.id
+//    ),
+//    tank_stocks AS (
+//        SELECT
+//            tanks.fuel_type_id,
+//            DATE(tank_stocks.date) AS stock_date,
+//            SUM(tank_stocks.reading_in_ltr) AS daily_quantity,
+//            SUM(SUM(tank_stocks.reading_in_ltr)) OVER (PARTITION BY tanks.fuel_type_id ORDER BY DATE(tank_stocks.date)) AS cumulative_quantity
+//        FROM
+//            tank_stocks
+//        JOIN
+//            tanks ON tank_stocks.tank_id = tanks.id
+//        WHERE
+//            tanks.petrol_pump_id = ?
+//            AND tank_stocks.date BETWEEN ? AND ?  -- Filtering by start and end dates
+//        GROUP BY
+//            tanks.fuel_type_id, stock_date
+//    ),
+//    dip_records AS (
+//        SELECT
+//            tanks.fuel_type_id,
+//            DATE(dip_records.date) AS dip_record_date,
+//            SUM(dip_records.reading_in_ltr) AS dip_quantity
+//        FROM
+//            dip_records
+//        JOIN
+//            tanks ON dip_records.tank_id = tanks.id
+//        WHERE
+//            tanks.petrol_pump_id = ?
+//            AND dip_records.date BETWEEN ? AND ?  -- Filtering by start and end dates
+//        GROUP BY
+//            tanks.fuel_type_id, dip_record_date
+//    ),
+//    tank_transfers AS (
+//        SELECT
+//            t.fuel_type_id,
+//            DATE(tt.date) AS transfer_date,
+//            SUM(tt.quantity_ltr) AS quantity_ltr
+//        FROM
+//            tank_transfers tt
+//        JOIN
+//            tanks t ON tt.tank_id = t.id
+//        WHERE
+//            t.petrol_pump_id = ?
+//            AND tt.date BETWEEN ? AND ?  -- Filtering by start and end dates
+//        GROUP BY t.fuel_type_id, transfer_date
+//    ),
+//	credit_balance AS (
+//        SELECT
+//            cc.date,
+//            SUM(DISTINCT cc.balance) AS total_credit
+//        FROM
+//            customers c
+//        LEFT JOIN
+//            customer_credits cc ON cc.customer_id = c.id AND cc.is_special = 0
+//        WHERE
+//            c.petrol_pump_id = ?
+//        GROUP BY
+//            cc.date
+//    ),
+//    wages AS (
+//        SELECT
+//            ee.date,
+//            COALESCE(SUM(DISTINCT ee.amount_received), 0) AS total_wage
+//        FROM
+//            employees e
+//        LEFT JOIN
+//            employee_wages ee ON ee.employee_id = e.id
+//        WHERE
+//            e.petrol_pump_id = ?
+//        GROUP BY
+//            ee.date
+//    )
+//
+//    SELECT
+//         cr.date AS reading_date,
+//        " . implode(', ', $selectClauses) . ",
+//        dr.daily_expense,
+//        dr.tuck_shop_rent,
+//        dr.tuck_shop_earning,
+//        dr.service_station_earning,
+//        dr.service_station_rent,
+//        dr.tyre_shop_earning,
+//        dr.tyre_shop_rent,
+//        dr.lube_shop_earning,
+//        dr.lube_shop_rent,
+//        dr.pump_rent,
+//        COALESCE(ps.amount, 0) AS products_amount,
+//        COALESCE(ps.profit, 0) AS products_profit,
+//        COALESCE(ee.total_wage,0) AS total_wage,
+//        COALESCE(cc.total_credit,0) AS total_credit
+//    FROM
+//        calculated_readings cr
+//    LEFT JOIN
+//        daily_reports dr ON cr.date = dr.date AND dr.petrol_pump_id = ?
+//    LEFT JOIN
+//        product_sales ps ON ps.petrol_pump_id = ? AND ps.date = cr.date
+//    LEFT JOIN
+//        tank_stocks ts ON cr.date = ts.stock_date AND cr.fuel_type_id = ts.fuel_type_id
+//    LEFT JOIN
+//        dip_records ds ON cr.date = ds.dip_record_date AND cr.fuel_type_id = ds.fuel_type_id
+//    LEFT JOIN
+//        tank_transfers tt ON cr.date = tt.transfer_date AND cr.fuel_type_id = tt.fuel_type_id
+//    LEFT JOIN
+//        credit_balance cc ON cc.date = cr.date
+//    LEFT JOIN
+//        wages ee ON ee.date = cr.date
+//    WHERE
+//        cr.date BETWEEN ? AND ?  -- Filtering by start and end dates
+//    GROUP BY
+//        cr.date, dr.daily_expense,
+//        dr.tuck_shop_rent, dr.tuck_shop_earning,
+//        dr.service_station_earning, dr.service_station_rent,
+//        dr.tyre_shop_earning, dr.tyre_shop_rent,
+//        dr.lube_shop_earning, dr.lube_shop_rent,
+//        dr.pump_rent, ps.amount, ps.profit,
+//        ee.total_wage,
+//        cc.total_credit
+//    ORDER BY
+//        cr.date;
+//    "; #analytics query
+//
+//        $pump_id = $pump->id;
+//
+//        #because sql query not wqorking fine here as it add one day in date something like this.
+//        $start_date_org_carbon = Carbon::parse($start_date);
+//        $start_date = Carbon::parse($start_date)->subDay()->toDateString();
+//
+//        // Execute the query with the necessary parameters
+//        $reportData = DB::select($query, [
+//            $pump_id,$pump_id, // Fuel pump ID for multiple places
+//            $pump_id, // Petrol pump ID for the calculated readings
+//            $start_date, // Start date for filtering
+//            $end_date, // End date for filtering
+//            $pump_id, // Petrol pump ID for the tank stocks
+//            $start_date, // Start date for tank stocks
+//            $end_date, // End date for tank stocks
+//            $pump_id, // Petrol pump ID for dip records
+//            $start_date, // Start date for dip records
+//            $end_date, // End date for dip records
+//            $pump_id, // Petrol pump ID for tank transfers
+//            $start_date, // Start date for tank transfers
+//            $end_date, // End date for tank transfers
+//            $pump_id, // Petrol pump ID for daily reports
+//            $pump_id, // Petrol pump ID for product sales
+//            $pump_id, // Petrol pump ID for customer credits
+//            $pump_id, // Petrol pump ID for employee wages
+//            $start_date, // Start date for employee wages
+//            $end_date, // End date for employee wages
+//        ]);
+//
+//        $fuelPurchasesSummary = DB::table('fuel_purchases')
+//            ->select('fuel_type_id', 'purchase_date', DB::raw('SUM(quantity_ltr) AS total_purchased_quantity'))
+//            ->where('petrol_pump_id', $pump_id)
+//            ->groupBy('fuel_type_id', 'purchase_date')
+//            ->get()
+//            ->toArray();
+//
+//        // Convert the result into a structured indexed array
+//        $fuelPurchases = [];
+//
+//        foreach ($fuelPurchasesSummary as $data) {
+//            $fuelPurchases[$data->purchase_date][$data->fuel_type_id] = $data->total_purchased_quantity;
+//        }
+//
+//        // Format the report data
+//        $formattedReport = $this->formatReportData($reportData, $fuelTypesWithTanks);
+//
+////        return view('pdfs.report-pdf', [
+////            'reportData' => $formattedReport,
+////            'fuelTypes' => $fuelTypesWithTanks,
+////            'pump_id' => $pump_id,
+////            'pump' => $pump
+////        ]);
+//
+//        // Generate and download the PDF #todo: do changes here.
+//        $pdf = Pdf::loadView('pdfs.report-pdf', [
 //            'reportData' => $formattedReport,
 //            'fuelTypes' => $fuelTypesWithTanks,
 //            'pump_id' => $pump_id,
-//            'pump' => $pump
-//        ]);
-
-        // Generate and download the PDF #todo: do changes here.
-        $pdf = Pdf::loadView('pdfs.report-pdf', [
-            'reportData' => $formattedReport,
-            'fuelTypes' => $fuelTypesWithTanks,
-            'pump_id' => $pump_id,
-            'pump' => $pump,
-            'fuelPurchases' => $fuelPurchases,
-            'is_pdf' => 1,
-        ])->setPaper('a4', 'landscape')->setOption('dpi', 180);
-
-
-        $filename = "{$pump->name}-" . now()->format('d-m-Y') . ".pdf";
-
-        $directory = public_path('storage/random_pdfs');
-        if (!file_exists($directory)) {
-            mkdir($directory, 0777, true);  // Create the directory if it doesn't exist
-        }
-
-        // Save the PDF to the specified directory
-        $pdfPath = $directory . '/' . $filename;
-        $pdf->save($pdfPath);
-
-        // Check if you want to send the file as a response (AJAX)
-        if ($request->ajax()) {
-            // Return the file URL in the response
-            $fileUrl = asset('storage/random_pdfs/' . $filename);
-            return response()->json([
-                'status' => 'success',
-                'file_url' => $fileUrl, // Provide the URL to the saved PDF
-            ]);
-        }
-
-        // If not an AJAX request, download the PDF directly
-        return response()->download($pdfPath, $filename, [
-            'Content-Type' => 'application/pdf',
-        ])->deleteFileAfterSend(false);
-    }
+//            'pump' => $pump,
+//            'fuelPurchases' => $fuelPurchases,
+//            'is_pdf' => 1,
+//        ])->setPaper('a4', 'landscape')->setOption('dpi', 180);
+//
+//
+//        $filename = "{$pump->name}-" . now()->format('d-m-Y') . ".pdf";
+//
+//        $directory = public_path('storage/random_pdfs');
+//        if (!file_exists($directory)) {
+//            mkdir($directory, 0777, true);  // Create the directory if it doesn't exist
+//        }
+//
+//        // Save the PDF to the specified directory
+//        $pdfPath = $directory . '/' . $filename;
+//        $pdf->save($pdfPath);
+//
+//        // Check if you want to send the file as a response (AJAX)
+//        if ($request->ajax()) {
+//            // Return the file URL in the response
+//            $fileUrl = asset('storage/random_pdfs/' . $filename);
+//            return response()->json([
+//                'status' => 'success',
+//                'file_url' => $fileUrl, // Provide the URL to the saved PDF
+//            ]);
+//        }
+//
+//        // If not an AJAX request, download the PDF directly
+//        return response()->download($pdfPath, $filename, [
+//            'Content-Type' => 'application/pdf',
+//        ])->deleteFileAfterSend(false);
+//    }
 
     public function get_sales_history_pdf(Request $request, $id)
     {
@@ -1525,14 +1527,33 @@ class PetrolPumpController extends Controller
         }
         // Update the SQL query with the start_date and end_date
         $query = "
-    WITH calculated_readings AS (
+        WITH latest_prices AS (
+            SELECT fp.*
+            FROM fuel_prices fp
+            INNER JOIN (
+                SELECT fuel_type_id, petrol_pump_id, MAX(date) AS max_date
+                FROM fuel_prices
+                GROUP BY fuel_type_id, petrol_pump_id
+            ) latest ON fp.fuel_type_id = latest.fuel_type_id
+                    AND fp.petrol_pump_id = latest.petrol_pump_id
+                    AND fp.date = latest.max_date
+        ),
+        calculated_readings AS (
         SELECT
             nrs.nozzle_id,
             nrs.sale_date AS date,
             ft.id AS fuel_type_id,
-            nrs.total_litres AS digital_sold_ltrs,
+            MAX(nrs.total_litres) AS digital_sold_ltrs,
             NULL AS analog_sold_ltrs, -- or remove if not needed
-            fr.selling_price,
+            (
+                SELECT fp2.selling_price
+                FROM fuel_prices fp2
+                WHERE fp2.fuel_type_id = ft.id
+                  AND fp2.petrol_pump_id = ?
+                  AND fp2.date <= nrs.sale_date
+                ORDER BY fp2.date DESC
+                LIMIT 1
+            ) AS selling_price,
             (
                 SELECT fp.buying_price_per_ltr
                 FROM fuel_purchases fp
@@ -1548,19 +1569,11 @@ class PetrolPumpController extends Controller
             nozzles n ON nrs.nozzle_id = n.id
         JOIN
             fuel_types ft ON n.fuel_type_id = ft.id
-        LEFT JOIN
-            fuel_prices fr ON fr.fuel_type_id = n.fuel_type_id
-            AND fr.petrol_pump_id = n.petrol_pump_id
-            AND fr.date = (
-                SELECT MAX(fp.date)
-                FROM fuel_prices fp
-                WHERE fp.fuel_type_id = fr.fuel_type_id
-                AND fp.petrol_pump_id = fr.petrol_pump_id
-                AND fp.date <= nrs.sale_date
-            )
         WHERE
-            fr.petrol_pump_id = ?
+            n.petrol_pump_id = ?
             AND nrs.sale_date BETWEEN ? AND ?  -- Filtering by start and end dates
+        GROUP BY
+                nrs.nozzle_id, nrs.sale_date, ft.id
     ),
     tank_stocks AS (
         SELECT
@@ -1605,10 +1618,9 @@ class PetrolPumpController extends Controller
         WHERE
             t.petrol_pump_id = ?
             AND tt.date BETWEEN ? AND ?  -- Filtering by start and end dates
-        GROUP BY
-            t.fuel_type_id, transfer_date
+            GROUP BY t.fuel_type_id, transfer_date
     ),
-	    credit_balance AS (
+	credit_balance AS (
         SELECT
             cc.date,
             SUM(DISTINCT cc.balance) AS total_credit
@@ -1677,6 +1689,7 @@ class PetrolPumpController extends Controller
 
         // Execute the query with the necessary parameters
         $reportData = DB::select($query, [
+            $pump_id, //for the sale, buy prices new logic
             $pump_id, // Fuel pump ID for multiple places
             $pump_id, // Petrol pump ID for the calculated readings
             $start_date, // Start date for filtering
