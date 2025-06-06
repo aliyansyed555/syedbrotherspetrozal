@@ -134,7 +134,7 @@ class PetrolPumpController extends Controller
 
         $creditsAndDebits = $customers->map(function ($customer) use ($startDate, $endDate) {
             $lastCredit = $customer->credits()
-                ->whereDate('date', '<=',$endDate) // Apply date filter
+                ->whereDate('date', '<=', $endDate) // Apply date filter
                 ->orderBy('id', 'desc')
                 ->first();
             $customer->total_credit = $lastCredit ? $lastCredit->balance : 0;
@@ -880,7 +880,7 @@ class PetrolPumpController extends Controller
                     SELECT fp2.selling_price
                     FROM fuel_prices fp2
                     WHERE fp2.fuel_type_id = ft.id
-                      AND fp2.petrol_pump_id = n.petrol_pump_id
+                      AND fp2.petrol_pump_id = ?
                       AND fp2.date <= nrs.sale_date
                     ORDER BY fp2.date DESC
                     LIMIT 1
@@ -1041,7 +1041,7 @@ class PetrolPumpController extends Controller
         }
 
         $reportData = DB::select($query, [
-            $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId
+            $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId, $pumpId
         ]);
 
         #dd($reportData[0]->diesel_digital_sold);
