@@ -876,7 +876,15 @@ class PetrolPumpController extends Controller
                 ft.id AS fuel_type_id,
                 MAX(nrs.total_litres) AS digital_sold_ltrs,
                 NULL AS analog_sold_ltrs,
-                fp2.selling_price,
+                (
+                    SELECT fp2.selling_price
+                    FROM fuel_prices fp2
+                    WHERE fp2.fuel_type_id = ft.id
+                      AND fp2.petrol_pump_id = n.petrol_pump_id
+                      AND fp2.date <= nrs.sale_date
+                    ORDER BY fp2.date DESC
+                    LIMIT 1
+                ) AS selling_price,
                 (
                     SELECT fp.buying_price_per_ltr
                     FROM fuel_purchases fp
@@ -892,19 +900,11 @@ class PetrolPumpController extends Controller
                 nozzles n ON nrs.nozzle_id = n.id
             JOIN
                 fuel_types ft ON n.fuel_type_id = ft.id
-            LEFT JOIN (
-                SELECT fuel_type_id, petrol_pump_id, date, selling_price,
-                       ROW_NUMBER() OVER (PARTITION BY fuel_type_id, petrol_pump_id ORDER BY date DESC) AS rn
-                FROM fuel_prices
-            ) AS fp2 ON fp2.fuel_type_id = ft.id
-                   AND fp2.petrol_pump_id = n.petrol_pump_id
-                   AND fp2.date <= nrs.sale_date
-                   AND fp2.rn = 1
             WHERE
                 n.petrol_pump_id = ?
             GROUP BY
-                nrs.nozzle_id, nrs.sale_date, ft.id, fp2.selling_price
-        ),
+                nrs.nozzle_id, nrs.sale_date, ft.id
+    ),
     tank_stocks AS (
         SELECT
             tanks.fuel_type_id,
