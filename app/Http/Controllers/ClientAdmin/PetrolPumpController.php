@@ -661,7 +661,7 @@ class PetrolPumpController extends Controller
                         'date' => $date,
                     ]);
 
-                    if ($amountSoldToday > 0){
+                    if ($amountSoldToday >= 0){
                         Log::info($nozzleId .' nozzle added reading   '.$amountSoldToday . ' date is '.$date);
                         (new NozzleController())->updateNozzleReadingSales($newReading, $amountSoldToday);
                     }
